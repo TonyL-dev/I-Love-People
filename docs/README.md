@@ -1,6 +1,6 @@
 # I Love People documentation
 
-Start with the project plan for the ordered roadmap. Phase 0 is in progress; later phases remain planned. The repository [README](../README.md) documents the local setup and runnable commands.
+Start with the project plan for the ordered roadmap. Phases 0 and 1 are accepted; Phase 2 remains planned and VoiceOver is unverified before release. The repository [README](../README.md) documents the local setup and runnable commands.
 
 | Document | Purpose |
 | --- | --- |
@@ -11,6 +11,8 @@ Start with the project plan for the ordered roadmap. Phase 0 is in progress; lat
 | [Architecture](ARCHITECTURE.md) | Proposed runtime, domains, data, and security boundaries |
 | [Decisions](DECISIONS.md) | Selected approaches and their rationale |
 | [Implementation status](IMPLEMENTATION_STATUS.md) | Current progress and verification limits |
+| [Device review](DEVICE_REVIEW.md) | Real iPhone Safari and VoiceOver steps and evidence requirements |
+| [Hosted authentication setup](AUTH_SETUP.md) | Provider settings, owner provisioning, and hosted login/recovery acceptance |
 | [Workflow notes](SKILLS.md) | Development and maintenance workflow |
 | [Third-party notices](THIRD_PARTY_NOTICES.md) | Bundled asset licenses |
 | [Repository instructions](../AGENTS.md) | Instructions for contributors and coding agents |

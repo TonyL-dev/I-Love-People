@@ -7,9 +7,12 @@ import sys
 from urllib.parse import urlsplit
 
 import httpx
+from alembic.config import Config
+from alembic.script import ScriptDirectory
 from ilp.infrastructure.settings import get_settings
 from ilp.main import create_app
 from local_auth_smoke import main as auth_smoke
+from local_privacy_smoke import main as privacy_smoke
 from local_services import ROOT, status
 from sqlalchemy import create_engine, text
 
@@ -42,7 +45,10 @@ def check_migrations(database_url: str) -> None:
             revision = connection.execute(
                 text("SELECT version_num FROM ilp_migrations.alembic_version")
             ).scalar_one()
-            if revision != "0001_foundation":
+            if (
+                revision
+                != ScriptDirectory.from_config(Config(str(ROOT / "alembic.ini"))).get_current_head()
+            ):
                 raise RuntimeError("Unexpected foundation revision")
             for role in ["anon", "authenticated"]:
                 permitted = connection.execute(
@@ -73,6 +79,8 @@ def main() -> int:
             raise RuntimeError("Only this project's loopback database is allowed")
         database_url = database_url.replace("postgresql://", "postgresql+psycopg://", 1)
         os.environ["ILP_DATABASE_URL"] = database_url
+        os.environ["ILP_SUPABASE_URL"] = "http://127.0.0.1:54321"
+        os.environ["ILP_SUPABASE_PUBLISHABLE_KEY"] = local_status["ANON_KEY"]
         get_settings.cache_clear()
         stage = "database migration and metadata isolation"
         check_migrations(database_url)
@@ -88,6 +96,9 @@ def main() -> int:
         print("Local Data API responded without exposing migration metadata.", flush=True)
         stage = "synthetic Auth and captured email"
         if auth_smoke():
+            return 1
+        stage = "two-user API privacy and RLS"
+        if privacy_smoke():
             return 1
     except Exception as error:
         print(f"Local database smoke failed at {stage} ({type(error).__name__}); details redacted.")

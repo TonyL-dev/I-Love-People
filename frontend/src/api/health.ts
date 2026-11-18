@@ -3,7 +3,11 @@ import type { paths } from './schema';
 type Health = paths['/api/health']['get']['responses'][200]['content']['application/json'];
 
 export async function fetchHealth(signal: AbortSignal): Promise<Health> {
-  const response = await fetch('/api/health', { signal, cache: 'no-store', credentials: 'omit' });
+  const response = await fetch('/api/health', {
+    signal,
+    cache: 'no-store',
+    credentials: 'same-origin',
+  });
   if (!response.ok) throw new Error('The API could not be reached.');
   const value: unknown = await response.json();
   if (

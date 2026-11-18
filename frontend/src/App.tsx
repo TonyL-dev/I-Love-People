@@ -6,7 +6,7 @@ import { Dialog } from './ui/Dialog';
 import { EmptyState } from './ui/EmptyState';
 import { samplePeople, type SamplePerson } from './design/fixtures';
 import { MeetupDialog } from './design/MeetupDialog';
-import { Login } from './design/Login';
+import { AccountPage } from './auth/AccountPage';
 import { Components } from './design/Components';
 
 import { AppearanceField, type Appearance } from './ui/Appearance';
@@ -70,8 +70,8 @@ export function App() {
 
   function renderPage() {
     if (!isDesign)
-      return path === '/' || path === '/login' ? (
-        <Login />
+      return ['/', '/login', '/forgot-password', '/reset-password'].includes(path) ? (
+        <AccountPage path={path} appearance={appearance} setAppearance={setAppearance} />
       ) : (
         <EmptyState
           title="That page isn’t here."

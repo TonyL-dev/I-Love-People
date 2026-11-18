@@ -25,7 +25,7 @@ describe('health contract boundary', () => {
     expect(request).toHaveBeenCalledWith('/api/health', {
       signal,
       cache: 'no-store',
-      credentials: 'omit',
+      credentials: 'same-origin',
     });
     vi.unstubAllGlobals();
   });

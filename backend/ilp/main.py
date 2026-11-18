@@ -2,6 +2,7 @@ from collections.abc import Awaitable, Callable
 
 from fastapi import FastAPI, Request, Response
 
+from ilp.auth.router import router as account_router
 from ilp.health.router import router
 
 
@@ -14,6 +15,7 @@ def create_app() -> FastAPI:
         openapi_url="/api/openapi.json",
     )
     application.include_router(router)
+    application.include_router(account_router)
 
     @application.middleware("http")
     async def private_responses(
