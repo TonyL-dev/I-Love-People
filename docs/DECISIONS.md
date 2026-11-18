@@ -102,3 +102,6 @@ Hosted conflict behavior, November 18: use explicit PostgREST PT409 for delibera
 
 
 Phase 2 hosted evidence confirms explicit PT409 fixes the conflict timeouts without altering ownership or locking. Retain Deployment Protection, Preview-only settings, the draft review branch and separate device evidence. The new exact recovery destination requires a user configuration step because connected Supabase tools do not expose Auth URL settings. Do not broaden the allowlist with wildcards.
+
+
+Phase 2 acceptance, November 18: combine independently observed CI/deployed privacy/concurrency/browser checks with explicitly user-reported iPhone Safari/desktop results. Verify the newly configured exact recovery target using a disposable hosted account without sending email. Keep VoiceOver as an outstanding private-release check. Phase acceptance does not authorize Phase 3, merge or Production promotion.

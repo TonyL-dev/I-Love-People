@@ -1,6 +1,6 @@
 # Proposed architecture
 
-Updated November 18, 2026. This describes the target architecture and Phase 0/1/2 source. Phase 1 is accepted; Phase 2 hosted verification is pending. Current verification status is in IMPLEMENTATION_STATUS.md. Imported architecture history is retained in reference/ARCHITECTURE.md.
+Updated November 18, 2026. This describes the target architecture and Phase 0/1/2 source. Phases 1 and 2 are accepted on the protected Preview. Current verification status is in IMPLEMENTATION_STATUS.md. Imported architecture history is retained in reference/ARCHITECTURE.md.
 
 ## Implemented foundation
 
@@ -116,3 +116,6 @@ Phase 2 hosted conflict adapter: Alembic 0005 changes only deliberately raised r
 
 
 Current Phase 2 runtime: CI-passed d377735 on protected Preview https://i-love-people-c2mef0l08-smooshy.vercel.app, Alembic 0005. Deployed browser/API/Data API checks verify the documented path, including explicit conflicts and account cleanup. Exact Auth URL configuration and new iPhone evidence remain pending; see IMPLEMENTATION_STATUS.md and AUTH_SETUP.md.
+
+
+Phase 2 acceptance confirmation, November 18: the new exact Auth redirect now passes independent hosted browser recovery and the user reports the people/history iPhone and desktop journeys pass. The accepted architecture remains caller-scoped repositories, forced owner/session RLS, Alembic migrations, exact dates and explicit PT409 conflicts. No architectural or runtime code change accompanies closure; see IMPLEMENTATION_STATUS.md for evidence.

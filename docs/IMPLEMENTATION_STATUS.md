@@ -6,7 +6,7 @@ Updated November 18, 2026. Phase 0 is accepted. Phase 1 is accepted: source/CI, 
 | --- | --- |
 | 0 Foundation | Accepted; real Safari pass reported, VoiceOver remains a release check |
 | 1 Login and privacy | Accepted on the protected Preview; Production unchanged |
-| 2 People and meetups | Hosted verified; new Auth redirect setting and iPhone review pending |
+| 2 People and meetups | Accepted on the protected Preview; iPhone/desktop pass reported |
 | 3 Due list | Planned |
 | 4 PWA and Web Push | Planned, scheduler feasibility pending |
 | 5 Personal release | Planned |
@@ -234,3 +234,12 @@ Phase 2 hosted rollout in progress: draft PR #2 is published; 7c6e268 passed bot
 Phase 2 hosted verification, November 18, 2026. Application commit d377735 passes both Linux CI jobs (https://github.com/TonyL-dev/I-Love-People/actions/runs/44398237798), with 62 Python tests, 7 frontend tests, 33 browser tests and real Linux database/Auth/browser checks. Protected Preview https://i-love-people-c2mef0l08-smooshy.vercel.app (dpl_DjMRfY6j4JoqJu1P4emgDJnCdKLU) is READY for that commit. Alembic 0005_explicit_conflicts applied twice. HTTPS/assets/SPA/security headers/health/readiness/no-store/API 404, actual deployed two-user API/Data API ownership and revocation, concurrent duplicate creation, stale-edit/request conflicts, backdates/latest-entry changes/archive/cascade, and live Chrome people/meetup persistence/reload/logout/expiry all pass. No browser page errors; temporary users were deleted and final synthetic-account count is zero. Owner/session forced RLS is verified for every new table. Local services are stopped; temporary share-token files were removed at handoff. Existing leaked-password-protection advisor warning is unchanged; no paid feature was enabled.
 
 The new Preview is ready for owner iPhone Safari review. A no-email recovery-link probe confirms its exact reset destination is not yet allowlisted: Supabase currently falls back to the accepted Phase 1 origin. The connected Supabase tools cannot update Auth URL settings. The user must set the Site URL to https://i-love-people-c2mef0l08-smooshy.vercel.app and add https://i-love-people-c2mef0l08-smooshy.vercel.app/reset-password in Auth URL configuration before reviewing recovery on the new origin. Keep the old exact redirect until the new one is verified; avoid wildcards. Phase 2 acceptance remains pending that configuration and the new people/history iPhone evidence. VoiceOver remains unverified before private release. Draft PR #2 stays open; no merge, Phase 3 or Production promotion.
+
+
+## Phase 2 accepted — November 18, 2026
+
+The user confirmed the new Supabase Auth URL settings and reported every requested people/history test passed in iPhone Safari and desktop, including persistence across fresh sign-in and devices, with no screen, keyboard or functional problems. This is user-reported evidence, not an agent-observed device session. The earlier device identification was iPhone 16 Pro / iOS 27.2; no new device/version was supplied in this report.
+
+An independent disposable Chrome recovery on [https://i-love-people-c2mef0l08-smooshy.vercel.app](https://i-love-people-c2mef0l08-smooshy.vercel.app) passed the actual hosted reset redirect, password replacement, rejection of the old password and rejection of the used link. Login/profile returned 200, no page errors were observed, and the synthetic account was deleted with absence verified. No test email was sent. Temporary protection-token storage was removed.
+
+Combined with both successful Linux CI jobs in [run 44398237798](https://github.com/TonyL-dev/I-Love-People/actions/runs/44398237798), 62 Python/7 frontend/33 browser tests, deployed API/Data API isolation/concurrency/privacy checks and live browser persistence for application d377735, this satisfies Phase 2 acceptance. Alembic remains at 0005_explicit_conflicts. Phase 3 remains planned; VoiceOver remains unverified before private release. No merge or Production promotion.

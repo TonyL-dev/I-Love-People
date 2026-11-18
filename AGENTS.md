@@ -2,7 +2,7 @@
 
 Updated November 18, 2026. Read docs/PROJECT.md, docs/IMPLEMENTATION_STATUS.md, docs/ARCHITECTURE.md, docs/DECISIONS.md, and docs/PROJECT_GUIDELINES.md before changes.
 
-This project is a private responsive website with a $0 monthly hosting target. The active roadmap is in docs/PROJECT.md. Implement phases in order when requested. Phase 0 foundation acceptance is met; local checks, GitHub Linux CI, hosted HTTP/database smoke, and local loopback binding pass. Safari review passed by user report. Phase 1 is accepted on the protected Preview; Phase 2 is implemented locally; hosted verification is pending. VoiceOver remains an open pre-release check. Imported resume-project files are preserved in docs/reference as historical reference material. Their implementation claims and commands do not establish this project's state.
+This project is a private responsive website with a $0 monthly hosting target. The active roadmap is in docs/PROJECT.md. Implement phases in order when requested. Phase 0 foundation acceptance is met; local checks, GitHub Linux CI, hosted HTTP/database smoke, and local loopback binding pass. Safari review passed by user report. Phases 1 and 2 are accepted on the protected Preview; Phase 3 remains planned. VoiceOver remains an open pre-release check. Imported resume-project files are preserved in docs/reference as historical reference material. Their implementation claims and commands do not establish this project's state.
 
 Read docs/DESIGN_STANDARDS.md for UI, code, and documentation changes. Apply its typography, semantic tokens, spacing, accessibility, interaction states, and visual review gates from Phase 0. Use local Supabase and synthetic data for repeatable development checks before hosted verification.
 
@@ -62,3 +62,6 @@ Phase 2 hosted rollout, November 18: review branch codex/phase-2-people-meetups 
 
 
 Phase 2 hosted handoff, November 18: CI-passed d377735 is READY at https://i-love-people-c2mef0l08-smooshy.vercel.app. Hosted Alembic 0005, HTTP/deployed API/RLS/conflict and real browser persistence/logout/expiry checks pass; synthetic cleanup is verified and local services are stopped. Draft PR #2 remains open. The user must save the new exact Auth Site URL/reset redirect (AUTH_SETUP.md) and review the new iPhone people/history flows before Phase 2 acceptance. VoiceOver remains a release check. No Phase 3, merge or Production promotion.
+
+
+Phase 2 accepted, November 18, 2026. The user confirmed the new Auth settings and reported all requested people/history checks pass in iPhone Safari and desktop with no screen, keyboard or functional problems. A disposable hosted browser recovery independently passed the exact new Preview redirect, password replacement, old-password and used-link rejection; cleanup passed without sending email. Together with CI/deployed checks for d377735 at https://i-love-people-c2mef0l08-smooshy.vercel.app, this meets Phase 2 gates. VoiceOver remains untested before private release. Do not begin Phase 3 without a request. No merge or Production promotion.

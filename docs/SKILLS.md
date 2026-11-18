@@ -76,3 +76,6 @@ Phase 2 rollout: used Vercel deployment/protected-access and Supabase workflows,
 
 
 Phase 2 hosted completion: authenticated Vercel fetch plus a temporary expiring share link supported the HTTP/API/browser review for CI-passed d377735. The new migration, explicit conflicts, concurrent retries, forced RLS, browser persistence/logout/expiry and cleanup pass. Final SQL confirms zero synthetic users. Temporary token storage was removed and local services stopped. The existing leaked-password warning is unchanged. Auth URL configuration and iPhone/VoiceOver evidence remain user-owned outstanding checks.
+
+
+Phase 2 closure, November 18: reused the previously reviewed Vercel protected-access and managed Supabase/Playwright workflows. The disposable hosted browser recovery passed the new exact origin, replacement-password login and old-password/used-link rejection; account cleanup and temporary token-file removal are verified. Device results and Auth-settings changes are user-reported. This is documentation-only closure; no implementation tests were added or repeated.

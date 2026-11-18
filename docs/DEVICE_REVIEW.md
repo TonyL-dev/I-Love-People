@@ -44,3 +44,6 @@ Use a disposable synthetic account on the new Phase 2 Preview once deployed. Add
 
 
 Phase 2 review target: [https://i-love-people-c2mef0l08-smooshy.vercel.app](https://i-love-people-c2mef0l08-smooshy.vercel.app). On iPhone Safari, sign in and add a disposable person. Log today and a backdated meetup; edit/delete the latest entry and check last seen. Check priority/cadence independence, archive/restore retaining history, then reload/sign in again and verify persistence. Delete the disposable person after reviewing the named confirmation. Report screen/keyboard problems and any failing step; do not send credentials or personal notes. Before testing recovery on this origin, save the exact Site URL and reset redirect in AUTH_SETUP.md. This device review is pending user evidence.
+
+
+Phase 2 user journey report — November 18, 2026. The user confirmed saving the new Auth settings and reported every requested test passed in iPhone Safari and desktop with no screen, keyboard or functional problems. This covers the preceding Phase 2 people/history checklist, including persistence after fresh sign-in and on desktop. The user did not report a new device/OS version or a VoiceOver run. VoiceOver remains unverified before private release.
