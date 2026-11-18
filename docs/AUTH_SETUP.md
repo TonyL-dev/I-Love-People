@@ -50,3 +50,8 @@ Displayed rate limits reported by the user:
 | Minimum interval per user | 60 seconds |
 
 These are reported settings, not load-test results. Reporting an SMS, anonymous or Web3 limit does not enable that feature; initial app use remains email/password with public signup disabled. No paid email service or feature was enabled.
+
+
+## Phase 2 Preview handoff — November 18, 2026
+
+The verified Phase 2 target is [https://i-love-people-c2mef0l08-smooshy.vercel.app](https://i-love-people-c2mef0l08-smooshy.vercel.app), application d377735. In [Auth URL configuration](https://supabase.com/dashboard/project/efuixughigoyyyflyelm/auth/url-configuration), set **Site URL** to `https://i-love-people-c2mef0l08-smooshy.vercel.app` and add **Redirect URL** `https://i-love-people-c2mef0l08-smooshy.vercel.app/reset-password`. Keep the old exact Phase 1 redirect until the new one is verified; add no wildcard. A disposable no-email probe verified the new target is currently absent and falls back to the old origin. Provider configuration is a user action because the connected Supabase tools do not expose these Auth settings. After saving, verify the new-origin recovery journey with a disposable account before treating it as accepted; existing owner-email delivery evidence remains Phase 1 evidence.

@@ -113,3 +113,6 @@ Phase 2 cleanup verification: receipt scrubbing runs only for the calling owner.
 
 
 Phase 2 hosted conflict adapter: Alembic 0005 changes only deliberately raised revision/request conflicts to PostgREST PT409. This preserves invoker permissions, ownership, row locks and request receipts while avoiding hosted retries of serialization errors. Real database serialization failures retain their original meaning.
+
+
+Current Phase 2 runtime: CI-passed d377735 on protected Preview https://i-love-people-c2mef0l08-smooshy.vercel.app, Alembic 0005. Deployed browser/API/Data API checks verify the documented path, including explicit conflicts and account cleanup. Exact Auth URL configuration and new iPhone evidence remain pending; see IMPLEMENTATION_STATUS.md and AUTH_SETUP.md.

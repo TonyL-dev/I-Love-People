@@ -59,3 +59,6 @@ Phase 2 implementation, November 18, 2026. People CRUD/search/archive/restore, p
 
 
 Phase 2 hosted rollout, November 18: review branch codex/phase-2-people-meetups and draft PR #2 are published. Initial commit 7c6e268 passed Linux CI 44396348593; hosted Alembic 0004 and protected Preview deployment succeeded. Hosted conflict checks exposed retries/timeouts for deliberate SQLSTATE 40001 errors. Alembic 0005 and explicit PT409 mapping fix the provider difference; current-source CI and final deployed checks are in progress. No Phase 2 acceptance, merge or Production promotion.
+
+
+Phase 2 hosted handoff, November 18: CI-passed d377735 is READY at https://i-love-people-c2mef0l08-smooshy.vercel.app. Hosted Alembic 0005, HTTP/deployed API/RLS/conflict and real browser persistence/logout/expiry checks pass; synthetic cleanup is verified and local services are stopped. Draft PR #2 remains open. The user must save the new exact Auth Site URL/reset redirect (AUTH_SETUP.md) and review the new iPhone people/history flows before Phase 2 acceptance. VoiceOver remains a release check. No Phase 3, merge or Production promotion.

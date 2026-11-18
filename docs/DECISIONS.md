@@ -99,3 +99,6 @@ Use exact calendar dates, validated both by the service and database against the
 
 
 Hosted conflict behavior, November 18: use explicit PostgREST PT409 for deliberate stale-edit and reused-request conflicts. Hosted calls raising serialization SQLSTATE 40001 timed out during regression; ordinary successful retries and duplicate creation were unaffected. Keep real serialization failures retryable. See [PostgREST custom HTTP errors](https://docs.postgrest.org/en/stable/references/errors.html#raise-errors-with-http-status-codes). A separate Alembic 0005 updates the already-applied 0004 functions without rewriting migration history.
+
+
+Phase 2 hosted evidence confirms explicit PT409 fixes the conflict timeouts without altering ownership or locking. Retain Deployment Protection, Preview-only settings, the draft review branch and separate device evidence. The new exact recovery destination requires a user configuration step because connected Supabase tools do not expose Auth URL settings. Do not broaden the allowlist with wildcards.

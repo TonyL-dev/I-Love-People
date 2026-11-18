@@ -73,3 +73,6 @@ Final Phase 2 local verification: source/build checks, 33 browser regressions, r
 
 
 Phase 2 rollout: used Vercel deployment/protected-access and Supabase workflows, connector Git tree/commit/branch/PR tools and GitHub Linux CI. Current-source publication is review-only. Consulted official PostgREST custom-error documentation after isolating hosted conflict timeouts. Browser inventory was inspected; no native security setting was changed. Auth URL configuration is not exposed by the connected Supabase tools.
+
+
+Phase 2 hosted completion: authenticated Vercel fetch plus a temporary expiring share link supported the HTTP/API/browser review for CI-passed d377735. The new migration, explicit conflicts, concurrent retries, forced RLS, browser persistence/logout/expiry and cleanup pass. Final SQL confirms zero synthetic users. Temporary token storage was removed and local services stopped. The existing leaked-password warning is unchanged. Auth URL configuration and iPhone/VoiceOver evidence remain user-owned outstanding checks.

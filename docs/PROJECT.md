@@ -148,3 +148,6 @@ Phase 2 source is implemented locally: people lifecycle/search, optional priorit
 
 
 Phase 2 hosted progress: source is published in draft PR #2. Initial Linux CI and HTTP/readiness pass, hosted 0004 is applied, and explicit PT409 conflict handling is being verified through forward migration 0005. Final hosted and iPhone evidence remains pending; do not use the first deployment as the device acceptance target.
+
+
+Phase 2 is hosted and verified for CI-passed d377735 on https://i-love-people-c2mef0l08-smooshy.vercel.app. Full results are in IMPLEMENTATION_STATUS.md. Acceptance awaits the new exact Auth URL configuration and iPhone people/history review; VoiceOver remains a pre-release check. Phase 3 is unstarted; no merge or Production promotion.
