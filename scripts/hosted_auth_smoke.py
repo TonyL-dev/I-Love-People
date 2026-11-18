@@ -73,6 +73,7 @@ def main() -> int:
                         "0002_profiles",
                         "0003_profile_timezone",
                         "0004_people_meetups",
+                        "0005_explicit_conflicts",
                     )
                     print("Current hosted Alembic revision:", revision)
             finally:

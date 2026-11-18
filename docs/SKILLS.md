@@ -70,3 +70,6 @@ Phase 1 closure, November 18: used the existing managed-Auth/Playwright workflow
 Read Supabase skill, current changelog and RLS documentation. Retained Alembic migrations as explicitly required by repository instructions. Applied React review guidance and the full-flow verification workflow to browser → Python API → local Data API/Postgres → UI persistence. No delegated agents, new dependencies, telemetry or provider changes. Playwright uses installed Chrome via ILP_BROWSER_EXECUTABLE on this host. Local and hosted evidence remain separate.
 
 Final Phase 2 local verification: source/build checks, 33 browser regressions, real local two-user API/RLS/concurrent-retry checks and live browser persistence/recovery/cleanup pass. Used local image inspection for representative phone, desktop dialog and 200% text screenshots. Hosted and real-device evidence is not inferred.
+
+
+Phase 2 rollout: used Vercel deployment/protected-access and Supabase workflows, connector Git tree/commit/branch/PR tools and GitHub Linux CI. Current-source publication is review-only. Consulted official PostgREST custom-error documentation after isolating hosted conflict timeouts. Browser inventory was inspected; no native security setting was changed. Auth URL configuration is not exposed by the connected Supabase tools.

@@ -44,3 +44,25 @@ def test_future_date_rejected_before_repository_write() -> None:
         )
     assert failure.value.status == 422
     repository.write.assert_not_called()
+
+
+def test_explicit_provider_conflicts_map_to_http_409() -> None:
+    from unittest.mock import patch
+
+    import httpx
+    from ilp.people.repository import PeopleRepository
+
+    account = Identity(
+        owner_id=uuid4(), session_id=uuid4(), email="synthetic@example.test", token="synthetic"
+    )
+    client = httpx.Client(
+        transport=httpx.MockTransport(lambda request: httpx.Response(409, json={"code": "PT409"}))
+    )
+    with (
+        patch("ilp.people.repository.httpx.Client", return_value=client),
+        pytest.raises(JournalFailure) as failure,
+    ):
+        PeopleRepository("https://synthetic.example", "synthetic").write(
+            account, "person_edit", uuid4(), 1, {}
+        )
+    assert failure.value.status == 409

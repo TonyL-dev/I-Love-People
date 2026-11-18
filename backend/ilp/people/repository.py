@@ -33,9 +33,14 @@ class PeopleRepository:
             )
         if response.is_error:
             code = response.json().get("code", "")
-            status = {"P0002": 404, "40001": 409, "23505": 409, "23514": 422, "22007": 422}.get(
-                code, 503
-            )
+            status = {
+                "P0002": 404,
+                "40001": 409,
+                "PT409": 409,
+                "23505": 409,
+                "23514": 422,
+                "22007": 422,
+            }.get(code, 503)
             raise JournalFailure(status)
         return response.json()
 

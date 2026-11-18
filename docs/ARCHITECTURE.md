@@ -110,3 +110,6 @@ The private account screen mounts the people list, profile, editors and confirma
 
 
 Phase 2 cleanup verification: receipt scrubbing runs only for the calling owner. Managed Auth account deletion cascades all owned rows and receipts without running owner-only receipt updates as the provider Auth role. The live browser fixture cleanup verifies this path with an account containing people and meetup history. Private account grid tracks also allow shrinking and long-text wrapping at 200% text size.
+
+
+Phase 2 hosted conflict adapter: Alembic 0005 changes only deliberately raised revision/request conflicts to PostgREST PT409. This preserves invoker permissions, ownership, row locks and request receipts while avoiding hosted retries of serialization errors. Real database serialization failures retain their original meaning.

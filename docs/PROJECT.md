@@ -145,3 +145,6 @@ Verified Phase 1 application candidate, November 18: e60a47f passes both Linux C
 ## Phase 2 implementation progress — November 18, 2026
 
 Phase 2 source is implemented locally: people lifecycle/search, optional priority with confirmed suggestions and independent cadence, dated meetup history/notes, future-date rejection, derived last seen, transactional delete, retry receipts and revision conflicts. See IMPLEMENTATION_STATUS.md for local verification. Phase 2 hosted CI/migration/Preview and new-screen iPhone review remain pending; acceptance is not yet claimed. Phase 3 is unstarted.
+
+
+Phase 2 hosted progress: source is published in draft PR #2. Initial Linux CI and HTTP/readiness pass, hosted 0004 is applied, and explicit PT409 conflict handling is being verified through forward migration 0005. Final hosted and iPhone evidence remains pending; do not use the first deployment as the device acceptance target.
