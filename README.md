@@ -140,3 +140,7 @@ The reported Phase 0 iPhone 16 Pro / iOS 27.2 review passed the non-VoiceOver st
 `scripts/hosted_auth_smoke.py` is restricted to the authorized synthetic Preview project. It reads the ignored database/admin settings and a public `ILP_SUPABASE_PUBLISHABLE_KEY` environment variable. Its optional `--migrate` applies Alembic before running. Actual hosted Auth/Data API and current local ASGI checks pass; it never sends external mail and removes its temporary users. This does not verify a deployed Vercel API or the owner inbox. See [current evidence](docs/IMPLEMENTATION_STATUS.md).
 
 Phase 1 acceptance is recorded in docs/IMPLEMENTATION_STATUS.md. The application remains on the protected Preview; Phase 2 has not started and Production was not promoted.
+
+## Phase 2 local people and history
+
+After `db-start` and `db-check`, run the local API and web tasks as above and sign in with a disposable development account. The private screen supports people, archive/restore, priorities/cadence and meetup history. Local schema upgrades now include Alembic `0004_people_meetups`. `db-check` also checks two-user people/meetup isolation, retries and revision conflicts; `browser-auth` exercises actual persistence across a fresh sign-in and saves synthetic responsive screenshots. On this Windows host set `ILP_BROWSER_EXECUTABLE` to the installed Chrome executable for browser checks. Hosted Phase 2 migration/deployment and real iPhone checks remain pending.

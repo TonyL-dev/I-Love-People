@@ -18,7 +18,7 @@ export class AccountError extends Error {
   }
 }
 
-async function jsonRequest(url: string, init?: RequestInit): Promise<unknown> {
+export async function jsonRequest(url: string, init?: RequestInit): Promise<unknown> {
   const controller = new AbortController();
   const abort = () => controller.abort();
   const timer = window.setTimeout(abort, 10_000);

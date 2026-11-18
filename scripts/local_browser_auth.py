@@ -128,6 +128,7 @@ def main() -> int:
             "browser-start",
             "managed-login",
             "owned-preference",
+            "people-and-meetup-persistence",
             "reload-and-logout",
             "captured-recovery-email",
             "managed-password-reset",
@@ -144,7 +145,8 @@ def main() -> int:
             print("Browser diagnostic flags: " + json.dumps(safe))
             raise RuntimeError("Live journey failed")
         print(
-            "Live browser managed login, owned preference, reload/logout "
+            "Live browser people/meetup persistence, responsive accessibility, "
+            "login, preference, reload/logout "
             "and captured-email password reset passed."
         )
     except Exception as error:

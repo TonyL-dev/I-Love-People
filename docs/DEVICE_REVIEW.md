@@ -36,3 +36,8 @@ VoiceOver/screen-reader review remains open before private release. Desktop Page
 ## Phase 1 owner journey report — November 18, 2026
 
 The user reports the requested iPhone Safari journey passed: owner login, timezone save/reload, sign-out, real reset email arrival, password reset and replacement-password login, with no screen or keyboard problems. Earlier device identification was iPhone 16 Pro / iOS 27.2. This report does not establish a new VoiceOver run; VoiceOver remains explicitly untested before private release.
+
+
+## Phase 2 people/history review — pending
+
+Use a disposable synthetic account on the new Phase 2 Preview once deployed. Add a name-only person, choose/clear priority, explicitly accept a suggested cadence, then change cadence independently. Search and open the person. Log today and a backdated meetup, edit/delete the latest entry, and confirm last seen updates or becomes unknown. Verify archive/restore keeps history and person deletion removes it after confirmation. Reload, sign in again and verify persistence. Try the same record in two tabs to check a stale edit reports a conflict. Review date/note keyboard handling, both appearances, large text, portrait/landscape and VoiceOver modal focus/labels. Report this separately from earlier Phase 0/1 device evidence.

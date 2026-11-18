@@ -6,7 +6,7 @@ Updated November 18, 2026. Phase 0 is accepted. Phase 1 is accepted: source/CI, 
 | --- | --- |
 | 0 Foundation | Accepted; real Safari pass reported, VoiceOver remains a release check |
 | 1 Login and privacy | Accepted on the protected Preview; Production unchanged |
-| 2 People and meetups | Planned |
+| 2 People and meetups | Implemented locally; hosted verification pending |
 | 3 Due list | Planned |
 | 4 PWA and Web Push | Planned, scheduler feasibility pending |
 | 5 Personal release | Planned |
@@ -217,3 +217,12 @@ User-reported evidence: final Preview redirects saved; owner login, timezone sav
 Agent-observed supplementary evidence: a disposable `example.test` account used an administratively generated recovery link (no email sent). Real Chrome followed the hosted verification link to the exact final `/reset-password` path, cleared URL credentials, changed the password through managed Auth, rejected the old password, accepted the replacement and rejected reuse of the link. Browser login/profile requests returned 200 and no page errors were observed. The account was deleted and absence verified; temporary protection-token storage was removed.
 
 Together with source checks, both successful Linux CI runs for e60a47f, deployed API/RLS/revocation and browser expiry checks, this satisfies the written Phase 1 gates. Phase 2 is not started. VoiceOver remains unverified before private release; Production remains unchanged.
+
+
+## Phase 2 local implementation — November 18, 2026
+
+Implemented people add/edit/search/archive/restore/delete, four optional private priorities, explicit cadence suggestions and independently clearable cadence. Person profiles show latest surviving meetup or an unknown-date state. Meetup creation/edit/delete supports exact dates and optional bounded notes, saved-timezone future-date rejection, UTC audits, optimistic revisions and durable account-scoped request receipts. Destructive actions name the affected person and use confirmation dialogs.
+
+Local evidence: source checks cover 61 Python tests and the existing 7 frontend tests; generated OpenAPI contracts include all new routes. The real local two-user API/Data API smoke exercises persistence, backdates, latest-entry edit/delete, retry payload conflicts, parallel duplicate creation, stale revisions, archive retention, owner/foreign-parent checks, direct future-date/revision rejection and cascading cleanup. The real Chrome/Auth/Python/Postgres journey creates a person/meetup and verifies persistence after reload and fresh login, alongside existing captured-email recovery. Its light/dark 320/390/768/1440 reflow and axe checks pass; synthetic screenshots are under artifacts/local/phase2-*.png. Representative phone and dialog screenshots were visually inspected; checkbox alignment was corrected afterward.
+
+Hosted Phase 2 CI, migration and Preview verification have not run. The accepted protected Preview still runs Phase 1 e60a47f. New people/history iPhone Safari evidence and VoiceOver remain unverified. No Phase 3 implementation, merge or Production promotion. Final verification: `scripts/tasks.py check` passes (61 Python tests, 7 frontend tests, lint/types/format/contracts/design checks and production build); all 33 Playwright browser tests pass in installed Chrome. The final live browser/Auth/API/database journey passes including account/data/mail cleanup. Long names, 200% text, keyboard focus and axe pass on the new editor; representative screenshots were inspected. Local Supabase is stopped. Hosted CI/deployment and real-device Phase 2 acceptance remain pending.

@@ -1,6 +1,6 @@
 # Proposed architecture
 
-Updated November 18, 2026. This describes the target architecture and Phase 0/1 source. Hosted Phase 1 acceptance is pending. Current verification status is in IMPLEMENTATION_STATUS.md. Imported architecture history is retained in reference/ARCHITECTURE.md.
+Updated November 18, 2026. This describes the target architecture and Phase 0/1/2 source. Phase 1 is accepted; Phase 2 hosted verification is pending. Current verification status is in IMPLEMENTATION_STATUS.md. Imported architecture history is retained in reference/ARCHITECTURE.md.
 
 ## Implemented foundation
 
@@ -98,3 +98,15 @@ Protected Preview integration, November 18: commit c031afa passed GitHub CI run 
 Current protected runtime, November 18: https://i-love-people-o73m6xnlh-smooshy.vercel.app runs CI-passed e60a47f. Same-origin API/config/health fetches include same-origin hosting cookies so Vercel protection works; managed Supabase calls continue to omit cookies. The API still requires and verifies bearer identity independently. Preview Feedback is disabled to prevent external toolbar injection. Actual deployed API/RLS and browser checks pass, with synthetic cleanup. Owner-email recovery and new-screen real-device evidence remain pending.
 
 Phase 1 accepted, November 18: managed hosted recovery now passes through the verified exact Preview redirect, password replacement, old-password and used-link rejection in a disposable Chrome journey. Real owner email delivery and iPhone account flows pass by user report. This closes Phase 1 runtime acceptance without changing the architecture, managed Auth ownership, memory-only tokens or Production. VoiceOver remains a release check.
+
+
+## Phase 2 implementation — November 18, 2026
+
+`/api/people`, `/api/people/{id}/meetups` and `/api/meetups/{id}` follow router → PeopleService → PeopleRepository. The repository uses only the verified caller token and public provider key. Reads page through records; last seen selects the latest surviving meetup. The account timezone is read through the existing profile repository before completed-date validation.
+
+Alembic `0004_people_meetups` creates people, meetups and request receipts with forced owner/session RLS, owner-consistent composite foreign keys, indexes and UTC audit timestamps. A database trigger also rejects future dates in the saved account timezone and enforces immutable identities, parents and revision increments. The invoker `journal_write` RPC locks affected rows, compares revisions and cascades person deletion transactionally. An account/request advisory lock serializes duplicate meetup creation; changed payloads return conflict. Receipts hold a payload fingerprint and response; editing/deleting a meetup scrubs its original response and later retries conflict. Deleting a person cascades receipts too.
+
+The private account screen mounts the people list, profile, editors and confirmations. All personal state remains in memory and is discarded on session change. Meetup retries retain their exact request key/payload after ambiguous failures. No reminders or Phase 3 calculations are implemented. Hosted Phase 2 rollout is pending; Phase 1 remains the accepted deployed version.
+
+
+Phase 2 cleanup verification: receipt scrubbing runs only for the calling owner. Managed Auth account deletion cascades all owned rows and receipts without running owner-only receipt updates as the provider Auth role. The live browser fixture cleanup verifies this path with an account containing people and meetup history. Private account grid tracks also allow shrinking and long-text wrapping at 200% text size.

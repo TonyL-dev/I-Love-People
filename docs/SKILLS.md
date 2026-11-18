@@ -63,3 +63,10 @@ Protected Preview integration, November 18: commit c031afa passed GitHub CI run 
 Final hosted verification, November 18: used authenticated Vercel tools and a temporary expiring share link without weakening Deployment Protection. Scoped protection access only to the verified Preview origin; Supabase admin requests stayed on the known provider. The ignored HTTPS review harness reused source smoke/ownership checks and drove real Chrome with credentials passed through stdin. HTTP/deployed API/RLS/browser checks pass; temporary users and access-token file were removed. CI 44341998540 passes for e60a47f with 31 browser tests. Real owner-email recovery and iPhone account-screen review await user evidence.
 
 Phase 1 closure, November 18: used the existing managed-Auth/Playwright workflow for a disposable hosted recovery link generated administratively without sending email. Actual redirect, password replacement, old-password and used-link rejection passed; temporary user and protection-token storage were removed. Owner inbox delivery and iPhone screen/keyboard results are separately user-reported. Only documentation changes follow this verification; no implementation tests were added or needlessly repeated. VoiceOver stays unverified for release.
+
+
+## Phase 2 workflow — November 18, 2026
+
+Read Supabase skill, current changelog and RLS documentation. Retained Alembic migrations as explicitly required by repository instructions. Applied React review guidance and the full-flow verification workflow to browser → Python API → local Data API/Postgres → UI persistence. No delegated agents, new dependencies, telemetry or provider changes. Playwright uses installed Chrome via ILP_BROWSER_EXECUTABLE on this host. Local and hosted evidence remain separate.
+
+Final Phase 2 local verification: source/build checks, 33 browser regressions, real local two-user API/RLS/concurrent-retry checks and live browser persistence/recovery/cleanup pass. Used local image inspection for representative phone, desktop dialog and 200% text screenshots. Hosted and real-device evidence is not inferred.

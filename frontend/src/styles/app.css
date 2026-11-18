@@ -680,3 +680,36 @@ textarea {
   min-height: 44px;
   font-weight: 600;
 }
+
+.meetup-note {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+input[type='checkbox'] {
+  width: auto;
+  min-height: auto;
+}
+.checkbox-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 44px;
+}
+.checkbox-row input[type='checkbox'] {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+}
+
+.people-page {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.private-account,
+.private-account .stack {
+  grid-template-columns: minmax(0, 1fr);
+  overflow-wrap: anywhere;
+}
