@@ -3,18 +3,29 @@ import AxeBuilder from '@axe-core/playwright';
 
 const owner = '11111111-1111-4111-8111-111111111111';
 
-async function mockAccount(page: Page, expires = 3600) {
+async function mockAccount(page: Page, expires = 3600, protectedPreview = false) {
   let timezone = 'UTC';
-  await page.route('**/api/auth/config', (route) =>
-    route.fulfill({
+  if (protectedPreview) {
+    await page.context().addCookies([
+      { name: 'preview-protection', value: 'synthetic', url: 'http://127.0.0.1:5173' },
+      { name: 'provider-cookie', value: 'must-not-send', url: 'https://auth.example' },
+    ]);
+  }
+  const hasPreviewAccess = (cookie: string | undefined) =>
+    !protectedPreview || Boolean(cookie?.includes('preview-protection=synthetic'));
+  await page.route('**/api/auth/config', (route) => {
+    if (!hasPreviewAccess(route.request().headers().cookie))
+      return route.fulfill({ status: 401, json: {} });
+    return route.fulfill({
       json: {
         url: 'https://auth.example',
         publishable_key: 'sb_publishable_synthetic',
         minimum_password_length: 12,
       },
-    }),
-  );
+    });
+  });
   await page.route('https://auth.example/auth/v1/**', async (route) => {
+    expect(route.request().headers().cookie).toBeUndefined();
     const headers = {
       'access-control-allow-origin': '*',
       'access-control-allow-headers': 'apikey,content-type,authorization',
@@ -36,11 +47,27 @@ async function mockAccount(page: Page, expires = 3600) {
     });
   });
   await page.route('**/api/profile', async (route) => {
+    if (!hasPreviewAccess(route.request().headers().cookie)) {
+      await route.fulfill({ status: 401, json: {} });
+      return;
+    }
     if (route.request().method() === 'PUT')
       timezone = (route.request().postDataJSON() as { timezone: string }).timezone;
     await route.fulfill({ json: { owner_id: owner, timezone } });
   });
 }
+
+test('Preview protection cookies reach the same-origin API without reaching Auth', async ({
+  page,
+}) => {
+  await mockAccount(page, 3600, true);
+  await page.goto('/');
+  await signIn(page);
+  await expect(page.getByRole('heading', { name: 'Your private space.' })).toBeVisible();
+  await page.getByLabel('Timezone', { exact: true }).fill('America/Toronto');
+  await page.getByRole('button', { name: 'Save timezone' }).click();
+  await expect(page.getByRole('status')).toContainText('Timezone saved');
+});
 
 async function signIn(page: Page) {
   await page.getByLabel('Email', { exact: true }).fill('synthetic@example.test');

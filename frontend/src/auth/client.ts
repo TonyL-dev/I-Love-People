@@ -29,7 +29,9 @@ async function jsonRequest(url: string, init?: RequestInit): Promise<unknown> {
       ...init,
       signal: controller.signal,
       cache: 'no-store',
-      credentials: 'omit',
+      // Same-origin requests may need the host's Preview Protection cookie.
+      // Application identity still requires our in-memory bearer token.
+      credentials: url.startsWith('/') ? 'same-origin' : 'omit',
       redirect: 'error',
     });
     if (!response.ok) {
