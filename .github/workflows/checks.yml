@@ -2,6 +2,7 @@ name: Checks
 on:
   push:
   pull_request:
+  workflow_dispatch:
 permissions:
   contents: read
 concurrency:
@@ -26,6 +27,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: uv run --locked python scripts/tasks.py db-start
       - run: uv run --locked python scripts/tasks.py db-check
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: uv run --locked python scripts/tasks.py browser-auth
       - if: always()
         run: uv run --locked python scripts/tasks.py db-stop
   local-checks:

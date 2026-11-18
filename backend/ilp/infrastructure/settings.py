@@ -12,6 +12,10 @@ class Settings(BaseSettings):
 
     environment: Literal["development", "test", "production"] = "development"
     database_url: SecretStr | None = None
+    supabase_url: str | None = None
+    supabase_publishable_key: str | None = None
+    jwt_audience: str = "authenticated"
+    jwt_algorithms: tuple[str, ...] = ("ES256", "RS256")
 
 
 @lru_cache

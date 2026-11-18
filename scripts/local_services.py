@@ -4,7 +4,11 @@ import json
 import os
 import shutil
 import subprocess
+import sys
+import tomllib
 from pathlib import Path
+
+from distlib.scripts import ScriptMaker, enquote_executable  # type: ignore[import-untyped]
 
 ROOT = Path(__file__).resolve().parents[1]
 NETWORK = "ilp-local"
@@ -40,13 +44,34 @@ def capture(*arguments: str, timeout: int = 30) -> subprocess.CompletedProcess[s
     return subprocess.run(
         command(*arguments),
         cwd=ROOT,
-        env=local_environment(),
+        env=supabase_environment(),
         capture_output=True,
         text=True,
         encoding="utf-8",
         errors="replace",
         timeout=timeout,
     )
+
+
+def supabase_environment() -> dict[str, str]:
+    environment = local_environment()
+    docker = shutil.which("docker", path=environment["PATH"])
+    if not docker:
+        raise RuntimeError("Install/start Docker Desktop before using local Supabase.")
+    directory = ROOT / ".tools/docker-loopback"
+    directory.mkdir(parents=True, exist_ok=True)
+    maker = ScriptMaker(None, str(directory))
+    maker.executable = enquote_executable(sys.executable)
+    maker.variants = {""}
+    maker.clobber = True
+    maker.set_mode = True
+    maker.make("docker = docker_loopback:main")
+    environment["ILP_REAL_DOCKER"] = docker
+    environment["PATH"] = str(directory) + os.pathsep + environment["PATH"]
+    environment["PYTHONPATH"] = (
+        str(ROOT / "scripts") + os.pathsep + environment.get("PYTHONPATH", "")
+    )
+    return environment
 
 
 def manage(action: str) -> None:
@@ -66,7 +91,55 @@ def manage(action: str) -> None:
             "Check Docker's engine and project containers. "
             "Credential-bearing CLI output was withheld."
         )
+    if action == "start":
+        try:
+            verify_loopback_ports()
+        except Exception:
+            stopped = capture("stop", timeout=120)
+            suffix = (
+                "Stack stopped." if stopped.returncode == 0 else "Stop the project stack manually."
+            )
+            raise RuntimeError("Local port isolation could not be verified. " + suffix) from None
     print(f"Local Supabase {action} completed. Credentials were not logged.", flush=True)
+
+
+def verify_loopback_ports() -> None:
+    environment = local_environment()
+    docker = shutil.which("docker", path=environment["PATH"])
+    if not docker:
+        raise RuntimeError("Docker CLI is unavailable.")
+    listed = subprocess.run(
+        [docker, "ps", "-q", "--filter", "label=com.supabase.cli.project=i-love-people"],
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=15,
+    )
+    identifiers = listed.stdout.split()
+    if not identifiers:
+        raise RuntimeError("No project containers are running.")
+    result = subprocess.run(
+        [docker, "inspect", *identifiers, "--format", "{{json .NetworkSettings.Ports}}"],
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=15,
+    )
+    published: set[int] = set()
+    for line in result.stdout.splitlines():
+        ports = json.loads(line)
+        for bindings in ports.values():
+            for binding in bindings or []:
+                if binding["HostIp"] != "127.0.0.1":
+                    raise RuntimeError("A project service is published outside IPv4 loopback.")
+                published.add(int(binding["HostPort"]))
+    config = tomllib.loads((ROOT / "supabase/config.toml").read_text(encoding="utf-8"))
+    expected = {int(config[key]["port"]) for key in ("api", "db", "studio", "local_smtp")}
+    if published != expected:
+        raise RuntimeError("The running stack's ports do not match the project configuration.")
+    print("Verified four published service ports are bound explicitly to 127.0.0.1.", flush=True)
 
 
 def ensure_loopback_network() -> None:
@@ -107,6 +180,7 @@ def ensure_loopback_network() -> None:
 
 
 def status() -> dict[str, str]:
+    verify_loopback_ports()
     result = capture("status", "--output", "json")
     if result.returncode:
         raise RuntimeError("Local Supabase status is unavailable; start the project stack first.")

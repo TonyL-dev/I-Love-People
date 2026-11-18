@@ -1,10 +1,16 @@
 # Proposed architecture
 
-Updated November 17, 2026. This describes the target architecture and the implemented Phase 0 subset. Current verification status is in IMPLEMENTATION_STATUS.md. Imported architecture history is retained in reference/ARCHITECTURE.md.
+Updated November 18, 2026. This describes the target architecture and Phase 0/1 source. Hosted Phase 1 acceptance is pending. Current verification status is in IMPLEMENTATION_STATUS.md. Imported architecture history is retained in reference/ARCHITECTURE.md.
 
 ## Implemented foundation
 
-The repository now contains `frontend/src` (strict React/TypeScript), `backend/ilp` (FastAPI), `api/index.py` (candidate Vercel entrypoint), and `scripts/tasks.py`. The frontend's `/design` routes use synthetic fixtures only. The root/login route renders an unavailable sign-in control rather than simulating identity. Browser storage contains only a non-sensitive appearance preference. There are no application data tables, private endpoints, tokens, external fonts/assets, or telemetry.
+The repository contains strict React/TypeScript, FastAPI, generated OpenAPI contracts, Alembic and a Vercel entrypoint. `/design` uses synthetic fixtures. Root/login, forgotten-password, reset-password and private account-preference screens use managed Supabase Auth. Only appearance is persisted in browser storage; access tokens, account state and drafts stay in tab memory. Refresh tokens are discarded. There are no external fonts/assets or telemetry.
+
+`/api/auth/config` exposes only the validated provider URL, public key and password guidance. `/api/profile` follows router → AuthService/ProfileService → repositories. JWT verification restricts algorithms, issuer, audience, expiry, subject and session ID using provider JWKS. Current provider identity and a server-only read of Auth session/account state must also succeed; outages fail closed. The app never modifies managed Auth tables or stores passwords.
+
+Profile repositories use the caller's verified bearer token and public key through the Data API. Alembic revisions `0002_profiles` and `0003_profile_timezone` add one profile per Auth user, forced owner RLS and timezone validation for API and direct Data API writes. A private no-argument SECURITY DEFINER function with empty search path checks only the calling JWT's active session/account, closing the direct Data API post-logout window. Execution is granted only to authenticated users. Other application data queries never use the privileged SQL credential.
+
+The typed REST adapter delegates credential verification/reset to managed Auth and strips recovery credentials from the URL before rendering or account requests. Expiry, account changes and logout unmount private state and abort reads. Global logout clears local credentials even if offline and reports server revocation as unconfirmed when it fails. Bounded requests, generic errors and no-store avoid exposing provider details. There is no private offline cache.
 
 The implemented request path is `/api/health` or `/api/ready` → health router → HealthService → HealthRepository. Liveness reads no data. Readiness delegates `SELECT 1` to DatabaseHealthRepository, returns a generic 503 on failure, and exposes no credentials. The readiness repository's database credential is server-only and scoped to this infrastructure probe, not a future application-data access path. Future people/meetup repositories must use verified user-scoped credentials as specified below. API responses use `no-store`; the local API runner disables access logging.
 
@@ -65,9 +71,24 @@ In Phase 4, select a durable scheduler only after verifying free quotas and real
 
 Supabase Free can pause on inactivity. Plan for recovery and manual portable exports. Private records are available online after authentication. A later service worker caches only public assets. Browser offline editing and synchronization require a separate design.
 
-Official platform references and cost caveats are recorded in PROJECT.md. Runtime authentication, RLS, CI, deployments, restore, and iPhone delivery are all pending implementation and verification.
+Official platform references and cost caveats are recorded in PROJECT.md. Runtime authentication and RLS pass local integration checks. Hosted Phase 1, restore and iPhone push delivery remain unverified.
 
 
 Documentation organization uses docs/ for active specifications and reference/ for imported historical material. The repository-root AGENTS.md points to these specifications.
 
 Interface planning is recorded in [INTERACTION_SPEC.md](INTERACTION_SPEC.md). Its conversation preview uses synthetic browser-memory state and simulated account/push/backup actions. It introduces no application runtime, provider connection, storage architecture, or change to the React/TypeScript and Python boundaries above.
+
+
+## Verified foundation and current Phase 1 boundary — November 18, 2026
+
+Docker publications are explicitly bound to 127.0.0.1 before container creation by a project-scoped adapter and checked on start/status. Synthetic startup/restart, database/Auth checks and host loopback/non-loopback probes pass. `scripts/hosted_smoke.py` verifies HTTPS headers, assets, SPA/API routing, no-store and database readiness; mock transports only test the checker.
+
+The isolated Supabase Free project `i-love-people-preview` (`efuixughigoyyyflyelm`) is in Smooshy, Canada Central. The Session pooler SSL database URL is ignored locally and stored only as a sensitive Vercel Preview setting. Alembic baseline and readiness passed on protected Preview `https://i-love-people-9xnbgkdx9-smooshy.vercel.app` for CI-passed `34305ba`. Node 24 is configured. Production was not promoted. Deployment Protection remains enabled; authenticated Vercel fetch verified the request path without weakening protection.
+
+Phase 1 source passes real local Auth/browser recovery and API/RLS ownership/revocation checks. Its hosted migrations and runtime settings are not yet applied, and hosted Auth setup is pending in AUTH_SETUP.md. The admin test key is excluded from the application runtime. Real-device Phase 0 Safari results are user-reported; VoiceOver is untested.
+
+Phase 1 handoff, November 18: local review branch `codex/phase-1-login-privacy` is not published. The connected GitHub integration rejected tree publication with HTTP 403 (Resource not accessible by integration), so current-source hosted CI is pending. Supabase setup and owner-email recovery in AUTH_SETUP.md remain required. Local verification passed; hosted Phase 1 acceptance is not claimed.
+
+Hosted Auth follow-up, November 18: Alembic through 0003_profile_timezone is applied on the isolated Preview. Current source via local ASGI plus actual hosted Auth/Data API passes identity/RLS/revocation tests. JWT verification allows five seconds of clock skew, with future/expired-token regressions. Vercel Preview-only public URL/key and production-mode validation settings are stored; the admin test key remains local. Phase 1 Vercel deployment and actual owner-email recovery remain unverified because GitHub publication is blocked.
+
+GitHub follow-up, November 18: user reconnection restored connector writes; a tree-write probe passed. Publishing the review branch and verifying CI/Preview are in progress. No Phase 1 acceptance is inferred before those and owner-email recovery pass.

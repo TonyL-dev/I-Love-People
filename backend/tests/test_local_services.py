@@ -8,6 +8,7 @@ from local_services import manage
 def test_start_never_prints_supabase_credentials(capsys: pytest.CaptureFixture[str]) -> None:
     with (
         patch("local_services.ensure_loopback_network"),
+        patch("local_services.verify_loopback_ports"),
         patch(
             "local_services.capture",
             return_value=subprocess.CompletedProcess(

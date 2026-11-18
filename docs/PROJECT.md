@@ -1,6 +1,6 @@
 # I Love People project plan
 
-Updated November 17, 2026. This document defines the implementation roadmap. Phase 0 is in progress, with local frontend/backend source and development checks. See [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for evidence and outstanding gates.
+Updated November 18, 2026. This document defines the implementation roadmap. Phase 0 is accepted. Phase 1 source and local integration checks are complete; hosted acceptance is pending. See [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for evidence and outstanding gates.
 
 ## Goal and scope
 
@@ -22,13 +22,13 @@ The proposed interface is outlined in [INTERACTION_SPEC.md](INTERACTION_SPEC.md)
 | Address and HTTPS | Provider subdomain and managed TLS | $0 |
 | Push delivery | Web Push, with scheduling evaluated in Phase 4 | $0 target, subject to verified runtime limits |
 
-These are planning estimates checked November 17, 2026. Vercel Hobby requires personal, non-commercial use. Supabase Free includes a 500 MB database and can pause after a week of inactivity. Free service limits and availability can change. Plan for manual unpause and maintain a portable export. A custom domain is optional and adds a renewal cost. Provider account setup and any deployment are future work.
+These are planning estimates checked November 17, 2026. Vercel Hobby requires personal, non-commercial use. Supabase Free includes a 500 MB database and can pause after a week of inactivity. Free service limits and availability can change. Plan for manual unpause and maintain a portable export. A custom domain is optional and adds a renewal cost. An isolated synthetic Supabase Free project and protected Vercel Preview are configured; Production was not promoted.
 
 Sources are [Vercel Hobby](https://vercel.com/docs/plans/hobby), [FastAPI deployment](https://vercel.com/docs/frameworks/backend/fastapi), [Supabase pricing](https://supabase.com/pricing), [project pausing](https://supabase.com/docs/guides/platform/free-project-pausing), and [GitHub included usage](https://docs.github.com/en/billing/reference/product-usage-included).
 
 ## Phase 0 — Foundation and deployability
 
-Current progress: the mockup has become a React/TypeScript synthetic component reference with the specified tokens and shared controls. A Python health/readiness API, generated contracts, locked dependencies, task runner, CI checks definition, Alembic baseline, local Supabase configuration, and candidate Vercel routing are present. Docker is installed and local database/Auth smoke, migration repeatability, database-backed API readiness, captured recovery links, and cleanup passed. Effective local port binding, hosted CI, trusted deployment setup, and preview smoke remain pending. Phase 0 is not complete, and no personal records are exposed.
+Current progress: foundation source, local setup/checks, GitHub CI for `34305ba`, hosted HTTP/database smoke and Docker loopback isolation pass. The user reports the non-VoiceOver Safari checklist passed on iPhone 16 Pro / iOS 27.2. Written Phase 0 acceptance is met; VoiceOver remains an unverified pre-release check. The existing hosted deployment is synthetic.
 
 - Establish design tokens, foundational styles, and a synthetic component reference following [DESIGN_STANDARDS.md](DESIGN_STANDARDS.md). Include light/dark appearance, typography, spacing, states, and responsive review from the beginning. Apply its code and documentation standards throughout every phase.
 - Configure local Supabase through its CLI and a Docker-compatible runtime, with synthetic accounts, locally captured recovery emails, and isolated PostgreSQL/Auth/Data API services. Test core flows locally before connecting a hosted project. Track hosted acceptance separately.
@@ -41,6 +41,8 @@ Current progress: the mockup has become a React/TypeScript synthetic component r
 Acceptance requires a reproducible local setup, passing checks, and a recorded hosted smoke result. A local build alone leaves the hosted gate pending. Phase 0 deploys no personal records.
 
 ## Phase 1 — Login and private data boundary
+
+Current progress: managed login/recovery, memory-only sessions, API identity/session verification and an owned timezone profile with RLS are implemented. Source checks, 30 browser tests, real local browser recovery and two-user API/Data API isolation/revocation pass. Hosted provider setup, CI/deployment of this source, hosted security checks and actual owner-email recovery remain pending; follow [AUTH_SETUP.md](AUTH_SETUP.md). Phase 1 is not accepted.
 
 - Configure Supabase Auth. Provision the first owner account through administrative setup and disable public signups for initial personal use.
 - Build login, logout, forgotten-password, reset-password, expired-session, and recovery error flows. Use Supabase's password storage and reset mechanisms. Configure a strong password policy and provider rate limits.
@@ -104,3 +106,33 @@ Before ending work, update ../AGENTS.md, ARCHITECTURE.md, IMPLEMENTATION_STATUS.
 
 
 Active project documentation now lives together in docs/. The documentation index is README.md in this folder; repository instructions remain at ../AGENTS.md.
+
+## Hosted-gate sequencing confirmation — November 17, 2026
+
+After requesting Phase 1, the user explicitly chose to finish Phase 0 hosted gates first. Phase 1 remains planned. The repository now includes a read-only `hosted-smoke` task and manual checks workflow dispatch; hosted CI is now verified for commit `34305ba`, while an isolated synthetic preview still requires Vercel/Supabase access. These tools do not satisfy acceptance until run against the hosted environment with recorded results.
+
+## Hosted provisioning progress — November 17, 2026
+
+The $0/month synthetic Supabase preview `i-love-people-preview` is created in Smooshy / Canada Central and healthy. A control-plane SQL probe passed; no application schema migration, hosted Auth verification, Vercel preview, or cross-provider connectivity check has run. Vercel is connected on Hobby, but Smooshy project access still returns 403 after reported team consent; a fresh consent flow is pending. Phase 0 remains in progress and Phase 1 remains planned.
+
+## Preview smoke progress — November 17, 2026
+
+Vercel team access is resolved. A synthetic Preview from CI-passed commit `34305ba` is READY using Node 24. HTTPS, assets, SPA deep links, headers, Python health, and API 404/no-store behavior pass. Database readiness still returns 503 with no connection setting. Awaiting secure database credential provisioning, Alembic application, and a repeated hosted readiness/smoke check. Local network isolation and device evidence remain pending; Phase 0 is not accepted and Phase 1 is unstarted.
+
+Hosted connection follow-up, November 18, 2026. The supplied direct preview URL passed format/project/SSL validation but its hostname failed local DNS resolution (11001). Alembic did not reach the database and no Vercel secret was configured. Requested the full Session pooler URI in ignored `.env.preview`; credentials were not printed. Existing architecture and phase sequencing are unchanged; hosted readiness remains pending.
+
+## Hosted foundation gates verified — November 18, 2026
+
+GitHub Linux CI and [the synthetic Node 24 Preview](https://i-love-people-9xnbgkdx9-smooshy.vercel.app) pass for commit `34305ba`. Alembic baseline repeatability, migration metadata isolation, asset delivery, SPA deep links, same-origin Python health/readiness, HTTPS/security headers, and API 404/no-store behavior are verified. The runtime URL is a sensitive Preview-only variable. No production release occurred. Phase 0 remains in progress for measured local port isolation and the outstanding device/accessibility review; Phase 1 remains unstarted. The locally added hosted-smoke/manual-dispatch tooling is not yet pushed or covered by that hosted commit.
+
+## Local isolation and device handoff — November 18, 2026
+
+Explicit project-scoped Docker port binding is implemented and verified across two startup cycles, with database/Auth regressions passing. Windows listeners are loopback-only and same-host non-loopback probes are rejected. See IMPLEMENTATION_STATUS.md for exact evidence. The new launcher/tests/tooling remain local and are not covered by the earlier hosted CI commit. Phase 0 remains in progress for device/accessibility review; Phase 1 remains unstarted. Follow DEVICE_REVIEW.md on a real iPhone before recording that evidence.
+
+Device evidence and sequencing, November 18, 2026. November 18, 2026: user-reported pass on iPhone 16 Pro, iOS 27.2, for all non-VoiceOver steps in DEVICE_REVIEW.md. VoiceOver was explicitly not tested. This is user-reported device evidence, not an agent-observed session. The written Phase 0 acceptance (reproducible local foundation, passing checks, recorded hosted smoke) is satisfied; device Safari review is additionally reported passed. VoiceOver is carried as an unverified pre-release accessibility check under DESIGN_STANDARDS.md, not silently marked passed. Earlier statements treating VoiceOver as a prerequisite for Phase 1 were too strict. Phase 1 implementation now begins under the original user request.
+
+Phase 1 handoff, November 18: local review branch `codex/phase-1-login-privacy` is not published. The connected GitHub integration rejected tree publication with HTTP 403 (Resource not accessible by integration), so current-source hosted CI is pending. Supabase setup and owner-email recovery in AUTH_SETUP.md remain required. Local verification passed; hosted Phase 1 acceptance is not claimed.
+
+Phase 1 hosted-service progress, November 18: signup/anonymous denial, password rules, Alembic through 0003_profile_timezone and two-user hosted Auth/Data API isolation/revocation with local ASGI pass. Public Auth settings are stored only for Preview. GitHub write authentication still blocks current-source CI/deployment. Deployed browser/API checks, owner-email recovery, actual provider-limit values and account-screen device review remain pending. Phase 1 acceptance is unchanged.
+
+GitHub follow-up, November 18: user reconnection restored connector writes; a tree-write probe passed. Publishing the review branch and verifying CI/Preview are in progress. No Phase 1 acceptance is inferred before those and owner-email recovery pass.

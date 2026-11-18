@@ -2,7 +2,7 @@
 
 A private, responsive place to remember when you last met someone and make time for next time.
 
-Phase 0 is in progress. The React/TypeScript foundation and Python health API run locally. The approved design is implemented as an explicitly synthetic component reference; account authentication and personal-data features are not connected yet.
+Phase 0 is accepted. Phase 1 login, recovery, memory-only sessions, and an owned timezone preference are implemented and verified locally with managed Supabase Auth. Hosted Phase 1 acceptance is pending provider configuration and verification; see [setup steps](docs/AUTH_SETUP.md). People and meetup persistence remain Phase 2 work. The `/design` reference remains explicitly synthetic.
 
 ## Start locally on Windows
 
@@ -25,7 +25,7 @@ Use two terminals, both at the repository root:
 .venv\Scripts\python.exe scripts/tasks.py web
 ```
 
-Open [the sample application](http://127.0.0.1:5173/design), [sign-in layout](http://127.0.0.1:5173/), or [component reference](http://127.0.0.1:5173/design/components). The sample uses November 17, 2026 and synthetic people. A sample save stores no record. Sign-in is deliberately unavailable until managed authentication is implemented. Appearance is the only preference saved in browser storage.
+Open [the sample application](http://127.0.0.1:5173/design), [sign-in layout](http://127.0.0.1:5173/), or [component reference](http://127.0.0.1:5173/design/components). The sample uses November 17, 2026 and synthetic people. A sample save stores no record. The plain `api` command leaves sign-in unavailable unless Auth settings are supplied. For real local authentication, start Supabase and run `db-check`, then replace Terminal 1's command with `scripts/tasks.py api-local`. Appearance is the only preference saved in browser storage; auth tokens and account drafts stay in tab memory.
 
 The website proxies `/api` to Python on port 8000. [Liveness](http://127.0.0.1:5173/api/health) proves the API is responding. `/api/ready` additionally requires a working PostgreSQL connection and returns a generic 503 otherwise.
 
@@ -42,7 +42,7 @@ uv run --locked python scripts/tasks.py api
 uv run --locked python scripts/tasks.py web
 ```
 
-The Linux workflow is configured in GitHub Actions but has not yet run on GitHub. The Python task runner checks Node/pnpm versions and resolves the portable Windows tools automatically when present.
+The Linux [Checks workflow](https://github.com/TonyL-dev/I-Love-People/actions/runs/44232670563) passed for commit `34305ba`, including source/browser checks and Docker-backed database/Auth checks. The new hosted-smoke tooling is locally verified but not yet pushed. The Python task runner checks Node/pnpm versions and resolves the portable Windows tools automatically when present.
 
 ## Browser checks
 
@@ -73,7 +73,7 @@ Docker Desktop is installed and the local database/Auth checks have passed on th
 .venv\Scripts\python.exe scripts/tasks.py db-stop
 ```
 
-The configuration uses PostgreSQL 17, Auth, the Data API, local Studio on port 54323, and captured mail on port 54324. Public signup and analytics are disabled. Supabase schema migration/seed execution is disabled because Alembic owns application migrations. The baseline contains no personal-data tables and does not modify the managed Auth schema.
+The configuration uses PostgreSQL 17, Auth, the Data API, local Studio on port 54323, and captured mail on port 54324. Public signup and analytics are disabled. Supabase schema migration/seed execution is disabled because Alembic owns application migrations. Application migrations add an owner-scoped timezone profile with RLS; Alembic never modifies managed Auth tables.
 
 The tasks detect standard Windows Docker installation paths and capture CLI credentials without printing them. `db-check` obtains local credentials in process memory, applies the baseline twice, verifies database-backed API readiness and migration-metadata isolation, and runs the two-user Auth/recovery check. No credential file or copied keys are needed. To run only the Auth check:
 
@@ -81,11 +81,11 @@ The tasks detect standard Windows Docker installation paths and capture CLI cred
 .venv\Scripts\python.exe scripts/local_auth_smoke.py
 ```
 
-The Auth script generates passwords in memory, verifies two distinct logins, opens the locally captured recovery emails, changes passwords, checks rejection of old passwords and used links, submits logout, verifies blocked signup, and removes its temporary accounts/messages. Application ownership/RLS and session revocation enforcement still belong to Phase 1.
+The Auth script generates passwords in memory, verifies two distinct logins, opens the locally captured recovery emails, changes passwords, checks rejection of old passwords and used links, submits logout, verifies blocked signup, and removes its temporary accounts/messages. `db-check` additionally verifies API JWT validation, two-user API/Data API ownership, direct-write timezone constraints, logout revocation, and disabled-account rejection.
 
 For the standalone API's database readiness outside `db-check`, create a server-only local environment file from `.env.example` if one does not already exist. Then `scripts/tasks.py migrate` applies the baseline using that environment. Preserve any existing local configuration.
 
-`db-start` requests loopback binding through a dedicated `ilp-local` Docker network. The installed Docker Desktop still reported published ports on all interfaces despite this option. Use synthetic data and stop the stack after checks until effective binding is resolved before personal-data use. See the implementation status for this measured limitation.
+`db-start` publishes the API (54321), PostgreSQL (54322), Studio (54323), and captured mail (54324) explicitly on `127.0.0.1`. A project-scoped Docker launcher supplies these addresses before container creation because Docker Desktop ignored the network default. Startup and local credential reads verify the effective bindings; startup stops the stack if verification fails. The launcher is generated under ignored `.tools/docker-loopback` using the locked development dependency `distlib`. It affects only the Supabase subprocess environment and does not change global Docker, PATH, or firewall settings. Keep development data synthetic and stop services after checks.
 
 ## Contracts and checks
 
@@ -100,8 +100,41 @@ Regenerate contracts whenever the API changes. The check task verifies Python fo
 
 ## Deployment status
 
-`vercel.json` and `api/index.py` prepare the Vite site and Python function for a future Vercel preview. The proposed rewrites keep `/api` separate from SPA deep links. Hosted routing, package installation, HTTPS, security headers and database connectivity have not been verified. No hosted project or deployment has been created. GitHub checks receive no deployment credentials; a trusted deployment job will be added when the preview environment is configured.
+[The synthetic Vercel Preview](https://i-love-people-9xnbgkdx9-smooshy.vercel.app) is READY for CI-passed commit `34305ba`, with Node 24. Hosted HTTPS, SPA routing, assets, security headers, Python health/database readiness, API 404 routing, and no-store pass through authenticated access. Alembic `0001_foundation` applied twice to the isolated hosted database. The connection URL is a sensitive Preview-only variable; Production was not promoted or configured. Deployment Protection remains enabled. Local port isolation is now verified. The user reports non-VoiceOver Phase 0 Safari review passed; VoiceOver and current Phase 1 hosted verification remain pending. See the implementation status for exact evidence.
 
 ## Project documents
 
 See the [documentation index](docs/README.md), [roadmap](docs/PROJECT.md), [design standards](docs/DESIGN_STANDARDS.md), [interaction specification](docs/INTERACTION_SPEC.md), and [verified implementation status](docs/IMPLEMENTATION_STATUS.md). Imported historical documents remain unchanged in `docs/reference/`.
+
+## Hosted Phase 0 smoke
+
+After the checks workflow succeeds on GitHub, configure an isolated synthetic Vercel preview and Supabase database. Keep `ILP_DATABASE_URL` in the preview project’s server-only secret settings. Apply the foundation migration with a trusted server-side environment before checking readiness. Never use a production database for this preview.
+
+Run from the repository root with the locked development dependencies installed:
+
+```powershell
+$env:ILP_PREVIEW_URL = 'https://your-preview.vercel.app'
+.venv/Scripts/python.exe scripts/tasks.py hosted-smoke
+```
+
+The command verifies HTTPS, baseline headers, built assets, SPA deep links, Python health/readiness, no-store, and unknown API routing. Redirects and deployment login pages fail the check. Use an accessible synthetic preview; do not put bypass secrets in the URL. Record the tested commit, deployment URL, GitHub run URL, time, and output in `docs/IMPLEMENTATION_STATUS.md`. The script’s mock tests are tooling evidence only. Browser/device review and local network binding remain separate evidence. The Checks workflow also supports manual dispatch after this revision is pushed.
+
+## Real iPhone review
+
+Follow [the Phase 0 device checklist](docs/DEVICE_REVIEW.md) in iPhone Safari. It covers light/dark appearance, rotation, Page Zoom, software keyboard, safe areas, and VoiceOver. Send back the iPhone model, iOS version, and the exact steps that passed or failed. The Phase 0 hosted reference remains synthetic; its app sign-in is unavailable.
+
+## Real local account journey
+
+With Supabase running and migrations applied, run:
+
+```powershell
+.venv/Scripts/python.exe scripts/tasks.py browser-auth
+```
+
+This starts temporary API/Vite servers if needed and tests actual login, preference persistence, reload, logout, captured-mail recovery, and replacement-password login. Disposable credentials travel through process memory/stdin; no credential-bearing traces or screenshots are recorded. Accounts/mail and owned servers are cleaned up. Use local Studio to provision a separate synthetic account for manual development and captured mail for recovery links.
+
+The reported Phase 0 iPhone 16 Pro / iOS 27.2 review passed the non-VoiceOver steps. VoiceOver and the new Phase 1 account screens still need device evidence before private release.
+
+## Hosted account regression
+
+`scripts/hosted_auth_smoke.py` is restricted to the authorized synthetic Preview project. It reads the ignored database/admin settings and a public `ILP_SUPABASE_PUBLISHABLE_KEY` environment variable. Its optional `--migrate` applies Alembic before running. Actual hosted Auth/Data API and current local ASGI checks pass; it never sends external mail and removes its temporary users. This does not verify a deployed Vercel API or the owner inbox. See [current evidence](docs/IMPLEMENTATION_STATUS.md).

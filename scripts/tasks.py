@@ -105,14 +105,17 @@ def main() -> int:
         choices=[
             "check",
             "api",
+            "api-local",
             "web",
             "contracts",
             "contracts-check",
             "browser",
+            "browser-auth",
             "db-start",
             "db-check",
             "db-stop",
             "migrate",
+            "hosted-smoke",
         ],
     )
     args = parser.parse_args()
@@ -122,7 +125,16 @@ def main() -> int:
         match args.task:
             case "check":
                 check()
-            case "api":
+            case "api" | "api-local":
+                if args.task == "api-local":
+                    from local_services import status
+
+                    local = status()
+                    os.environ["ILP_DATABASE_URL"] = local["DB_URL"].replace(
+                        "postgresql://", "postgresql+psycopg://", 1
+                    )
+                    os.environ["ILP_SUPABASE_URL"] = "http://127.0.0.1:54321"
+                    os.environ["ILP_SUPABASE_PUBLISHABLE_KEY"] = local["ANON_KEY"]
                 run(
                     sys.executable,
                     "-m",
@@ -141,6 +153,8 @@ def main() -> int:
                 contracts(check=args.task == "contracts-check")
             case "browser":
                 pnpm("run", "test:browser")
+            case "browser-auth":
+                run(sys.executable, "scripts/local_browser_auth.py")
             case "db-start":
                 local_services("start")
             case "db-stop":
@@ -149,6 +163,8 @@ def main() -> int:
                 run(sys.executable, "scripts/local_database_smoke.py")
             case "migrate":
                 run(sys.executable, "-m", "alembic", "upgrade", "head")
+            case "hosted-smoke":
+                run(sys.executable, "scripts/hosted_smoke.py")
     except (RuntimeError, subprocess.CalledProcessError) as error:
         print(str(error), file=sys.stderr)
         return 1
