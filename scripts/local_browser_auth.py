@@ -129,6 +129,7 @@ def main() -> int:
             "managed-login",
             "owned-preference",
             "people-and-meetup-persistence",
+            "due-nudges",
             "reload-and-logout",
             "captured-recovery-email",
             "managed-password-reset",
@@ -140,12 +141,13 @@ def main() -> int:
             diagnostics = report.get("diagnostics", {})
             safe = {
                 key: diagnostics.get(key)
-                for key in ("navigation", "loginStatus", "profileStatus", "pageError")
+                for key in ("navigation", "loginStatus", "profileStatus", "pageError", "nudgeStep")
             }
             print("Browser diagnostic flags: " + json.dumps(safe))
             raise RuntimeError("Live journey failed")
         print(
-            "Live browser people/meetup persistence, responsive accessibility, "
+            "Live browser due/snooze/dismiss/pause/new-meetup cycle, weekly review, "
+            "people/meetup persistence, responsive accessibility, "
             "login, preference, reload/logout "
             "and captured-email password reset passed."
         )

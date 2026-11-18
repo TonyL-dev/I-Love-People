@@ -7,7 +7,7 @@ Updated November 18, 2026. Phase 0 is accepted. Phase 1 is accepted: source/CI, 
 | 0 Foundation | Accepted; real Safari pass reported, VoiceOver remains a release check |
 | 1 Login and privacy | Accepted on the protected Preview; Production unchanged |
 | 2 People and meetups | Accepted on the protected Preview; iPhone/desktop pass reported |
-| 3 Due list | Planned |
+| 3 Due list | Implemented locally; hosted and device verification pending |
 | 4 PWA and Web Push | Planned, scheduler feasibility pending |
 | 5 Personal release | Planned |
 | 6 Enhancements | Backlog |
@@ -243,3 +243,14 @@ The user confirmed the new Supabase Auth URL settings and reported every request
 An independent disposable Chrome recovery on [https://i-love-people-c2mef0l08-smooshy.vercel.app](https://i-love-people-c2mef0l08-smooshy.vercel.app) passed the actual hosted reset redirect, password replacement, rejection of the old password and rejection of the used link. Login/profile returned 200, no page errors were observed, and the synthetic account was deleted with absence verified. No test email was sent. Temporary protection-token storage was removed.
 
 Combined with both successful Linux CI jobs in [run 44398237798](https://github.com/TonyL-dev/I-Love-People/actions/runs/44398237798), 62 Python/7 frontend/33 browser tests, deployed API/Data API isolation/concurrency/privacy checks and live browser persistence for application d377735, this satisfies Phase 2 acceptance. Alembic remains at 0005_explicit_conflicts. Phase 3 remains planned; VoiceOver remains unverified before private release. No merge or Production promotion.
+
+
+## Phase 3 local implementation - November 18, 2026
+
+Implemented calendar days/weeks/months with month-end clamping, due-now/inclusive-seven-day/later/unknown states, deterministic priority/date/name/ID ordering, durable snooze/dismiss/pause/unpause and weekly due reasons. Cadence remains independently editable. Profiles retain the original catch-up date. Archive/pause and missing history suppress recurring nudges. Advancing latest dates and final-meetup removal atomically clear snooze/dismiss; older entries and note-only edits preserve them. Reads recalculate eligibility across fresh service instances.
+
+Local source checks pass (83 Python and 7 frontend tests, Ruff/mypy/ESLint/TypeScript, generated-contract drift, token contrast and production build); 33 browser regressions pass in installed Chrome. Real local Alembic 0006 repeat-upgrade/readiness/Auth/two-user API/Data API checks cover preferences, conflicts and cycle resets. The actual Maya browser journey passes due, snooze with unchanged due date, weekly review, pause/unpause, dismissal and a newer meetup clearing snooze/dismiss. Reload/login, history persistence, logout and captured-email recovery remain covered. Disposable users/mail and owned review servers are cleaned up.
+
+Visual evidence includes synthetic 320/390/768/1440 px light/dark screenshots, reduced motion, axe checks and 200% text reflow. Representative phone and enlarged review images were inspected. Review found a fixed-offset skip link peeking over the header with enlarged text; it now hides by its own height. A real sequential-action race was corrected by applying the confirmed API state before enabling controls.
+
+Hosted exact-source CI, migration/deployment/API/browser verification and new iPhone Safari review remain pending. VoiceOver remains untested before private release. No Phase 3 acceptance, Phase 4, merge or Production promotion is claimed.

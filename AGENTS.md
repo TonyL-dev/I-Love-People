@@ -2,7 +2,7 @@
 
 Updated November 18, 2026. Read docs/PROJECT.md, docs/IMPLEMENTATION_STATUS.md, docs/ARCHITECTURE.md, docs/DECISIONS.md, and docs/PROJECT_GUIDELINES.md before changes.
 
-This project is a private responsive website with a $0 monthly hosting target. The active roadmap is in docs/PROJECT.md. Implement phases in order when requested. Phase 0 foundation acceptance is met; local checks, GitHub Linux CI, hosted HTTP/database smoke, and local loopback binding pass. Safari review passed by user report. Phases 1 and 2 are accepted on the protected Preview; Phase 3 remains planned. VoiceOver remains an open pre-release check. Imported resume-project files are preserved in docs/reference as historical reference material. Their implementation claims and commands do not establish this project's state.
+This project is a private responsive website with a $0 monthly hosting target. The active roadmap is in docs/PROJECT.md. Implement phases in order when requested. Phase 0 foundation acceptance is met; local checks, GitHub Linux CI, hosted HTTP/database smoke, and local loopback binding pass. Safari review passed by user report. Phases 1 and 2 are accepted on the protected Preview; Phase 3 is implemented locally with hosted verification in progress. VoiceOver remains an open pre-release check. Imported resume-project files are preserved in docs/reference as historical reference material. Their implementation claims and commands do not establish this project's state.
 
 Read docs/DESIGN_STANDARDS.md for UI, code, and documentation changes. Apply its typography, semantic tokens, spacing, accessibility, interaction states, and visual review gates from Phase 0. Use local Supabase and synthetic data for repeatable development checks before hosted verification.
 
@@ -65,3 +65,6 @@ Phase 2 hosted handoff, November 18: CI-passed d377735 is READY at https://i-lov
 
 
 Phase 2 accepted, November 18, 2026. The user confirmed the new Auth settings and reported all requested people/history checks pass in iPhone Safari and desktop with no screen, keyboard or functional problems. A disposable hosted browser recovery independently passed the exact new Preview redirect, password replacement, old-password and used-link rejection; cleanup passed without sending email. Together with CI/deployed checks for d377735 at https://i-love-people-c2mef0l08-smooshy.vercel.app, this meets Phase 2 gates. VoiceOver remains untested before private release. Do not begin Phase 3 without a request. No merge or Production promotion.
+
+
+Phase 3 local implementation, November 18, 2026. Calendar due dates, timing/priority ordering, in-app snooze/dismiss/pause controls and weekly review are implemented. Alembic 0006 adds preferences to the existing forced-RLS people row, with invoker RPC revision checks and atomic meetup-cycle resets. Local source, real database/two-user and browser evidence is recorded in docs/IMPLEMENTATION_STATUS.md. Hosted verification is in progress; no Phase 3 acceptance, Phase 4, merge or Production promotion. VoiceOver and new-screen iPhone review remain unverified.

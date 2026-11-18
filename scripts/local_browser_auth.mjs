@@ -8,7 +8,13 @@ import AxeBuilder from '@axe-core/playwright';
 const fixture = JSON.parse(readFileSync(0, 'utf8'));
 let stage = 'browser-start';
 let browser;
-const diagnostics = { navigation: false, loginStatus: 0, profileStatus: 0, pageError: false };
+const diagnostics = {
+  navigation: false,
+  loginStatus: 0,
+  profileStatus: 0,
+  pageError: false,
+  nudgeStep: 0,
+};
 try {
   browser = await chromium.launch({
     ...(process.env.ILP_BROWSER_EXECUTABLE
@@ -58,6 +64,46 @@ try {
   await dialog.getByLabel('Note (optional)').fill('Synthetic walk');
   await dialog.getByRole('button', { name: 'Save meetup', exact: true }).click();
   await expect(page.getByText('Synthetic walk', { exact: true })).toBeVisible();
+  stage = 'due-nudges';
+  await page.getByRole('button', { name: 'Catch up', exact: true }).click();
+  diagnostics.nudgeStep = 1;
+  const dueGroup = page.getByRole('region', { name: 'Time to catch up', exact: true });
+  await expect(dueGroup).toContainText('Synthetic Maya');
+  diagnostics.nudgeStep = 2;
+  await page.getByLabel('Snooze until', { exact: true }).fill('2099-01-01');
+  await page.getByRole('button', { name: 'Snooze nudge', exact: true }).click();
+  diagnostics.nudgeStep = 3;
+  await expect(page.getByRole('region', { name: 'Taking a pause', exact: true })).toContainText(
+    'Snoozed until 2099-01-01',
+  );
+  await expect(page.getByRole('region', { name: 'Nudge preferences' })).toContainText(
+    'Catch-up date: 2020-03-14',
+  );
+  diagnostics.nudgeStep = 4;
+  await page.getByRole('button', { name: 'Weekly review', exact: true }).click();
+  await expect(page.getByRole('region', { name: 'Weekly review', exact: true })).toContainText(
+    'Last meetup 2020-02-29; every 2 weeks; catch-up date 2020-03-14',
+  );
+  diagnostics.nudgeStep = 5;
+  await page.getByRole('button', { name: 'Pause nudges', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Unpause nudges', exact: true })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Weekly review', exact: true })).not.toContainText(
+    'Synthetic Maya',
+  );
+  diagnostics.nudgeStep = 6;
+  await page.getByRole('button', { name: 'Unpause nudges', exact: true }).click();
+  diagnostics.nudgeStep = 7;
+  await page.getByRole('button', { name: 'Dismiss for today', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Show again today', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Log meetup', exact: true }).click();
+  await dialog.getByLabel('Meetup date').fill('2020-03-31');
+  await dialog.getByRole('button', { name: 'Save meetup', exact: true }).click();
+  diagnostics.nudgeStep = 8;
+  await expect(page.getByRole('button', { name: 'Clear snooze', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Show again today', exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Catch up', exact: true }).click();
+  await expect(dueGroup).toContainText('Synthetic Maya');
+  diagnostics.nudgeStep = 9;
   mkdirSync('artifacts/local', { recursive: true });
   for (const appearance of ['light', 'dark']) {
     await page.getByLabel('Appearance', { exact: true }).selectOption(appearance);
@@ -72,13 +118,28 @@ try {
       const audit = await new AxeBuilder({ page }).analyze();
       assert.equal(audit.violations.length, 0);
       await page.screenshot({
-        path: `artifacts/local/phase2-${appearance}-${width}.png`,
+        path: `artifacts/local/phase3-catchup-${appearance}-${width}.png`,
         fullPage: true,
       });
     }
   }
+  await page.getByRole('button', { name: 'Weekly review', exact: true }).click();
+  await page.setViewportSize({ width: 320, height: 900 });
+  await page.evaluate(() => {
+    globalThis.document.documentElement.style.fontSize = '200%';
+  });
+  assert(
+    await page.evaluate(
+      () => globalThis.document.documentElement.scrollWidth <= globalThis.innerWidth,
+    ),
+  );
+  assert.equal((await new AxeBuilder({ page }).analyze()).violations.length, 0);
+  await page.screenshot({ path: 'artifacts/local/phase3-review-large-text.png', fullPage: true });
+  await page.evaluate(() => {
+    globalThis.document.documentElement.style.fontSize = '';
+  });
   await page.getByRole('button', { name: 'Log meetup', exact: true }).click();
-  await page.screenshot({ path: 'artifacts/local/phase2-meetup-dialog.png', fullPage: true });
+  await page.screenshot({ path: 'artifacts/local/phase3-meetup-dialog.png', fullPage: true });
   page.once('dialog', (d) => d.accept());
   await dialog.getByRole('button', { name: 'Close', exact: true }).click();
   const stored = await page.evaluate(() =>
@@ -94,6 +155,7 @@ try {
   await page.getByRole('heading', { name: 'Keep your people close.' }).waitFor();
   await login(fixture.password);
   assert.equal(await page.getByLabel('Timezone', { exact: true }).inputValue(), 'America/Toronto');
+  await page.getByRole('button', { name: 'People', exact: true }).click();
   await page.getByRole('button', { name: 'Synthetic Maya', exact: true }).click();
   await expect(page.getByText('Synthetic walk', { exact: true })).toBeVisible();
   await logout();

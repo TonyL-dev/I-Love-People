@@ -1,6 +1,6 @@
 # Proposed architecture
 
-Updated November 18, 2026. This describes the target architecture and Phase 0/1/2 source. Phases 1 and 2 are accepted on the protected Preview. Current verification status is in IMPLEMENTATION_STATUS.md. Imported architecture history is retained in reference/ARCHITECTURE.md.
+Updated November 18, 2026. This describes the target architecture and Phase 0/1/2/3 source. Phases 1 and 2 are accepted on the protected Preview. Current verification status is in IMPLEMENTATION_STATUS.md. Imported architecture history is retained in reference/ARCHITECTURE.md.
 
 ## Implemented foundation
 
@@ -119,3 +119,12 @@ Current Phase 2 runtime: CI-passed d377735 on protected Preview https://i-love-p
 
 
 Phase 2 acceptance confirmation, November 18: the new exact Auth redirect now passes independent hosted browser recovery and the user reports the people/history iPhone and desktop journeys pass. The accepted architecture remains caller-scoped repositories, forced owner/session RLS, Alembic migrations, exact dates and explicit PT409 conflicts. No architectural or runtime code change accompanies closure; see IMPLEMENTATION_STATUS.md for evidence.
+
+
+## Phase 3 due dates and in-app nudges - November 18, 2026
+
+`people/due.py` derives calendar due dates from the latest surviving meetup and explicit cadence on each authenticated people read. Days/weeks use calendar arithmetic; months clamp to the target month's last day. The saved IANA timezone determines today. Timing groups use the original due date; snooze independently sets the next eligible date. Sorting uses timing, private priority (unranked last), due date, case-folded name and UUID. No process timer or stored due-date copy determines server eligibility.
+
+Alembic `0006_in_app_nudges` puts pause, snooze and dismissal on the existing forced-RLS owner/session-protected people row. `/api/people/{id}/nudge` follows router, PeopleService and caller-scoped PeopleRepository to SECURITY INVOKER `nudge_write`. It locks the owned row, checks revision and validates dates in the saved timezone. The API returns a freshly derived person so the UI applies the confirmed revision before enabling another action.
+
+Meetup triggers serialize parent changes and clear snooze/dismiss when the latest date advances or the final meetup is removed. Backdates, same-date additions and note-only edits preserve the cycle. Other edits/deletes recalculate from surviving history; pause remains independent. Meetup date mutations increment the parent revision, making stale person/cadence/nudge writes conflict. The tab refreshes each minute and on focus/timezone change. Catch up, People and Weekly review share existing editors and semantic tokens; private state stays in memory. No external delivery is implemented.

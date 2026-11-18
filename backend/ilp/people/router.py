@@ -8,7 +8,15 @@ from ilp.auth.repository import SupabaseProfileRepository
 from ilp.auth.router import identity
 from ilp.auth.service import public_config
 from ilp.infrastructure.settings import get_settings
-from ilp.people.models import Meetup, MeetupCreate, MeetupEdit, Person, PersonEdit, PersonInput
+from ilp.people.models import (
+    Meetup,
+    MeetupCreate,
+    MeetupEdit,
+    NudgeEdit,
+    Person,
+    PersonEdit,
+    PersonInput,
+)
 from ilp.people.repository import JournalFailure, PeopleRepository
 from ilp.people.service import PeopleService
 
@@ -78,6 +86,18 @@ def delete_person(
     person: UUID, account: Account, svc: Service, revision: Annotated[int, Query(ge=1)]
 ) -> Any:
     return write(svc, account, "person_delete", person, revision, {})
+
+
+@router.put("/people/{person}/nudge", response_model=Person)
+def edit_nudge(person: UUID, value: NudgeEdit, account: Account, svc: Service) -> Any:
+    return write(
+        svc,
+        account,
+        "nudge",
+        person,
+        value.revision,
+        value.model_dump(mode="json", exclude={"revision"}),
+    )
 
 
 @router.get("/people/{person}/meetups", response_model=list[Meetup])

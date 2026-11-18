@@ -105,3 +105,12 @@ Phase 2 hosted evidence confirms explicit PT409 fixes the conflict timeouts with
 
 
 Phase 2 acceptance, November 18: combine independently observed CI/deployed privacy/concurrency/browser checks with explicitly user-reported iPhone Safari/desktop results. Verify the newly configured exact recovery target using a disposable hosted account without sending email. Keep VoiceOver as an outstanding private-release check. Phase acceptance does not authorize Phase 3, merge or Production promotion.
+
+
+## Phase 3 calendar and nudge state - November 18, 2026
+
+Calendar-month addition starts at the latest meetup and clamps once to the target month, including leap years. Today, the inclusive seven-day window and dismiss expiry use the saved account timezone. Snooze changes eligibility while the original catch-up date remains visible. Suppressed entries have their own Catch up group. Weekly review includes originally due/soon people with snooze/dismiss context, excluding archive/pause.
+
+Keep the three small preferences on `people` instead of adding a separate preferences table: this reuses its verified RLS, cascade, revision and parent lock. Only an advancing latest date resets a nonempty cycle; older entries, same-date duplicates and note-only edits preserve it. Removing the final meetup clears snooze/dismiss and recurring eligibility. Pause survives meetup logging. Alembic owns the additive migration and functions remain invoker-scoped.
+
+The real browser exposed stale revisions between sequential nudge actions. Return a derived person after a preference mutation and apply confirmed state before enabling the next action. External notifications remain Phase 4 work.

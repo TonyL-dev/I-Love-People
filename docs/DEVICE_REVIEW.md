@@ -47,3 +47,8 @@ Phase 2 review target: [https://i-love-people-c2mef0l08-smooshy.vercel.app](http
 
 
 Phase 2 user journey report — November 18, 2026. The user confirmed saving the new Auth settings and reported every requested test passed in iPhone Safari and desktop with no screen, keyboard or functional problems. This covers the preceding Phase 2 people/history checklist, including persistence after fresh sign-in and on desktop. The user did not report a new device/OS version or a VoiceOver run. VoiceOver remains unverified before private release.
+
+
+## Phase 3 review on the final Preview
+
+On iPhone Safari and desktop, sign in and add synthetic Maya with a cadence and backdated meetup. Confirm Catch up shows her due and More opens her profile. Snooze to a future date: the catch-up date stays visible and Maya moves to Taking a pause. Review the last-seen/cadence reason in Weekly review. Try dismiss-for-today and pause/unpause. Log a newer meetup and confirm snooze/dismiss clear; change cadence and archive/restore. Check date controls, software keyboard, long names, light/dark, enlarged text and readable errors. Record actual device/version/results separately. VoiceOver remains an outstanding pre-release check.

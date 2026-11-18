@@ -1,6 +1,6 @@
 # I Love People project plan
 
-Updated November 18, 2026. This document defines the implementation roadmap. Phase 0 is accepted. Phases 1 and 2 are accepted on the protected Preview; Phase 3 remains planned. VoiceOver remains unverified before release. See [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for evidence and outstanding gates.
+Updated November 18, 2026. This document defines the implementation roadmap. Phase 0 is accepted. Phases 1 and 2 are accepted on the protected Preview; Phase 3 is implemented locally with hosted verification in progress. VoiceOver remains unverified before release. See [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for evidence and outstanding gates.
 
 ## Goal and scope
 
@@ -154,3 +154,6 @@ Phase 2 is hosted and verified for CI-passed d377735 on https://i-love-people-c2
 
 
 Phase 2 accepted November 18, 2026 for CI-passed d377735 on https://i-love-people-c2mef0l08-smooshy.vercel.app. New Auth settings are confirmed by the user and the exact redirect/password-replacement journey passed an independent disposable browser test. The user reports all requested iPhone Safari and desktop people/history flows pass without screen, keyboard or functional problems. Full evidence is in IMPLEMENTATION_STATUS.md. Phase 3 remains planned until requested. VoiceOver is still a pre-release check; no merge or Production promotion.
+
+
+Phase 3 progress, November 18: due-date calculations, ordering, durable in-app controls and weekly review are implemented locally. Deterministic calendar/timezone tests and the actual Maya due, snooze and new-meetup browser journey pass. Hosted current-source CI/migration/Preview and new-screen device review remain pending. This does not begin Phase 4 or promote Production.

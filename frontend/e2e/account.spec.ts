@@ -261,6 +261,7 @@ test('people long names and editors reflow at large text with keyboard focus', a
   await page.setViewportSize({ width: 320, height: 900 });
   await page.goto('/');
   await signIn(page);
+  await page.getByRole('button', { name: 'People', exact: true }).click();
   await page.getByRole('button', { name, exact: true }).click();
   await page.evaluate(() => {
     document.documentElement.style.fontSize = '200%';

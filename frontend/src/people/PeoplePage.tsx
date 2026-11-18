@@ -3,6 +3,7 @@ import type { Session } from '../auth/client';
 import { Button } from '../ui/Button';
 import { Dialog } from '../ui/Dialog';
 import { journal, failureMessage, type Person, type PersonInput, type Meetup } from './client';
+import { DueList, NudgeControls } from './NudgeViews';
 
 const levels = [
   ['closest', 'Closest - make time regularly', 2, 'weeks'],
@@ -113,8 +114,8 @@ function PersonEditor({
           </Button>
         )}
         <p className="supporting secondary">
-          Priority is private. Cadence changes only when you choose it. Reminders are planned for a
-          later phase.
+          Priority is private. Cadence changes only when you choose it. Nudges appear in this
+          website.
         </p>
         <label htmlFor="person-cadence">
           Cadence
@@ -251,6 +252,7 @@ export function PeoplePage({ session, timezone }: { session: Session; timezone: 
   const [selected, setSelected] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [archived, setArchived] = useState(false);
+  const [view, setView] = useState<'catchup' | 'people' | 'review'>('catchup');
   const [attempt, setAttempt] = useState(0);
   const [error, setError] = useState('');
   const [editor, setEditor] = useState<'person' | 'meetup' | null>(null);
@@ -265,6 +267,16 @@ export function PeoplePage({ session, timezone }: { session: Session; timezone: 
   const [busy, setBusy] = useState(false);
   const person = people?.find((p) => p.id === selected);
   useEffect(() => {
+    // Refresh across local midnight, returning to the tab, or a timezone change.
+    const refresh = () => setAttempt((a) => a + 1);
+    const timer = window.setInterval(refresh, 60_000);
+    window.addEventListener('focus', refresh);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener('focus', refresh);
+    };
+  }, [timezone]);
+  useEffect(() => {
     const abort = new AbortController();
     void journal<Person[]>(session, 'people', 'GET', undefined, abort.signal).then(
       (value) => {
@@ -275,7 +287,7 @@ export function PeoplePage({ session, timezone }: { session: Session; timezone: 
       },
     );
     return () => abort.abort();
-  }, [session, attempt]);
+  }, [session, attempt, timezone]);
   useEffect(() => {
     if (!selected) return;
     const abort = new AbortController();
@@ -309,11 +321,22 @@ export function PeoplePage({ session, timezone }: { session: Session; timezone: 
       <div className="page-heading">
         <h2>Your people</h2>
         <p className="secondary">A little space to remember time together.</p>
+        <p className="supporting secondary">
+          Today: {today(timezone)} · {timezone}
+        </p>
       </div>
+      <nav className="actions" aria-label="Your library">
+        {(['catchup', 'people', 'review'] as const).map((value) => (
+          <Button key={value} aria-pressed={view === value} onClick={() => setView(value)}>
+            {{ catchup: 'Catch up', people: 'People', review: 'Weekly review' }[value]}
+          </Button>
+        ))}
+      </nav>
       <div className="actions">
         <Button
           variant="primary"
           onClick={() => {
+            setView('people');
             setEditingPerson(null);
             setEditor('person');
           }}
@@ -322,14 +345,24 @@ export function PeoplePage({ session, timezone }: { session: Session; timezone: 
         </Button>
         <Button onClick={refresh}>Refresh people</Button>
       </div>
-      <label>
-        Search people
-        <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} />
-      </label>
-      <label className="checkbox-row">
-        <input type="checkbox" checked={archived} onChange={(e) => setArchived(e.target.checked)} />{' '}
-        Show archived people
-      </label>
+      {view === 'people' && (
+        <>
+          <label>
+            Search people
+            <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} />
+          </label>
+        </>
+      )}
+      {view === 'people' && (
+        <label className="checkbox-row">
+          <input
+            type="checkbox"
+            checked={archived}
+            onChange={(e) => setArchived(e.target.checked)}
+          />{' '}
+          Show archived people
+        </label>
+      )}
       {error && (
         <p role="alert" className="error-text">
           {error}
@@ -339,37 +372,56 @@ export function PeoplePage({ session, timezone }: { session: Session; timezone: 
       {people && !people.length && (
         <p>No people yet. Add someone, then log a meetup whenever you like.</p>
       )}
-      {people &&
+      {view === 'people' &&
+        people &&
         people.length > 0 &&
         !people.some(
           (p) =>
             p.archived === archived &&
             p.name.toLocaleLowerCase().includes(query.toLocaleLowerCase()),
         ) && <p>No matching people.</p>}
-      <div className="stack">
-        {people
-          ?.filter(
-            (p) =>
-              p.archived === archived &&
-              p.name.toLocaleLowerCase().includes(query.toLocaleLowerCase()),
-          )
-          .map((p) => (
-            <div className="surface stack" key={p.id}>
-              <Button
-                variant="quiet"
-                onClick={() => {
-                  setHistory(null);
-                  setSelected(p.id);
-                }}
-              >
-                {p.name}
-              </Button>
-              <p className="secondary">
-                {p.last_seen ? `Last meetup: ${p.last_seen}` : 'No meetup logged'}
-              </p>
-            </div>
-          ))}
-      </div>
+      {view !== 'people' && people && (
+        <DueList
+          people={people}
+          review={view === 'review'}
+          open={(id) => {
+            setSelected(id);
+            setHistory(null);
+          }}
+          log={(id) => {
+            setSelected(id);
+            setHistory(null);
+            setEditingMeetup(null);
+            setEditor('meetup');
+          }}
+        />
+      )}
+      {view === 'people' && (
+        <div className="stack">
+          {people
+            ?.filter(
+              (p) =>
+                p.archived === archived &&
+                p.name.toLocaleLowerCase().includes(query.toLocaleLowerCase()),
+            )
+            .map((p) => (
+              <div className="surface stack" key={p.id}>
+                <Button
+                  variant="quiet"
+                  onClick={() => {
+                    setHistory(null);
+                    setSelected(p.id);
+                  }}
+                >
+                  {p.name}
+                </Button>
+                <p className="secondary">
+                  {p.last_seen ? `Last meetup: ${p.last_seen}` : 'No meetup logged'}
+                </p>
+              </div>
+            ))}
+        </div>
+      )}
       {person && (
         <section className="surface stack" aria-label={`Profile for ${person.name}`}>
           <h2>{person.name}</h2>
@@ -432,6 +484,17 @@ export function PeoplePage({ session, timezone }: { session: Session; timezone: 
               Delete person
             </Button>
           </div>
+          <NudgeControls
+            key={person.id}
+            person={person}
+            session={session}
+            refresh={(updated) => {
+              setPeople(
+                (current) => current?.map((p) => (p.id === updated.id ? updated : p)) ?? null,
+              );
+              refresh();
+            }}
+          />
           <h3>Meetup history</h3>
           {!history ? (
             <p>Loading history...</p>

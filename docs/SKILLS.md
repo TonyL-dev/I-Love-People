@@ -79,3 +79,8 @@ Phase 2 hosted completion: authenticated Vercel fetch plus a temporary expiring 
 
 
 Phase 2 closure, November 18: reused the previously reviewed Vercel protected-access and managed Supabase/Playwright workflows. The disposable hosted browser recovery passed the new exact origin, replacement-password login and old-password/used-link rejection; account cleanup and temporary token-file removal are verified. Device results and Auth-settings changes are user-reported. This is documentation-only closure; no implementation tests were added or repeated.
+
+
+## Phase 3 workflow - November 18, 2026
+
+Read the Supabase skill, current changelog and official RLS guidance; retained repository-mandated Alembic ownership. Applied React review and full-flow verification to browser, Python API, caller-scoped Data API/PostgreSQL and confirmed UI state. No subagents or new dependencies. Used pinned tasks and installed Chrome (`ILP_BROWSER_EXECUTABLE`), synthetic users, no credential traces and verified cleanup. Local/hosted/device evidence remains separate in IMPLEMENTATION_STATUS.md.

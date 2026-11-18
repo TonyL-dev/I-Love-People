@@ -154,6 +154,46 @@
         "title": "MeetupEdit",
         "type": "object"
       },
+      "NudgeEdit": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "enum": [
+              "snooze",
+              "unsnooze",
+              "dismiss",
+              "undismiss",
+              "pause",
+              "unpause"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "revision": {
+            "minimum": 1.0,
+            "title": "Revision",
+            "type": "integer"
+          },
+          "until": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Until"
+          }
+        },
+        "required": [
+          "revision",
+          "action"
+        ],
+        "title": "NudgeEdit",
+        "type": "object"
+      },
       "Person": {
         "properties": {
           "archived": {
@@ -195,6 +235,42 @@
             "title": "Created At",
             "type": "string"
           },
+          "dismissed_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dismissed On"
+          },
+          "due_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due On"
+          },
+          "eligible_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eligible On"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -218,6 +294,11 @@
             "title": "Name",
             "type": "string"
           },
+          "paused": {
+            "default": false,
+            "title": "Paused",
+            "type": "boolean"
+          },
           "priority": {
             "anyOf": [
               {
@@ -235,9 +316,54 @@
             ],
             "title": "Priority"
           },
+          "reason": {
+            "default": "No meetup logged",
+            "title": "Reason",
+            "type": "string"
+          },
           "revision": {
             "title": "Revision",
             "type": "integer"
+          },
+          "snoozed_until": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snoozed Until"
+          },
+          "suppression": {
+            "anyOf": [
+              {
+                "enum": [
+                  "archived",
+                  "paused",
+                  "snoozed",
+                  "dismissed"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suppression"
+          },
+          "timing": {
+            "default": "unknown",
+            "enum": [
+              "now",
+              "soon",
+              "later",
+              "unknown"
+            ],
+            "title": "Timing",
+            "type": "string"
           },
           "updated_at": {
             "format": "date-time",
@@ -959,6 +1085,64 @@
           }
         ],
         "summary": "Create Meetup",
+        "tags": [
+          "people"
+        ]
+      }
+    },
+    "/api/people/{person}/nudge": {
+      "put": {
+        "operationId": "edit_nudge_api_people__person__nudge_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Person",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NudgeEdit"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Person"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Edit Nudge",
         "tags": [
           "people"
         ]

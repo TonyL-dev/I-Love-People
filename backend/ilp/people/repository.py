@@ -84,7 +84,7 @@ class PeopleRepository:
     ) -> Any:
         return self.request(
             account,
-            "rpc/journal_write",
+            "rpc/nudge_write" if action == "nudge" else "rpc/journal_write",
             body={
                 "action": action,
                 "target": str(target),

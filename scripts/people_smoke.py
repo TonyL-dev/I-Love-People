@@ -82,7 +82,7 @@ async def exercise_people(
         "priority": "closest",
         "cadence_count": 6,
         "cadence_unit": "months",
-        "revision": 1,
+        "revision": (await api.get("/api/people", headers=headers)).json()[0]["revision"],
     }
     assert (
         await api.put("/api/people/" + pid, headers=headers, json=person_edit)
@@ -92,10 +92,14 @@ async def exercise_people(
         await api.put("/api/people/" + pid, headers=headers, json=person_edit)
     ).status_code == 409
     assert (
-        await api.delete("/api/people/" + pid + "?revision=2", headers=foreign)
+        await api.delete(
+            "/api/people/" + pid + f"?revision={person_edit['revision'] + 1}", headers=foreign
+        )
     ).status_code == 404
     assert (
-        await api.delete("/api/people/" + pid + "?revision=2", headers=headers)
+        await api.delete(
+            "/api/people/" + pid + f"?revision={person_edit['revision'] + 1}", headers=headers
+        )
     ).status_code == 200
     with httpx.Client(base_url=data_url, timeout=10) as data:
         for table in ("people", "meetups", "meetup_requests"):
@@ -104,3 +108,6 @@ async def exercise_people(
         "Phase 2 persistence, backdates, retries, conflicts, "
         "archive, cascade and two-user RLS passed."
     )
+    from nudge_smoke import exercise_nudges
+
+    await exercise_nudges(api, headers, foreign, public_key, data_url)
