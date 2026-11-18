@@ -1,18 +1,18 @@
 # Implementation status
 
-Updated November 18, 2026. Phase 0 is accepted. Phase 1 is accepted: source/CI, protected Preview security/browser checks, synthetic hosted recovery and user-reported owner-email/iPhone journeys pass. VoiceOver remains an unverified release check. The user approved development from the reviewed mockup.
+Updated November 18, 2026. Phases 0, 1 and 2 are accepted. Phase 3 is implemented and hosted-verified for a559aa5; final Auth URL configuration and new-screen device review remain pending. VoiceOver and new-screen iPhone review remain unverified. See the Phase 3 evidence below.
 
 | Phase | State |
 | --- | --- |
 | 0 Foundation | Accepted; real Safari pass reported, VoiceOver remains a release check |
 | 1 Login and privacy | Accepted on the protected Preview; Production unchanged |
 | 2 People and meetups | Accepted on the protected Preview; iPhone/desktop pass reported |
-| 3 Due list | Implemented locally; hosted and device verification pending |
+| 3 Due list | Implemented and hosted-verified; final Auth URL/device review pending |
 | 4 PWA and Web Push | Planned, scheduler feasibility pending |
 | 5 Personal release | Planned |
 | 6 Enhancements | Backlog |
 
-## Current Phase 1 evidence — November 18, 2026
+## Phase 1 evidence (historical) — November 18, 2026
 
 Login, logout, forgotten/reset-password, expired-session and recovery-error flows are implemented. Access tokens stay in tab memory; reload requires sign-in. Account preferences persist in an owner-scoped timezone profile. People and meetup persistence remain unimplemented.
 
@@ -254,3 +254,21 @@ Local source checks pass (83 Python and 7 frontend tests, Ruff/mypy/ESLint/TypeS
 Visual evidence includes synthetic 320/390/768/1440 px light/dark screenshots, reduced motion, axe checks and 200% text reflow. Representative phone and enlarged review images were inspected. Review found a fixed-offset skip link peeking over the header with enlarged text; it now hides by its own height. A real sequential-action race was corrected by applying the confirmed API state before enabling controls.
 
 Hosted exact-source CI, migration/deployment/API/browser verification and new iPhone Safari review remain pending. VoiceOver remains untested before private release. No Phase 3 acceptance, Phase 4, merge or Production promotion is claimed.
+
+
+## Phase 3 hosted handoff - November 18, 2026
+
+| Verification | Observed result |
+| --- | --- |
+| Application | `a559aa5c7500e3c8325c709572352de3c1280e4e`; [draft PR #3](https://github.com/TonyL-dev/I-Love-People/pull/3) based on accepted Phase 2 |
+| Linux CI | [Run 44416468153](https://github.com/TonyL-dev/I-Love-People/actions/runs/44416468153) passed both jobs: 83 Python, 7 frontend and 33 browser tests plus real local database/Auth/browser checks |
+| Hosted migration | Alembic `0006_in_app_nudges` applied and repeated successfully on the isolated synthetic project |
+| Preview | [https://i-love-people-k5cwd4tp3-smooshy.vercel.app](https://i-love-people-k5cwd4tp3-smooshy.vercel.app), `dpl_HhGygzx9uQmEpPFsAw4J4V523Hm7`, READY; Node 24, protection enabled, feedback disabled |
+| HTTP smoke | HTTPS, SPA routes/assets, security headers, no-store health/readiness and API 404 passed |
+| Deployed API/Data API | Two-user ownership, anonymous/forged-token denial, logout/disable rejection, retries/conflicts, cadence due dates, durable nudge controls and meetup-cycle resets passed; direct Data API newer-meetup edits also clear the cycle |
+| Actual deployed browser | Maya add/cadence/backdated meetup, due, snooze preserving original due date, weekly reasons, pause/unpause, dismissal, new latest meetup clearing state, reload/login persistence, logout and expiry passed |
+| Visual review | Actual hosted synthetic light/dark 320/390/768/1440 px screenshots, reduced motion, axe and 200% text reflow passed; representative phone/desktop/enlarged screenshots inspected |
+| Cleanup | Zero synthetic verification accounts remain. An interrupted harness's two fixtures were explicitly removed. Temporary protected-access token revoked and local token file removed. Local services stopped |
+| Recovery/device | No-email probe confirms the new exact reset target is absent and falls back to the accepted Phase 2 origin. New Auth URL configuration and independent new-origin recovery check await the dashboard save. New-screen iPhone and VoiceOver evidence remain unverified |
+
+The security advisor still reports the pre-existing [leaked-password-protection setting](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection); no new schema advisories were returned. No paid feature was enabled. The remaining checks are in AUTH_SETUP.md and DEVICE_REVIEW.md. Phase 3 is implemented and hosted-verified, with acceptance pending those configuration/device steps. No Phase 4, merge or Production promotion.

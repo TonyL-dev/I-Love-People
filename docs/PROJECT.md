@@ -1,6 +1,6 @@
 # I Love People project plan
 
-Updated November 18, 2026. This document defines the implementation roadmap. Phase 0 is accepted. Phases 1 and 2 are accepted on the protected Preview; Phase 3 is implemented locally with hosted verification in progress. VoiceOver remains unverified before release. See [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for evidence and outstanding gates.
+Updated November 18, 2026. This document defines the implementation roadmap. Phase 0 is accepted. Phases 1 and 2 are accepted on the protected Preview; Phase 3 is implemented and hosted-verified, awaiting final Auth URL configuration and new-screen device review. VoiceOver remains unverified before release. See [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for evidence and outstanding gates.
 
 ## Goal and scope
 
@@ -42,7 +42,7 @@ Acceptance requires a reproducible local setup, passing checks, and a recorded h
 
 ## Phase 1 — Login and private data boundary
 
-Current progress: accepted November 18, 2026 for CI-passed `e60a47f` on the protected Preview. Local source/database/Auth/browser, deployed API/RLS/revocation and browser expiry checks pass. The user reports successful owner email recovery and iPhone account-screen journeys with no keyboard/screen problems. A disposable hosted browser recovery independently verified the final redirect, password update, old-password rejection and used-link rejection. Rate limits are recorded in [AUTH_SETUP.md](AUTH_SETUP.md). VoiceOver remains untested before private release; Phase 2 source is implemented locally with hosted verification pending.
+Current progress: accepted November 18, 2026 for CI-passed `e60a47f` on the protected Preview. Local source/database/Auth/browser, deployed API/RLS/revocation and browser expiry checks pass. The user reports successful owner email recovery and iPhone account-screen journeys with no keyboard/screen problems. A disposable hosted browser recovery independently verified the final redirect, password update, old-password rejection and used-link rejection. Rate limits are recorded in [AUTH_SETUP.md](AUTH_SETUP.md). VoiceOver remains untested before private release. Phase 2 is also accepted on the protected Preview.
 
 - Configure Supabase Auth. Provision the first owner account through administrative setup and disable public signups for initial personal use.
 - Build login, logout, forgotten-password, reset-password, expired-session, and recovery error flows. Use Supabase's password storage and reset mechanisms. Configure a strong password policy and provider rate limits.
@@ -156,4 +156,7 @@ Phase 2 is hosted and verified for CI-passed d377735 on https://i-love-people-c2
 Phase 2 accepted November 18, 2026 for CI-passed d377735 on https://i-love-people-c2mef0l08-smooshy.vercel.app. New Auth settings are confirmed by the user and the exact redirect/password-replacement journey passed an independent disposable browser test. The user reports all requested iPhone Safari and desktop people/history flows pass without screen, keyboard or functional problems. Full evidence is in IMPLEMENTATION_STATUS.md. Phase 3 remains planned until requested. VoiceOver is still a pre-release check; no merge or Production promotion.
 
 
-Phase 3 progress, November 18: due-date calculations, ordering, durable in-app controls and weekly review are implemented locally. Deterministic calendar/timezone tests and the actual Maya due, snooze and new-meetup browser journey pass. Hosted current-source CI/migration/Preview and new-screen device review remain pending. This does not begin Phase 4 or promote Production.
+Phase 3 progress, November 18: due-date calculations, ordering, durable in-app controls and weekly review are implemented locally. Deterministic calendar/timezone tests and the actual Maya due, snooze and new-meetup browser journey pass. Current-source Linux CI and hosted migration/Preview/API/browser checks pass. Final Auth URL configuration and new-screen device review remain pending. This does not begin Phase 4 or promote Production.
+
+
+Phase 3 hosted handoff, November 18: application `a559aa5` passes [both Linux CI jobs](https://github.com/TonyL-dev/I-Love-People/actions/runs/44416468153), hosted Alembic 0006, HTTP/deployed API/Data API checks and the actual Maya due/snooze/new-meetup/review browser journey at [the protected Preview](https://i-love-people-k5cwd4tp3-smooshy.vercel.app). Cleanup is verified. [Draft PR #3](https://github.com/TonyL-dev/I-Love-People/pull/3) targets the accepted Phase 2 branch. Final exact Auth URL configuration and new-screen iPhone review remain pending; VoiceOver remains a pre-release check. No Phase 3 acceptance, Phase 4, merge or Production promotion.

@@ -58,3 +58,13 @@ The verified Phase 2 target is [https://i-love-people-c2mef0l08-smooshy.vercel.a
 
 
 Phase 2 Auth configuration verified, November 18, 2026. The user confirmed saving the new Site URL and exact reset redirect for https://i-love-people-c2mef0l08-smooshy.vercel.app. A disposable hosted Chrome journey independently verified the actual new-origin redirect, password replacement, old-password rejection and used-link rejection. No email was sent; the account was deleted and absence verified. This closes the new-origin configuration check. Owner inbox delivery remains supported by the earlier Phase 1 user report; no new inbox claim is inferred.
+
+
+## Phase 3 Preview handoff - November 18, 2026
+
+The verified Phase 3 application is `a559aa5` at [https://i-love-people-k5cwd4tp3-smooshy.vercel.app](https://i-love-people-k5cwd4tp3-smooshy.vercel.app). In [Auth URL configuration](https://supabase.com/dashboard/project/efuixughigoyyyflyelm/auth/url-configuration), save:
+
+- **Site URL:** `https://i-love-people-k5cwd4tp3-smooshy.vercel.app`
+- **Redirect URL:** `https://i-love-people-k5cwd4tp3-smooshy.vercel.app/reset-password`
+
+Keep the previous exact Phase 2 redirect until the new one is verified; add no wildcard. A disposable no-email probe confirms the new reset destination is currently absent and falls back to the Phase 2 origin. Connected Supabase tools do not expose this configuration; the Computer Use skill's Windows guidance forbids changing in-app security settings. The dashboard save is therefore a user step. After it is saved, independently verify the new-origin password replacement, old-password and used-link rejection with a disposable account. No new owner-inbox claim is inferred; earlier real delivery evidence remains Phase 1 evidence.

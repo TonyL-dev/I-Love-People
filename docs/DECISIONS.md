@@ -114,3 +114,6 @@ Calendar-month addition starts at the latest meetup and clamps once to the targe
 Keep the three small preferences on `people` instead of adding a separate preferences table: this reuses its verified RLS, cascade, revision and parent lock. Only an advancing latest date resets a nonempty cycle; older entries, same-date duplicates and note-only edits preserve it. Removing the final meetup clears snooze/dismiss and recurring eligibility. Pause survives meetup logging. Alembic owns the additive migration and functions remain invoker-scoped.
 
 The real browser exposed stale revisions between sequential nudge actions. Return a derived person after a preference mutation and apply confirmed state before enabling the next action. External notifications remain Phase 4 work.
+
+
+Phase 3 rollout confirmation, November 18: deploy the exact CI-passed application commit to the existing protected synthetic Preview after the additive Alembic migration. Keep Production unchanged. Combine hosted API/RLS/browser evidence with separate user device evidence; do not infer an iPhone or VoiceOver pass. A no-email probe confirms the new exact recovery target is not yet allowlisted, so provider configuration and new-origin recovery verification remain open.
