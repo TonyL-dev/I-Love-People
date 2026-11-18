@@ -1,11 +1,11 @@
 # Implementation status
 
-Updated November 18, 2026. Phase 0 is accepted. Phase 1 is implemented locally with hosted acceptance pending. The user approved development from the reviewed mockup.
+Updated November 18, 2026. Phase 0 is accepted. Phase 1 is accepted: source/CI, protected Preview security/browser checks, synthetic hosted recovery and user-reported owner-email/iPhone journeys pass. VoiceOver remains an unverified release check. The user approved development from the reviewed mockup.
 
 | Phase | State |
 | --- | --- |
 | 0 Foundation | Accepted; real Safari pass reported, VoiceOver remains a release check |
-| 1 Login and privacy | In progress |
+| 1 Login and privacy | Accepted on the protected Preview; Production unchanged |
 | 2 People and meetups | Planned |
 | 3 Due list | Planned |
 | 4 PWA and Web Push | Planned, scheduler feasibility pending |
@@ -19,21 +19,20 @@ Login, logout, forgotten/reset-password, expired-session and recovery-error flow
 | Verification | Observed result |
 | --- | --- |
 | Source checks | Ruff, strict mypy, 55 Python tests, Prettier, ESLint, strict TypeScript, 7 frontend tests, OpenAPI drift, contrast checks and production build passed |
-| Browser checks | 30 Chromium tests passed; account forms at 320/390/768/1440 px in light/dark, scanned axe rules and overflow checks passed; representative phone screenshots visually reviewed |
+| Browser checks | 31 Chromium tests passed in hosted CI; account forms at 320/390/768/1440 px in light/dark, scanned axe rules and overflow checks passed; representative phone screenshots visually reviewed |
 | Real local managed Auth/browser | Login, saved preference, reload requiring login, global logout, captured-mail recovery, changed-password login and old-password rejection passed; disposable credentials were not recorded |
 | Real local database/API | Alembic through `0003_profile_timezone`, repeat upgrades, API readiness, blocked signup, two-user API/Data API isolation, invalid timezone rejection, anonymous denial, post-logout token rejection, disabled-account rejection and cleanup passed |
-| GitHub CI | Successful foundation run for `34305ba`; GitHub write access restored; Phase 1 source publication and CI verification are in progress |
-| Hosted Preview | Phase 0 deployment `dpl_8E33qgjzEaizmJforFHnrs1HhtUL` passes HTTP/database smoke; current Phase 1 source is not deployed |
-| Real device | User reports all non-VoiceOver Phase 0 checklist steps passed on iPhone 16 Pro / iOS 27.2; VoiceOver was explicitly not tested. This does not verify new account screens |
+| GitHub CI | Both Linux jobs passed for `e60a47f` in [run 44341998540](https://github.com/TonyL-dev/I-Love-People/actions/runs/44341998540), including source/browser and real local Auth/database/browser checks |
+| Hosted Preview | [Phase 1 Preview](https://i-love-people-o73m6xnlh-smooshy.vercel.app), `dpl_GhNTVomxdbfCScYnpYyWhXPw4Be4`, READY for `e60a47f`; HTTP, deployed API/RLS and real browser checks passed |
+| Real device | User reports all non-VoiceOver Phase 0 checklist steps passed on iPhone 16 Pro / iOS 27.2; VoiceOver was explicitly not tested. The user now also reports owner login, timezone save/reload, sign-out and real email reset/replacement-password login passed in iPhone Safari, with no screen/keyboard problems |
 
-Browser UI tests use mocked provider responses and are distinct from the real local Auth/browser and two-user database exercises. Hosted-service security checks are now recorded below; they exercise current Python source through local ASGI and do not establish deployed Vercel API behavior or owner-email delivery. The database remains synthetic; no people/meetup records are exposed.
+Browser UI tests use mocked provider responses and are distinct from the real local Auth/browser and two-user database exercises. Hosted-service checks first used local ASGI, then passed against the actual deployed API and browser as recorded below. Owner-email delivery is separately supported by the user report below. The database remains synthetic; no people/meetup records are exposed.
 
-### Remaining Phase 1 acceptance
+### Phase 1 acceptance and release boundary
 
-- Provider setup was reported configured and verified: hosted signup and anonymous sign-in are disabled, email/password is enabled, one account is provisioned, and the admin test key works. Actual provider rate-limit values and owner-email recovery evidence remain pending.
-- Preview migrations and public runtime settings are applied. Publish the exact Phase 1 source, pass CI and verify its Vercel deployment; GitHub write access is restored; CI verification is in progress.
-- Hosted Auth/Data API isolation, signup denial, logout and disabled-account rejection pass with local ASGI. Repeat against the deployed API and verify browser expiry plus real owner-email delivery/links with the owner's participation.
-- Review the new account screens on iPhone; retain VoiceOver as an unverified pre-release check. No Phase 2 work begins until Phase 1 acceptance.
+The user confirmed the final Site URL/exact reset allowlist, successful owner login/preferences/reload/logout, arrival of the real reset email, password reset and replacement-password login, and no iPhone screen/keyboard problems. The provider-rate-limit values are recorded in AUTH_SETUP.md. An agent-run disposable hosted browser recovery independently verified the actual redirect, password update, old-password rejection and used-link rejection without sending email. Synthetic cleanup passed.
+
+Phase 1 is accepted for application commit `e60a47f` on the verified protected Preview. Phase 2 remains planned and has not started. VoiceOver remains explicitly untested before private release. No merge or Production promotion is implied by this acceptance.
 
 ## Earlier implementation history
 
@@ -200,3 +199,21 @@ The Supabase security advisor reports leaked-password protection disabled. No pa
 GitHub access restored, November 18: after user reconnection, the connected GitHub tree-write probe succeeds. Local Git still lacks interactive credentials; source publication uses the authorized connector. Earlier provider 403 records are historical. CI and exact-source Preview are being verified.
 
 Protected Preview integration, November 18: commit c031afa passed GitHub CI run 44340365242, including both Linux jobs. Live smoke found an injected Vercel feedback script; Preview Feedback was disabled and the same source rebuilt. HTTP/deployed two-user API/RLS checks then passed, but browser login exposed that credentials=omit blocked the hosting protection cookie. Same-origin API/config/health requests now retain only same-origin cookies; cross-origin Supabase requests continue to omit cookies. Application authentication still requires the verified bearer token. A protected-cookie browser regression passes locally. The fix is being published and reverified; earlier Preview URLs are not the final recovery target. Owner-email recovery and device evidence remain pending.
+
+## Final protected Preview verification — November 18, 2026
+
+Application commit `e60a47fe289ed968a68eba9cf4f089a0d868c529` is published in [draft PR #1](https://github.com/TonyL-dev/I-Love-People/pull/1). [GitHub CI run 44341998540](https://github.com/TonyL-dev/I-Love-People/actions/runs/44341998540) passed both Linux jobs, including all 31 browser tests and the real local database/Auth/browser journey. A duplicate push run is separate; the successful PR run establishes the gate.
+
+The final [Preview](https://i-love-people-o73m6xnlh-smooshy.vercel.app) (`dpl_GhNTVomxdbfCScYnpYyWhXPw4Be4`) is READY for that exact commit. HTTP smoke verified headers/CSP, bundled JavaScript/CSS, SPA deep links, Python health/database readiness, no-store and API 404. Actual deployed API plus hosted Auth/Data API passed two-user ownership, anonymous/forged-token denial, invalid timezone rejection, logout-token revocation and disabled-account rejection. The live Chrome browser passed managed login, timezone persistence, fresh sign-in on reload, logout, no credential persistence and simulated browser-clock session expiry; no page errors were observed. Expired-token cryptographic checks remain covered by Python tests.
+
+All three deployment-review synthetic users were removed and absence verified; a final database query found zero `ilp-%@example.test` users. Temporary protection-token storage was removed. Review scripts under ignored `.tools/` adapted the existing smoke/ownership exercises to protected HTTPS and drove Chrome without traces, videos or credential screenshots. Deployment Protection stayed enabled. Preview Feedback was disabled to prevent Vercel's injected external feedback script. The same-origin cookie fix retains only hosting protection access; application identity still requires the bearer token, and cross-origin Auth requests omit cookies.
+
+No merge or Production promotion occurred. The user has been asked to replace the earlier Preview redirect targets with the final URL above, test real owner-email recovery/new-password login and review account screens in iPhone Safari. Those results, actual provider-rate-limit values and VoiceOver remain unverified; Phase 1 is not accepted and Phase 2 has not started.
+
+## Phase 1 acceptance — November 18, 2026
+
+User-reported evidence: final Preview redirects saved; owner login, timezone save/reload, sign-out, actual reset email arrival, password reset and replacement-password login all worked in the requested iPhone Safari journey, with no screen/keyboard problems. Earlier device identification in this chat was iPhone 16 Pro / iOS 27.2. This is user evidence, not agent observation of the owner inbox or device. The reported provider limits are recorded verbatim by category in AUTH_SETUP.md.
+
+Agent-observed supplementary evidence: a disposable `example.test` account used an administratively generated recovery link (no email sent). Real Chrome followed the hosted verification link to the exact final `/reset-password` path, cleared URL credentials, changed the password through managed Auth, rejected the old password, accepted the replacement and rejected reuse of the link. Browser login/profile requests returned 200 and no page errors were observed. The account was deleted and absence verified; temporary protection-token storage was removed.
+
+Together with source checks, both successful Linux CI runs for e60a47f, deployed API/RLS/revocation and browser expiry checks, this satisfies the written Phase 1 gates. Phase 2 is not started. VoiceOver remains unverified before private release; Production remains unchanged.

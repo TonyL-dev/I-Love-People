@@ -1,6 +1,6 @@
 # I Love People project plan
 
-Updated November 18, 2026. This document defines the implementation roadmap. Phase 0 is accepted. Phase 1 source and local integration checks are complete; hosted acceptance is pending. See [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for evidence and outstanding gates.
+Updated November 18, 2026. This document defines the implementation roadmap. Phase 0 is accepted. Phase 1 is accepted on the protected Preview; Phase 2 remains planned. VoiceOver remains unverified before release. See [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for evidence and outstanding gates.
 
 ## Goal and scope
 
@@ -42,7 +42,7 @@ Acceptance requires a reproducible local setup, passing checks, and a recorded h
 
 ## Phase 1 — Login and private data boundary
 
-Current progress: managed login/recovery, memory-only sessions, API identity/session verification and an owned timezone profile with RLS are implemented. Source checks, 30 browser tests, real local browser recovery and two-user API/Data API isolation/revocation pass. Hosted provider setup, CI/deployment of this source, hosted security checks and actual owner-email recovery remain pending; follow [AUTH_SETUP.md](AUTH_SETUP.md). Phase 1 is not accepted.
+Current progress: accepted November 18, 2026 for CI-passed `e60a47f` on the protected Preview. Local source/database/Auth/browser, deployed API/RLS/revocation and browser expiry checks pass. The user reports successful owner email recovery and iPhone account-screen journeys with no keyboard/screen problems. A disposable hosted browser recovery independently verified the final redirect, password update, old-password rejection and used-link rejection. Rate limits are recorded in [AUTH_SETUP.md](AUTH_SETUP.md). VoiceOver remains untested before private release; Phase 2 has not started.
 
 - Configure Supabase Auth. Provision the first owner account through administrative setup and disable public signups for initial personal use.
 - Build login, logout, forgotten-password, reset-password, expired-session, and recovery error flows. Use Supabase's password storage and reset mechanisms. Configure a strong password policy and provider rate limits.
@@ -138,3 +138,5 @@ Phase 1 hosted-service progress, November 18: signup/anonymous denial, password 
 GitHub follow-up, November 18: user reconnection restored connector writes; a tree-write probe passed. Publishing the review branch and verifying CI/Preview are in progress. No Phase 1 acceptance is inferred before those and owner-email recovery pass.
 
 Protected Preview integration, November 18: commit c031afa passed GitHub CI run 44340365242, including both Linux jobs. Live smoke found an injected Vercel feedback script; Preview Feedback was disabled and the same source rebuilt. HTTP/deployed two-user API/RLS checks then passed, but browser login exposed that credentials=omit blocked the hosting protection cookie. Same-origin API/config/health requests now retain only same-origin cookies; cross-origin Supabase requests continue to omit cookies. Application authentication still requires the verified bearer token. A protected-cookie browser regression passes locally. The fix is being published and reverified; earlier Preview URLs are not the final recovery target. Owner-email recovery and device evidence remain pending.
+
+Verified Phase 1 application candidate, November 18: e60a47f passes both Linux CI jobs and protected Preview https://i-love-people-o73m6xnlh-smooshy.vercel.app, including deployed two-user API/RLS/revocation and browser login/preferences/reload/logout/expiry. Draft PR #1 remains open. Acceptance still requires final redirect configuration, actual owner-email reset/reuse/old-password checks, recorded rate limits and account-screen device review. VoiceOver remains an open pre-release check. No later phase begins yet.

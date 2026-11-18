@@ -1,6 +1,6 @@
 # I Love People documentation
 
-Start with the project plan for the ordered roadmap. Phase 0 is accepted; Phase 1 is implemented with hosted deployment and owner-email acceptance pending. The repository [README](../README.md) documents the local setup and runnable commands.
+Start with the project plan for the ordered roadmap. Phases 0 and 1 are accepted; Phase 2 remains planned and VoiceOver is unverified before release. The repository [README](../README.md) documents the local setup and runnable commands.
 
 | Document | Purpose |
 | --- | --- |

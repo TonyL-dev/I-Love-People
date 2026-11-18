@@ -32,3 +32,7 @@ Report iPhone model, iOS version, date, Safari/zoom result, keyboard/safe-area r
 November 18, 2026: user-reported pass on iPhone 16 Pro, iOS 27.2, for all non-VoiceOver steps in DEVICE_REVIEW.md. VoiceOver was explicitly not tested. This is user-reported device evidence, not an agent-observed session.
 
 VoiceOver/screen-reader review remains open before private release. Desktop Page Zoom and second-device LAN evidence remain separate where unverified.
+
+## Phase 1 owner journey report — November 18, 2026
+
+The user reports the requested iPhone Safari journey passed: owner login, timezone save/reload, sign-out, real reset email arrival, password reset and replacement-password login, with no screen or keyboard problems. Earlier device identification was iPhone 16 Pro / iOS 27.2. This report does not establish a new VoiceOver run; VoiceOver remains explicitly untested before private release.

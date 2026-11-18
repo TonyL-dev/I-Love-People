@@ -2,7 +2,7 @@
 
 A private, responsive place to remember when you last met someone and make time for next time.
 
-Phase 0 is accepted. Phase 1 login, recovery, memory-only sessions, and an owned timezone preference are implemented and verified locally with managed Supabase Auth. Hosted Phase 1 acceptance is pending provider configuration and verification; see [setup steps](docs/AUTH_SETUP.md). People and meetup persistence remain Phase 2 work. The `/design` reference remains explicitly synthetic.
+Phase 0 is accepted. Phase 1 login, recovery, memory-only sessions, and an owned timezone preference are implemented and verified locally with managed Supabase Auth. Phase 1 is accepted: hosted CI, protected Preview API/browser/recovery checks and user-reported owner email/iPhone journeys pass; see [setup steps](docs/AUTH_SETUP.md). People and meetup persistence remain Phase 2 work. The `/design` reference remains explicitly synthetic.
 
 ## Start locally on Windows
 
@@ -100,7 +100,7 @@ Regenerate contracts whenever the API changes. The check task verifies Python fo
 
 ## Deployment status
 
-[The synthetic Vercel Preview](https://i-love-people-9xnbgkdx9-smooshy.vercel.app) is READY for CI-passed commit `34305ba`, with Node 24. Hosted HTTPS, SPA routing, assets, security headers, Python health/database readiness, API 404 routing, and no-store pass through authenticated access. Alembic `0001_foundation` applied twice to the isolated hosted database. The connection URL is a sensitive Preview-only variable; Production was not promoted or configured. Deployment Protection remains enabled. Local port isolation is now verified. The user reports non-VoiceOver Phase 0 Safari review passed; VoiceOver and current Phase 1 hosted verification remain pending. See the implementation status for exact evidence.
+[Phase 1 Preview](https://i-love-people-o73m6xnlh-smooshy.vercel.app) is READY for `e60a47f`, with [both Linux CI jobs passing](https://github.com/TonyL-dev/I-Love-People/actions/runs/44341998540). Protected HTTPS/assets/SPA/API routing, database readiness, headers/no-store, deployed two-user API/RLS/revocation and live browser account checks pass. Alembic is at `0003_profile_timezone`; credentials and public Auth settings are Preview-only. Deployment Protection remains enabled and Preview Feedback is disabled. Owner-email recovery and account-screen device review passed by user report; provider limits are recorded. VoiceOver remains unverified before release. [Draft PR #1](https://github.com/TonyL-dev/I-Love-People/pull/1) is open; Production was not promoted.
 
 ## Project documents
 
@@ -138,3 +138,5 @@ The reported Phase 0 iPhone 16 Pro / iOS 27.2 review passed the non-VoiceOver st
 ## Hosted account regression
 
 `scripts/hosted_auth_smoke.py` is restricted to the authorized synthetic Preview project. It reads the ignored database/admin settings and a public `ILP_SUPABASE_PUBLISHABLE_KEY` environment variable. Its optional `--migrate` applies Alembic before running. Actual hosted Auth/Data API and current local ASGI checks pass; it never sends external mail and removes its temporary users. This does not verify a deployed Vercel API or the owner inbox. See [current evidence](docs/IMPLEMENTATION_STATUS.md).
+
+Phase 1 acceptance is recorded in docs/IMPLEMENTATION_STATUS.md. The application remains on the protected Preview; Phase 2 has not started and Production was not promoted.
