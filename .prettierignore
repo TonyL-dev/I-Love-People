@@ -1,0 +1,14 @@
+pnpm-lock.yaml
+uv.lock
+contracts/openapi.json
+frontend/src/api/schema.d.ts
+.tools
+.venv
+dist
+node_modules
+docs/reference
+artifacts/local
+test-results
+playwright-report
+*.py
+*.toml

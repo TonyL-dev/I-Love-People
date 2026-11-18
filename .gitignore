@@ -1,0 +1,26 @@
+# Toolchains and dependencies
+.tools/
+.venv/
+node_modules/
+dist/
+*.egg-info/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+# Local credentials and provider state
+.env
+.env.*
+!.env.example
+!**/.env.example
+.vercel/
+supabase/.temp/
+supabase/.branches/
+supabase/signing_keys.json
+# Local review output
+test-results/
+playwright-report/
+artifacts/local/
+*.log

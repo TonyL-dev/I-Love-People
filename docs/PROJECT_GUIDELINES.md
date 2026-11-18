@@ -1,5 +1,7 @@
 # I Love People
 
+> Updated platform direction, November 17, 2026. The first release targets a responsive website with login and secure cloud storage. PROJECT.md defines the active phased roadmap and supersedes the native iPhone storage and notification assumptions below. The original ideas remain preserved for future planning. Native widgets and Apple Watch support are future platform ideas.
+
 ## Product direction
 
 I Love People is an iPhone app that helps you remember when you last saw someone and make time to see them again. It is for people who care about staying close to friends, family, and others but lose track of time between get-togethers.
