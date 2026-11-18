@@ -51,5 +51,5 @@ def test_readiness_fails_closed_without_exposing_errors(
     assert response.headers["cache-control"] == "no-store"
 
 
-def test_unimplemented_private_routes_are_not_exposed() -> None:
-    assert request("/api/people").status_code == 404
+def test_people_route_requires_authentication() -> None:
+    assert request("/api/people").status_code == 401

@@ -1,3 +1,4 @@
+import { PeoplePage } from '../people/PeoplePage';
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type FormEvent } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { Link } from '../navigation';
@@ -366,14 +367,12 @@ function PrivateAccount({
     });
   }
   return (
-    <section className="stack stack--large">
+    <section className="private-account stack stack--large">
       <div className="page-heading">
         <h1>Your private space.</h1>
         <p className="secondary">Signed in as {session.email}</p>
       </div>
-      <Notice title="A little space for your people.">
-        <p>People and meetup history are coming next.</p>
-      </Notice>
+      {profile && <PeoplePage session={session} timezone={profile.timezone} />}
       {!profile && !error && <p role="status">Loading your account…</p>}
       {error && (
         <Notice title="Please try again." variant="error">

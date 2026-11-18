@@ -1,7 +1,9 @@
 // Live synthetic journey. Credentials arrive on stdin; no traces, video, or credential screenshots.
 import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
-import { chromium } from '@playwright/test';
+import { chromium, expect } from '@playwright/test';
+import { mkdirSync } from 'node:fs';
+import AxeBuilder from '@axe-core/playwright';
 
 const fixture = JSON.parse(readFileSync(0, 'utf8'));
 let stage = 'browser-start';
@@ -43,6 +45,42 @@ try {
   await page.getByLabel('Timezone', { exact: true }).fill('America/Toronto');
   await page.getByRole('button', { name: 'Save timezone' }).click();
   await page.getByText('Timezone saved.', { exact: true }).waitFor();
+  stage = 'people-and-meetup-persistence';
+  await page.getByRole('button', { name: 'Add person', exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByLabel('Name', { exact: true }).fill('Synthetic Maya');
+  await dialog.getByLabel('Private priority').selectOption('closest');
+  await dialog.getByRole('button', { name: 'Use suggested cadence: every 2 weeks' }).click();
+  await dialog.getByRole('button', { name: 'Save person', exact: true }).click();
+  await page.getByRole('button', { name: 'Synthetic Maya', exact: true }).click();
+  await page.getByRole('button', { name: 'Log meetup', exact: true }).click();
+  await dialog.getByLabel('Meetup date').fill('2020-02-29');
+  await dialog.getByLabel('Note (optional)').fill('Synthetic walk');
+  await dialog.getByRole('button', { name: 'Save meetup', exact: true }).click();
+  await expect(page.getByText('Synthetic walk', { exact: true })).toBeVisible();
+  mkdirSync('artifacts/local', { recursive: true });
+  for (const appearance of ['light', 'dark']) {
+    await page.getByLabel('Appearance', { exact: true }).selectOption(appearance);
+    for (const width of [320, 390, 768, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      assert(
+        await page.evaluate(
+          () => globalThis.document.documentElement.scrollWidth <= globalThis.innerWidth,
+        ),
+      );
+      const audit = await new AxeBuilder({ page }).analyze();
+      assert.equal(audit.violations.length, 0);
+      await page.screenshot({
+        path: `artifacts/local/phase2-${appearance}-${width}.png`,
+        fullPage: true,
+      });
+    }
+  }
+  await page.getByRole('button', { name: 'Log meetup', exact: true }).click();
+  await page.screenshot({ path: 'artifacts/local/phase2-meetup-dialog.png', fullPage: true });
+  page.once('dialog', (d) => d.accept());
+  await dialog.getByRole('button', { name: 'Close', exact: true }).click();
   const stored = await page.evaluate(() =>
     JSON.stringify([Object.entries(localStorage), Object.entries(sessionStorage)]),
   );
@@ -56,6 +94,8 @@ try {
   await page.getByRole('heading', { name: 'Keep your people close.' }).waitFor();
   await login(fixture.password);
   assert.equal(await page.getByLabel('Timezone', { exact: true }).inputValue(), 'America/Toronto');
+  await page.getByRole('button', { name: 'Synthetic Maya', exact: true }).click();
+  await expect(page.getByText('Synthetic walk', { exact: true })).toBeVisible();
   await logout();
   stage = 'captured-recovery-email';
   await page.getByRole('link', { name: 'Forgot password?' }).click();

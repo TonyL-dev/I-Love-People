@@ -6,7 +6,7 @@ Updated November 18, 2026. Phase 0 is accepted. Phase 1 is accepted: source/CI, 
 | --- | --- |
 | 0 Foundation | Accepted; real Safari pass reported, VoiceOver remains a release check |
 | 1 Login and privacy | Accepted on the protected Preview; Production unchanged |
-| 2 People and meetups | Planned |
+| 2 People and meetups | Accepted on the protected Preview; iPhone/desktop pass reported |
 | 3 Due list | Planned |
 | 4 PWA and Web Push | Planned, scheduler feasibility pending |
 | 5 Personal release | Planned |
@@ -217,3 +217,29 @@ User-reported evidence: final Preview redirects saved; owner login, timezone sav
 Agent-observed supplementary evidence: a disposable `example.test` account used an administratively generated recovery link (no email sent). Real Chrome followed the hosted verification link to the exact final `/reset-password` path, cleared URL credentials, changed the password through managed Auth, rejected the old password, accepted the replacement and rejected reuse of the link. Browser login/profile requests returned 200 and no page errors were observed. The account was deleted and absence verified; temporary protection-token storage was removed.
 
 Together with source checks, both successful Linux CI runs for e60a47f, deployed API/RLS/revocation and browser expiry checks, this satisfies the written Phase 1 gates. Phase 2 is not started. VoiceOver remains unverified before private release; Production remains unchanged.
+
+
+## Phase 2 local implementation — November 18, 2026
+
+Implemented people add/edit/search/archive/restore/delete, four optional private priorities, explicit cadence suggestions and independently clearable cadence. Person profiles show latest surviving meetup or an unknown-date state. Meetup creation/edit/delete supports exact dates and optional bounded notes, saved-timezone future-date rejection, UTC audits, optimistic revisions and durable account-scoped request receipts. Destructive actions name the affected person and use confirmation dialogs.
+
+Local evidence: source checks cover 61 Python tests and the existing 7 frontend tests; generated OpenAPI contracts include all new routes. The real local two-user API/Data API smoke exercises persistence, backdates, latest-entry edit/delete, retry payload conflicts, parallel duplicate creation, stale revisions, archive retention, owner/foreign-parent checks, direct future-date/revision rejection and cascading cleanup. The real Chrome/Auth/Python/Postgres journey creates a person/meetup and verifies persistence after reload and fresh login, alongside existing captured-email recovery. Its light/dark 320/390/768/1440 reflow and axe checks pass; synthetic screenshots are under artifacts/local/phase2-*.png. Representative phone and dialog screenshots were visually inspected; checkbox alignment was corrected afterward.
+
+Hosted Phase 2 CI, migration and Preview verification have not run. The accepted protected Preview still runs Phase 1 e60a47f. New people/history iPhone Safari evidence and VoiceOver remain unverified. No Phase 3 implementation, merge or Production promotion. Final verification: `scripts/tasks.py check` passes (61 Python tests, 7 frontend tests, lint/types/format/contracts/design checks and production build); all 33 Playwright browser tests pass in installed Chrome. The final live browser/Auth/API/database journey passes including account/data/mail cleanup. Long names, 200% text, keyboard focus and axe pass on the new editor; representative screenshots were inspected. Local Supabase is stopped. Hosted CI/deployment and real-device Phase 2 acceptance remain pending.
+
+
+Phase 2 hosted rollout in progress: draft PR #2 is published; 7c6e268 passed both Linux CI jobs in run 44396348593. Hosted 0004 upgrade is applied and protected Preview dpl_2hUkBHsABfn5zHEidSZfBsvsswfX passes readiness/HTTP smoke. Full hosted checks found deliberate serialization-code conflicts could time out; the forward migration 0005 and PT409 adapter fix are being verified. This initial deployment is not the final device target. Temporary regression users were cleaned up after failed runs.
+
+
+Phase 2 hosted verification, November 18, 2026. Application commit d377735 passes both Linux CI jobs (https://github.com/TonyL-dev/I-Love-People/actions/runs/44398237798), with 62 Python tests, 7 frontend tests, 33 browser tests and real Linux database/Auth/browser checks. Protected Preview https://i-love-people-c2mef0l08-smooshy.vercel.app (dpl_DjMRfY6j4JoqJu1P4emgDJnCdKLU) is READY for that commit. Alembic 0005_explicit_conflicts applied twice. HTTPS/assets/SPA/security headers/health/readiness/no-store/API 404, actual deployed two-user API/Data API ownership and revocation, concurrent duplicate creation, stale-edit/request conflicts, backdates/latest-entry changes/archive/cascade, and live Chrome people/meetup persistence/reload/logout/expiry all pass. No browser page errors; temporary users were deleted and final synthetic-account count is zero. Owner/session forced RLS is verified for every new table. Local services are stopped; temporary share-token files were removed at handoff. Existing leaked-password-protection advisor warning is unchanged; no paid feature was enabled.
+
+The new Preview is ready for owner iPhone Safari review. A no-email recovery-link probe confirms its exact reset destination is not yet allowlisted: Supabase currently falls back to the accepted Phase 1 origin. The connected Supabase tools cannot update Auth URL settings. The user must set the Site URL to https://i-love-people-c2mef0l08-smooshy.vercel.app and add https://i-love-people-c2mef0l08-smooshy.vercel.app/reset-password in Auth URL configuration before reviewing recovery on the new origin. Keep the old exact redirect until the new one is verified; avoid wildcards. Phase 2 acceptance remains pending that configuration and the new people/history iPhone evidence. VoiceOver remains unverified before private release. Draft PR #2 stays open; no merge, Phase 3 or Production promotion.
+
+
+## Phase 2 accepted — November 18, 2026
+
+The user confirmed the new Supabase Auth URL settings and reported every requested people/history test passed in iPhone Safari and desktop, including persistence across fresh sign-in and devices, with no screen, keyboard or functional problems. This is user-reported evidence, not an agent-observed device session. The earlier device identification was iPhone 16 Pro / iOS 27.2; no new device/version was supplied in this report.
+
+An independent disposable Chrome recovery on [https://i-love-people-c2mef0l08-smooshy.vercel.app](https://i-love-people-c2mef0l08-smooshy.vercel.app) passed the actual hosted reset redirect, password replacement, rejection of the old password and rejection of the used link. Login/profile returned 200, no page errors were observed, and the synthetic account was deleted with absence verified. No test email was sent. Temporary protection-token storage was removed.
+
+Combined with both successful Linux CI jobs in [run 44398237798](https://github.com/TonyL-dev/I-Love-People/actions/runs/44398237798), 62 Python/7 frontend/33 browser tests, deployed API/Data API isolation/concurrency/privacy checks and live browser persistence for application d377735, this satisfies Phase 2 acceptance. Alembic remains at 0005_explicit_conflicts. Phase 3 remains planned; VoiceOver remains unverified before private release. No merge or Production promotion.

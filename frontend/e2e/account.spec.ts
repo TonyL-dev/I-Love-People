@@ -5,6 +5,7 @@ const owner = '11111111-1111-4111-8111-111111111111';
 
 async function mockAccount(page: Page, expires = 3600, protectedPreview = false) {
   let timezone = 'UTC';
+  await page.route('**/api/people', (route) => route.fulfill({ json: [] }));
   if (protectedPreview) {
     await page.context().addCookies([
       { name: 'preview-protection', value: 'synthetic', url: 'http://127.0.0.1:5173' },
@@ -172,3 +173,105 @@ for (const appearance of ['light', 'dark']) {
     });
   }
 }
+
+test('people and meetup browser journey, cadence confirmation and deletion', async ({ page }) => {
+  await mockAccount(page);
+  let people: Record<string, unknown>[] = [];
+  let meetups: Record<string, unknown>[] = [];
+  const timestamp = '2026-01-01T00:00:00Z';
+  await page.route('**/api/people', async (route) => {
+    if (route.request().method() === 'POST') {
+      const person = {
+        ...route.request().postDataJSON(),
+        id: owner,
+        revision: 1,
+        created_at: timestamp,
+        updated_at: timestamp,
+        last_seen: null,
+      };
+      people.push(person);
+      await route.fulfill({ json: person });
+    } else await route.fulfill({ json: people });
+  });
+  await page.route('**/api/people/*/meetups', async (route) => {
+    if (route.request().method() === 'POST') {
+      const meetup = {
+        ...route.request().postDataJSON(),
+        id: owner,
+        person_id: owner,
+        revision: 1,
+        created_at: timestamp,
+        updated_at: timestamp,
+      };
+      meetups.push(meetup);
+      people[0]!.last_seen = meetup.completed_on;
+      await route.fulfill({ json: meetup });
+    } else await route.fulfill({ json: meetups });
+  });
+  await page.route('**/api/people/*?revision=*', async (route) => {
+    people = [];
+    meetups = [];
+    await route.fulfill({ json: {} });
+  });
+  await page.goto('/');
+  await signIn(page);
+  await page.getByRole('button', { name: 'Add person', exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByLabel('Name', { exact: true }).fill('Synthetic Maya');
+  await dialog.getByLabel('Private priority').selectOption('closest');
+  await expect(dialog.getByLabel('Cadence', { exact: true })).toHaveValue('');
+  await dialog.getByRole('button', { name: 'Use suggested cadence: every 2 weeks' }).click();
+  await expect(dialog.getByLabel('Cadence', { exact: true })).toHaveValue('weeks');
+  await dialog.getByRole('button', { name: 'Save person', exact: true }).click();
+  await page.getByLabel('Search people').fill('maya');
+  await page.getByRole('button', { name: 'Synthetic Maya', exact: true }).click();
+  await page.getByRole('button', { name: 'Log meetup', exact: true }).click();
+  await dialog.getByLabel('Meetup date').fill('2020-02-29');
+  await dialog.getByLabel('Note (optional)').fill('Synthetic walk');
+  await dialog.getByRole('button', { name: 'Save meetup', exact: true }).click();
+  await expect(page.getByText('Synthetic walk', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Delete person', exact: true }).click();
+  await expect(dialog).toContainText('Synthetic Maya');
+  await dialog.getByRole('button', { name: 'Confirm', exact: true }).click();
+  await expect(page.getByText('No people yet.', { exact: false })).toBeVisible();
+});
+
+test('people long names and editors reflow at large text with keyboard focus', async ({ page }) => {
+  await mockAccount(page);
+  const name = 'Synthetic' + 'x'.repeat(100);
+  await page.route('**/api/people', (route) =>
+    route.fulfill({
+      json: [
+        {
+          id: owner,
+          name,
+          priority: null,
+          cadence_count: null,
+          cadence_unit: null,
+          archived: false,
+          revision: 1,
+          created_at: '2020-01-01T00:00:00Z',
+          updated_at: '2020-01-01T00:00:00Z',
+          last_seen: null,
+        },
+      ],
+    }),
+  );
+  await page.route('**/api/people/*/meetups', (route) => route.fulfill({ json: [] }));
+  await page.setViewportSize({ width: 320, height: 900 });
+  await page.goto('/');
+  await signIn(page);
+  await page.getByRole('button', { name, exact: true }).click();
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = '200%';
+  });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.getByRole('button', { name: 'Edit person', exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog.getByLabel('Name', { exact: true })).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(dialog.getByLabel('Private priority')).toBeFocused();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  await page.screenshot({ path: 'artifacts/local/phase2-large-text-editor.png', fullPage: true });
+});

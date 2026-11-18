@@ -2,7 +2,7 @@
 
 A private, responsive place to remember when you last met someone and make time for next time.
 
-Phase 0 is accepted. Phase 1 login, recovery, memory-only sessions, and an owned timezone preference are implemented and verified locally with managed Supabase Auth. Phase 1 is accepted: hosted CI, protected Preview API/browser/recovery checks and user-reported owner email/iPhone journeys pass; see [setup steps](docs/AUTH_SETUP.md). People and meetup persistence remain Phase 2 work. The `/design` reference remains explicitly synthetic.
+Phase 0 is accepted. Phase 1 login, recovery, memory-only sessions, and an owned timezone preference are implemented and verified locally with managed Supabase Auth. Phase 1 is accepted: hosted CI, protected Preview API/browser/recovery checks and user-reported owner email/iPhone journeys pass; see [setup steps](docs/AUTH_SETUP.md). Phase 2 people and meetup history are accepted on the protected Preview; Phase 3 remains planned. The `/design` reference remains explicitly synthetic.
 
 ## Start locally on Windows
 
@@ -140,3 +140,11 @@ The reported Phase 0 iPhone 16 Pro / iOS 27.2 review passed the non-VoiceOver st
 `scripts/hosted_auth_smoke.py` is restricted to the authorized synthetic Preview project. It reads the ignored database/admin settings and a public `ILP_SUPABASE_PUBLISHABLE_KEY` environment variable. Its optional `--migrate` applies Alembic before running. Actual hosted Auth/Data API and current local ASGI checks pass; it never sends external mail and removes its temporary users. This does not verify a deployed Vercel API or the owner inbox. See [current evidence](docs/IMPLEMENTATION_STATUS.md).
 
 Phase 1 acceptance is recorded in docs/IMPLEMENTATION_STATUS.md. The application remains on the protected Preview; Phase 2 has not started and Production was not promoted.
+
+## Phase 2 local people and history
+
+After `db-start` and `db-check`, run the local API and web tasks as above and sign in with a disposable development account. The private screen supports people, archive/restore, priorities/cadence and meetup history. Local schema upgrades now include Alembic `0004_people_meetups`. `db-check` also checks two-user people/meetup isolation, retries and revision conflicts; `browser-auth` exercises actual persistence across a fresh sign-in and saves synthetic responsive screenshots. On this Windows host set `ILP_BROWSER_EXECUTABLE` to the installed Chrome executable for browser checks. Hosted Phase 2 migration/deployment and real iPhone checks remain pending.
+
+Phase 2 protected Preview: [https://i-love-people-c2mef0l08-smooshy.vercel.app](https://i-love-people-c2mef0l08-smooshy.vercel.app) for CI-passed d377735 ([run](https://github.com/TonyL-dev/I-Love-People/actions/runs/44398237798)). Deployed API/RLS/conflict and real browser persistence checks pass; schema is at Alembic 0005. The new exact Auth redirect setting and iPhone people/history review are pending. [Draft PR #2](https://github.com/TonyL-dev/I-Love-People/pull/2) builds on Phase 1 without a merge or Production promotion.
+
+Phase 2 is accepted on [https://i-love-people-c2mef0l08-smooshy.vercel.app](https://i-love-people-c2mef0l08-smooshy.vercel.app) for application d377735. The user reports all requested iPhone Safari and desktop checks pass without screen/keyboard/functional problems; the new Auth redirect and disposable hosted recovery are independently verified. Phase 3 remains planned. VoiceOver remains untested before private release; Production is unchanged.

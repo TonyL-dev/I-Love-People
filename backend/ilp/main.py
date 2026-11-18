@@ -4,6 +4,7 @@ from fastapi import FastAPI, Request, Response
 
 from ilp.auth.router import router as account_router
 from ilp.health.router import router
+from ilp.people.router import router as people_router
 
 
 def create_app() -> FastAPI:
@@ -16,6 +17,7 @@ def create_app() -> FastAPI:
     )
     application.include_router(router)
     application.include_router(account_router)
+    application.include_router(people_router)
 
     @application.middleware("http")
     async def private_responses(

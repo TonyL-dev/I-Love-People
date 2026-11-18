@@ -63,3 +63,19 @@ Protected Preview integration, November 18: commit c031afa passed GitHub CI run 
 Final hosted verification, November 18: used authenticated Vercel tools and a temporary expiring share link without weakening Deployment Protection. Scoped protection access only to the verified Preview origin; Supabase admin requests stayed on the known provider. The ignored HTTPS review harness reused source smoke/ownership checks and drove real Chrome with credentials passed through stdin. HTTP/deployed API/RLS/browser checks pass; temporary users and access-token file were removed. CI 44341998540 passes for e60a47f with 31 browser tests. Real owner-email recovery and iPhone account-screen review await user evidence.
 
 Phase 1 closure, November 18: used the existing managed-Auth/Playwright workflow for a disposable hosted recovery link generated administratively without sending email. Actual redirect, password replacement, old-password and used-link rejection passed; temporary user and protection-token storage were removed. Owner inbox delivery and iPhone screen/keyboard results are separately user-reported. Only documentation changes follow this verification; no implementation tests were added or needlessly repeated. VoiceOver stays unverified for release.
+
+
+## Phase 2 workflow — November 18, 2026
+
+Read Supabase skill, current changelog and RLS documentation. Retained Alembic migrations as explicitly required by repository instructions. Applied React review guidance and the full-flow verification workflow to browser → Python API → local Data API/Postgres → UI persistence. No delegated agents, new dependencies, telemetry or provider changes. Playwright uses installed Chrome via ILP_BROWSER_EXECUTABLE on this host. Local and hosted evidence remain separate.
+
+Final Phase 2 local verification: source/build checks, 33 browser regressions, real local two-user API/RLS/concurrent-retry checks and live browser persistence/recovery/cleanup pass. Used local image inspection for representative phone, desktop dialog and 200% text screenshots. Hosted and real-device evidence is not inferred.
+
+
+Phase 2 rollout: used Vercel deployment/protected-access and Supabase workflows, connector Git tree/commit/branch/PR tools and GitHub Linux CI. Current-source publication is review-only. Consulted official PostgREST custom-error documentation after isolating hosted conflict timeouts. Browser inventory was inspected; no native security setting was changed. Auth URL configuration is not exposed by the connected Supabase tools.
+
+
+Phase 2 hosted completion: authenticated Vercel fetch plus a temporary expiring share link supported the HTTP/API/browser review for CI-passed d377735. The new migration, explicit conflicts, concurrent retries, forced RLS, browser persistence/logout/expiry and cleanup pass. Final SQL confirms zero synthetic users. Temporary token storage was removed and local services stopped. The existing leaked-password warning is unchanged. Auth URL configuration and iPhone/VoiceOver evidence remain user-owned outstanding checks.
+
+
+Phase 2 closure, November 18: reused the previously reviewed Vercel protected-access and managed Supabase/Playwright workflows. The disposable hosted browser recovery passed the new exact origin, replacement-password login and old-password/used-link rejection; account cleanup and temporary token-file removal are verified. Device results and Auth-settings changes are user-reported. This is documentation-only closure; no implementation tests were added or repeated.

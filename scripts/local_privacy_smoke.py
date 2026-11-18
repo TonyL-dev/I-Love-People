@@ -3,12 +3,14 @@
 import asyncio
 import secrets
 import uuid
+from pathlib import Path
 
 import httpx
 from ilp.infrastructure.settings import get_settings
 from ilp.main import create_app
 from local_auth_smoke import AUTH_URL, cleanup_synthetic_data
 from local_services import status
+from people_smoke import exercise_people
 
 
 async def exercise(
@@ -89,6 +91,7 @@ async def exercise(
                         json={"owner_id": foreign, "timezone": "UTC"},
                     )
                 ).status_code == 422
+            await exercise_people(api, sessions, public_key, data_url)
             with httpx.Client(base_url=data_url, timeout=20, trust_env=False) as data:
                 assert data.get("/profiles", headers=public).status_code in (401, 403)
                 for index, (owner, token) in enumerate(sessions):
@@ -174,6 +177,15 @@ def main() -> int:
             flush=True,
         )
     except Exception as error:
+        import traceback
+
+        print(
+            "Failure locations:",
+            [
+                (Path(frame.filename).name, frame.lineno)
+                for frame in traceback.extract_tb(error.__traceback__)
+            ],
+        )
         print(
             f"Local privacy smoke failed ({type(error).__name__}); "
             "credentials and response bodies withheld."

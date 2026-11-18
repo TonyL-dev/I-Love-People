@@ -68,7 +68,13 @@ def main() -> int:
                     revision = connection.execute(
                         text("SELECT version_num FROM ilp_migrations.alembic_version")
                     ).scalar_one()
-                    assert revision in ("0001_foundation", "0002_profiles", "0003_profile_timezone")
+                    assert revision in (
+                        "0001_foundation",
+                        "0002_profiles",
+                        "0003_profile_timezone",
+                        "0004_people_meetups",
+                        "0005_explicit_conflicts",
+                    )
                     print("Current hosted Alembic revision:", revision)
             finally:
                 engine.dispose()

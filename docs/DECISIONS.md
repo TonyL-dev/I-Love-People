@@ -91,3 +91,17 @@ Protected Preview integration, November 18: commit c031afa passed GitHub CI run 
 Protected Preview browser requests, November 18: retain same-origin hosting protection cookies for API/config/health fetches while omitting cookies on cross-origin Auth calls. Cookies do not authenticate application data; verified bearer identity remains mandatory. A browser regression reproduces protected-cookie access without provider-cookie forwarding, and the real protected deployment passes. Disable Vercel Preview Feedback to keep external feedback scripts out of the app. Keep the PR draft and Production unchanged until owner-email recovery and outstanding release evidence are resolved.
 
 Phase 1 acceptance, November 18: combine independently observed hosted security/recovery checks with explicitly user-reported owner inbox and iPhone evidence. Record actual configured rate limits without enabling SMS, anonymous or Web3 sign-in. Phase 1 acceptance does not imply Production release, merge, completion of VoiceOver review or authorization to start Phase 2.
+
+
+## Phase 2 concurrency and dates — November 18, 2026
+
+Use exact calendar dates, validated both by the service and database against the saved IANA timezone (UTC until saved). Derive last seen rather than storing a second editable value. Use an invoker RPC with row locks and expected revisions for stale-edit conflicts, and an account-scoped advisory lock plus durable receipts for meetup retries. A request key cannot be reused with a changed payload. Scrub original receipt content after meetup edits/deletion; a late retry then conflicts rather than recreating content. Cascade people, history and receipts in the same database transaction. Priority suggestions require an explicit button press; changing/clearing priority preserves the independent cadence.
+
+
+Hosted conflict behavior, November 18: use explicit PostgREST PT409 for deliberate stale-edit and reused-request conflicts. Hosted calls raising serialization SQLSTATE 40001 timed out during regression; ordinary successful retries and duplicate creation were unaffected. Keep real serialization failures retryable. See [PostgREST custom HTTP errors](https://docs.postgrest.org/en/stable/references/errors.html#raise-errors-with-http-status-codes). A separate Alembic 0005 updates the already-applied 0004 functions without rewriting migration history.
+
+
+Phase 2 hosted evidence confirms explicit PT409 fixes the conflict timeouts without altering ownership or locking. Retain Deployment Protection, Preview-only settings, the draft review branch and separate device evidence. The new exact recovery destination requires a user configuration step because connected Supabase tools do not expose Auth URL settings. Do not broaden the allowlist with wildcards.
+
+
+Phase 2 acceptance, November 18: combine independently observed CI/deployed privacy/concurrency/browser checks with explicitly user-reported iPhone Safari/desktop results. Verify the newly configured exact recovery target using a disposable hosted account without sending email. Keep VoiceOver as an outstanding private-release check. Phase acceptance does not authorize Phase 3, merge or Production promotion.
