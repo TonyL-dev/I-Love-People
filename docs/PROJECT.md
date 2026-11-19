@@ -169,3 +169,6 @@ November 19 usability follow-up verified: `cedb269` passes [both Linux jobs](htt
 
 
 Phase 3 menu refinement, November 19: implement the user's requested on-demand preferences/account side menu and first-line mobile toast checkmark. Existing authentication, due logic and phase scope stay unchanged. Source/build, 36 browser checks and the real local account journey pass; hosted verification is pending. Revised device review, Auth URL configuration and VoiceOver remain unconfirmed; Phase 4 is not started.
+
+
+Settings-menu follow-up verified: `97e40ea` passes [both Linux CI jobs](https://github.com/TonyL-dev/I-Love-People/actions/runs/44554413689) and actual hosted drawer/toast/account/library checks at [the updated protected Preview](https://i-love-people-pfoktasn6-smooshy.vercel.app). Preferences/account are hidden until Menu opens; toast cues align with the first line. Draft PR #3 is updated. Current-device review, exact recovery URL configuration and VoiceOver remain unconfirmed. No Phase 4, merge or Production promotion.

@@ -73,3 +73,8 @@ Keep the previous exact Phase 2 redirect until the new one is verified; add no w
 ## November 19 usability Preview
 
 The latest verified application is `cedb269` at [https://i-love-people-kipv1n31u-smooshy.vercel.app](https://i-love-people-kipv1n31u-smooshy.vercel.app). For recovery on this exact origin, save **Site URL** `https://i-love-people-kipv1n31u-smooshy.vercel.app` and exact **Redirect URL** `https://i-love-people-kipv1n31u-smooshy.vercel.app/reset-password` in [Auth URL configuration](https://supabase.com/dashboard/project/efuixughigoyyyflyelm/auth/url-configuration). Retain the previously verified exact redirect until the new one is verified; do not add a wildcard. The user's usability report did not confirm Auth settings. No new-origin recovery check is claimed for this follow-up; after the save, use the existing disposable no-email recovery verification workflow.
+
+
+## Settings-menu Preview
+
+The latest verified application is `97e40ea` at [https://i-love-people-pfoktasn6-smooshy.vercel.app](https://i-love-people-pfoktasn6-smooshy.vercel.app). Recovery on this exact origin uses **Site URL** `https://i-love-people-pfoktasn6-smooshy.vercel.app` and **Redirect URL** `https://i-love-people-pfoktasn6-smooshy.vercel.app/reset-password` in [Auth URL configuration](https://supabase.com/dashboard/project/efuixughigoyyyflyelm/auth/url-configuration). Keep the previous exact redirect until the new target is independently verified; add no wildcard. The menu/toast request did not confirm provider settings, and no new-origin hosted recovery claim is made. Managed Auth and recovery code are unchanged; the existing disposable no-email recovery workflow can verify the target after the dashboard save.

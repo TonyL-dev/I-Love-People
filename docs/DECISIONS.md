@@ -134,3 +134,6 @@ November 19 rollout confirmation: reuse the Git-built protected Preview after co
 Move infrequently used preferences/account controls into a modal side drawer rather than leaving them below every library view. Reuse the native dialog for inert background, keyboard behavior and focus return; initially focus Close so opening the menu does not open a software keyboard. Keep library state mounted and preserve in-memory timezone drafts. Dismissal cancels only the local logout confirmation, without submitting changes.
 
 Place the toast success icon alongside the first message line on all widths. Let text wrap naturally and limit spacing growth on narrow enlarged-text layouts, keeping the explicit dismiss target at least 44 px. Preserve confirmed-success semantics, inline failures and notification lifetime. This is a Phase 3 presentation refinement with no new dependencies, runtime services, schema or cost.
+
+
+Settings-menu rollout confirmation: reuse the exact Git-built protected Preview after Linux CI passes. The native drawer and inline toast cue pass both local and actual hosted journeys without another migration. Preserve the draft PR, synthetic cleanup and separate device/recovery gates; no release or phase change follows this presentation refinement.

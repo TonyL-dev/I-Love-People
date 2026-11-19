@@ -1,6 +1,6 @@
 # Implementation status
 
-Updated November 19, 2026. Phases 0, 1 and 2 are accepted. Phase 3 is implemented and hosted-verified for cedb269; final Auth URL configuration and new-screen device review remain pending. VoiceOver and new-screen iPhone review remain unverified. See the Phase 3 evidence below.
+Updated November 19, 2026. Phases 0, 1 and 2 are accepted. Phase 3 is implemented and hosted-verified for 97e40ea; final Auth URL configuration and new-screen device review remain pending. VoiceOver and new-screen iPhone review remain unverified. See the Phase 3 evidence below.
 
 | Phase | State |
 | --- | --- |
@@ -302,3 +302,19 @@ No backend, schema, dependency or API contract changes. No Phase 3 acceptance, P
 Implemented the user-requested side menu for Your preferences and Account, including saved identity/recovery/sign-out controls. A labeled Menu button opens a right-side native modal with deliberate Close focus, Escape/backdrop dismissal and focus return. The underlying library selection/search stay mounted. Closing cancels a pending logout confirmation; timezone edits remain in memory until explicitly saved. Loading/error and saved-timezone feedback remain accessible in the active context.
 
 The success checkmark now sits beside the first toast line, with naturally wrapping text and unchanged lifetime/dismissal. Normal and 200% text alignment is measured in browser checks. Initial visual review found an overly narrow enlarged drawer heading; wrapping and narrow-toast spacing were corrected. Source checks pass (83 Python/7 frontend, lint/types/contracts/design/build); all 36 browser checks and the actual local account/nudge/recovery journey pass with verified synthetic cleanup. Hosted evidence follows after verification. No API, schema, dependency, Production or Phase 4 changes.
+
+
+## Settings-menu verification and handoff - November 19, 2026
+
+| Check | Observed result |
+| --- | --- |
+| Application | `97e40eafd3a695b422cd248b291d0505a18f7777` in draft PR #3 |
+| Linux CI | [Run 44554413689](https://github.com/TonyL-dev/I-Love-People/actions/runs/44554413689) passed both jobs: 83 Python, 7 frontend, 36 browser checks and real local database/Auth/browser |
+| Preview | [https://i-love-people-pfoktasn6-smooshy.vercel.app](https://i-love-people-pfoktasn6-smooshy.vercel.app), `dpl_FpMv9MC2UzDTZzuUqXBfCo9ySJDg`, READY; exact Git commit and protected Preview target verified |
+| Drawer behavior | Hidden by default; right-side layout, deliberate Close focus, native background-focus exclusion, Escape/backdrop close, restored opener/library/search, timezone/appearance and logout confirmation pass |
+| Toast behavior | Icon is beside the first text line at normal and 200% text; measured local and actual hosted alignment passes. Success/failure, timeout/hover/focus, dismiss and logout cleanup remain covered |
+| Visual review | Light/dark at 320/390/768/1440 px, axe and enlarged text pass. Header wrapping and sticky coverage were corrected after visual inspection; representative actual hosted drawer/toast images inspected |
+| Hosted flow | HTTP routing/assets/headers/no-store/readiness/404 plus actual login, drawer preference/appearance, snooze/pause/dismiss, meetup/review/persistence, logout and expiry pass; no page errors |
+| Cleanup | Zero hosted synthetic verification accounts remain. Temporary share access revoked and local file removed. Local services stopped |
+
+This is presentation-only: no backend, API, schema, dependency or credential change. Revised iPhone/VoiceOver and exact Auth URL confirmation remain unverified. No Phase 3 acceptance, Phase 4, merge or Production promotion. The following handoff commit changes documentation only; source verification is attached to the application commit above.

@@ -68,3 +68,6 @@ Revised review target, November 19: [https://i-love-people-kipv1n31u-smooshy.ver
 ## Settings menu and toast follow-up
 
 On the revised Preview, check that preferences/account panels are hidden until Menu opens the side drawer. Opening should focus Close without automatically raising the keyboard; timezone/appearance and logout remain usable inside. Close or tap the backdrop and confirm the open person/search remain. Check enlarged-text scrolling and the Close control. Confirm a snooze/pause toast keeps its checkmark beside the first message line. This request alone does not establish a device pass or a VoiceOver result.
+
+
+Settings-menu review target: [https://i-love-people-pfoktasn6-smooshy.vercel.app](https://i-love-people-pfoktasn6-smooshy.vercel.app), `97e40ea`. Recheck Menu opening/closing, timezone/appearance and logout within the drawer, preserved person/search on close, enlarged-text drawer scrolling, and the toast checkmark on the first message line. Agent Chrome results do not establish a new iPhone or VoiceOver pass.
