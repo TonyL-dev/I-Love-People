@@ -1,6 +1,6 @@
 # Repository instructions for I Love People
 
-Updated November 18, 2026. Read docs/PROJECT.md, docs/IMPLEMENTATION_STATUS.md, docs/ARCHITECTURE.md, docs/DECISIONS.md, and docs/PROJECT_GUIDELINES.md before changes.
+Updated November 19, 2026. Read docs/PROJECT.md, docs/IMPLEMENTATION_STATUS.md, docs/ARCHITECTURE.md, docs/DECISIONS.md, and docs/PROJECT_GUIDELINES.md before changes.
 
 This project is a private responsive website with a $0 monthly hosting target. The active roadmap is in docs/PROJECT.md. Implement phases in order when requested. Phase 0 foundation acceptance is met; local checks, GitHub Linux CI, hosted HTTP/database smoke, and local loopback binding pass. Safari review passed by user report. Phases 1 and 2 are accepted on the protected Preview; Phase 3 is implemented and hosted-verified, awaiting final Auth URL configuration and new-screen device review. VoiceOver remains an open pre-release check. Imported resume-project files are preserved in docs/reference as historical reference material. Their implementation claims and commands do not establish this project's state.
 
@@ -74,3 +74,6 @@ Phase 3 hosted handoff, November 18, 2026. CI-passed a559aa5 is READY at https:/
 
 
 Phase 3 usability follow-up, November 19, 2026. The user reports the existing date controls, software keyboard, long names, light/dark, enlarged text and readable errors work correctly, while requesting clearer section selection, action feedback and mobile profile discovery. Added selected navigation with a check mark and matching titles, focused person details with Back preserving list context, and confirmed-success toasts for people/meetup/nudge mutations. Local source/build, browser regressions and the real local account/nudge/recovery journey pass; hosted validation of this revision remains pending. The report does not confirm the Auth URL save or VoiceOver; Phase 3 acceptance and Phase 4 remain unchanged.
+
+
+Phase 3 usability handoff, November 19, 2026. CI-passed cedb269 is READY at https://i-love-people-kipv1n31u-smooshy.vercel.app, deployment dpl_H5GW5rw39kH7ME8AbK5Ut6jgK4uw. Both Linux jobs in run 44547451534 pass (83 Python, 7 frontend, 35 browser checks plus real local database/Auth/browser). Protected hosted HTTP and actual browser navigation/profile/back/toast/nudge/persistence/logout/expiry checks pass. Temporary hosted user absence and zero synthetic verification accounts are verified; temporary share access was revoked and its file removed. Local services are stopped. Draft PR #3 is updated. The user's prior mobile checks pass by report; the revised navigation/toast/detail interactions need a quick device recheck. Auth URL configuration and VoiceOver remain unconfirmed. No Phase 3 acceptance, Phase 4, merge or Production promotion.

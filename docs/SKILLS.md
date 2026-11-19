@@ -1,6 +1,6 @@
 # Workflow and skills notes
 
-Updated November 17, 2026. Imported notes are retained in reference/SKILLS.md.
+Updated November 19, 2026. Imported notes are retained in reference/SKILLS.md.
 
 Initial planning adapted documentation and reviewed official provider sources. Subsequent interface planning and Phase 0 work are recorded below; current evidence is in IMPLEMENTATION_STATUS.md.
 
@@ -94,3 +94,6 @@ Computer Use inventory found only native user browser windows, with no connected
 ## Phase 3 usability follow-up - November 19, 2026
 
 Applied React review guidance to navigation/focus, cancellable reads, notification lifecycle and keyboard/screen-reader semantics. Existing semantic tokens and bundled Lucide icons are reused. Behavioral Playwright checks cover selected state, profile focus/scroll/back with filtered search, delayed success, inline conflicts, repeated toasts, hover/focus timeout and logout cleanup. No subagents, new dependencies or API/schema changes. Real-device feedback and agent browser evidence remain separately attributed.
+
+
+November 19 final verification: existing task runner, installed Chrome and React/full-flow review covered the new UI locally; GitHub Linux CI passed both jobs. Reused the exact Git-built Vercel Preview and existing protected-access harness for HTTP plus actual synthetic browser navigation/toast/meetup/persistence/logout/expiry checks. No backend reimplementation or migration. Verified synthetic cleanup, revoked temporary share access, removed its local token file, and stopped local services. Inspected phone/detail/toast screenshots, including readable 200% text feedback after widening its narrow-screen layout. No Computer Use or subagents were used in this follow-up.

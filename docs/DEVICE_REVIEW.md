@@ -60,3 +60,6 @@ Phase 3 review target: [https://i-love-people-k5cwd4tp3-smooshy.vercel.app](http
 ## Phase 3 usability feedback - November 19, 2026
 
 The user reports existing date controls, software keyboard, long names, light/dark, enlarged text and readable errors work correctly. Navigation clarity, success feedback and mobile person opening need improvement. No new device/OS version or VoiceOver result was provided. After the revised Preview is verified, recheck the clearly selected section, opening a person into details with the name/Back action in view, Back restoring search, and success toasts after snooze/pause and saving a meetup. The earlier report is not automatically evidence for the revised UI.
+
+
+Revised review target, November 19: [https://i-love-people-kipv1n31u-smooshy.vercel.app](https://i-love-people-kipv1n31u-smooshy.vercel.app), `cedb269`. Recheck just the requested improvements: selected section remains unmistakable while scrolling; opening a person shows details with name and Back visible; Back returns to the filtered list; snooze/pause and meetup saves show a readable success toast. Prior reported mobile passes remain recorded above. No new VoiceOver pass is inferred.

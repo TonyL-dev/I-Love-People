@@ -68,3 +68,8 @@ The verified Phase 3 application is `a559aa5` at [https://i-love-people-k5cwd4tp
 - **Redirect URL:** `https://i-love-people-k5cwd4tp3-smooshy.vercel.app/reset-password`
 
 Keep the previous exact Phase 2 redirect until the new one is verified; add no wildcard. A disposable no-email probe confirms the new reset destination is currently absent and falls back to the Phase 2 origin. Connected Supabase tools do not expose this configuration; the Computer Use skill's Windows guidance forbids changing in-app security settings. The dashboard save is therefore a user step. After it is saved, independently verify the new-origin password replacement, old-password and used-link rejection with a disposable account. No new owner-inbox claim is inferred; earlier real delivery evidence remains Phase 1 evidence.
+
+
+## November 19 usability Preview
+
+The latest verified application is `cedb269` at [https://i-love-people-kipv1n31u-smooshy.vercel.app](https://i-love-people-kipv1n31u-smooshy.vercel.app). For recovery on this exact origin, save **Site URL** `https://i-love-people-kipv1n31u-smooshy.vercel.app` and exact **Redirect URL** `https://i-love-people-kipv1n31u-smooshy.vercel.app/reset-password` in [Auth URL configuration](https://supabase.com/dashboard/project/efuixughigoyyyflyelm/auth/url-configuration). Retain the previously verified exact redirect until the new one is verified; do not add a wildcard. The user's usability report did not confirm Auth settings. No new-origin recovery check is claimed for this follow-up; after the save, use the existing disposable no-email recovery verification workflow.

@@ -1,6 +1,6 @@
 # Implementation status
 
-Updated November 18, 2026. Phases 0, 1 and 2 are accepted. Phase 3 is implemented and hosted-verified for a559aa5; final Auth URL configuration and new-screen device review remain pending. VoiceOver and new-screen iPhone review remain unverified. See the Phase 3 evidence below.
+Updated November 19, 2026. Phases 0, 1 and 2 are accepted. Phase 3 is implemented and hosted-verified for cedb269; final Auth URL configuration and new-screen device review remain pending. VoiceOver and new-screen iPhone review remain unverified. See the Phase 3 evidence below.
 
 | Phase | State |
 | --- | --- |
@@ -279,3 +279,19 @@ The security advisor still reports the pre-existing [leaked-password-protection 
 The user reports that date controls, software keyboard, long names, light/dark, enlarged text and readable errors work correctly on the existing Phase 3 UI. They request a more obvious current section, success feedback for actions such as snooze/pause, and an unmistakable result when opening a person on mobile. No new device/OS version, Auth URL save or VoiceOver result was supplied. This is user-reported evidence for the previous Preview, not an agent-observed device run or acceptance of the revised interactions.
 
 Implemented selected primary navigation with a check mark, `aria-current` and matching page titles; a single focused person-detail view with Back restoring filtered-list context; and dismissible confirmed-success toasts for people, meetup and nudge mutations. Toasts pause expiration on hover/focus, replace previous feedback and clear on account unmount. Errors remain inline. Local source/build checks pass (83 Python and 7 frontend tests). The 35 browser regressions pass across the full run and isolated rerun of a login test that hit its overall time limit; new navigation/toast checks pass. The real local account/nudge/recovery journey passes with synthetic cleanup. Hosted verification of this revision remains pending. No backend/schema/contract changes, Phase 4, merge or Production promotion.
+
+
+## November 19 usability verification and handoff
+
+| Check | Observed result |
+| --- | --- |
+| Current application | `cedb269aa5d9f60cd1aecbbcd7095461f0384d19` in draft PR #3 |
+| Linux CI | [Run 44547451534](https://github.com/TonyL-dev/I-Love-People/actions/runs/44547451534) passed both jobs: source/contracts/build, 83 Python/7 frontend/35 browser checks and real local database/Auth/browser journey |
+| Preview | [https://i-love-people-kipv1n31u-smooshy.vercel.app](https://i-love-people-kipv1n31u-smooshy.vercel.app); Git-built `dpl_H5GW5rw39kH7ME8AbK5Ut6jgK4uw`, READY with exact commit verified |
+| Hosted HTTP/browser | Routing/assets/headers/no-store/health/readiness/404 pass. Actual login, new focused detail/Back, snooze/pause success messages, dismiss/new-meetup cycle, review, persistence, logout and expiry pass; no page errors |
+| New interaction checks | Selected current state and distinct styling, filtered-search Back focus, visible heading/Back below sticky navigation, pending request without success, conflict inline without toast, repeated messages, hover/focus timeout, dismiss and logout cleanup pass |
+| Visual evidence | Light/dark 320/390/768/1440 px, axe and enlarged-text checks pass; phone detail and enlarged-toast viewport screenshots inspected. Mobile toast text uses the full second row to avoid excessive wrapping at 200% |
+| Cleanup | Real local and hosted fixtures removed; final hosted account inspection found zero synthetic verification accounts. Temporary share link revoked and file removed. Local services stopped |
+| Remaining evidence | The user reports prior date/keyboard/long-name/appearance/enlarged-text/error checks pass. Revised interactions need a quick device recheck. No Auth URL save or VoiceOver result was supplied; no new-origin recovery claim is made |
+
+No backend, schema, dependency or API contract changes. No Phase 3 acceptance, Phase 4, merge or Production promotion. Source verification remains attached to the application commit above; the subsequent handoff commit changes documentation only.

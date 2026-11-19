@@ -1,6 +1,6 @@
 # Decisions
 
-Updated November 17, 2026. The architecture entries define the selected direction. The foundation decisions below are implemented locally; hosted/provider behavior is still subject to phase acceptance.
+Updated November 19, 2026. The architecture entries define the selected direction. The foundation decisions below are implemented locally; hosted/provider behavior is still subject to phase acceptance.
 
 | Decision | Rationale and consequence |
 | --- | --- |
@@ -124,3 +124,6 @@ Phase 3 rollout confirmation, November 18: deploy the exact CI-passed applicatio
 Use the existing primary-action tokens plus a check mark and `aria-current` to distinguish the selected section in both appearances. Keep ordinary keyboard-operable navigation buttons rather than adding partial ARIA tab semantics. Match the page heading to the selection. Show one focused person detail view with a Back action instead of appending it below a potentially long list.
 
 Use short success toasts only after a confirmed mutation, with no suggested Undo for irreversible changes. Keep error recovery inline. Seven idle seconds, pause on hover/focus and explicit dismissal make feedback readable without interrupting forms. Account unmount clears messages alongside other private state. These are Phase 3 refinements, with no change to hosting cost, identity, schema or phase sequencing.
+
+
+November 19 rollout confirmation: reuse the Git-built protected Preview after confirming its exact commit matches successful Linux CI, avoiding a duplicate deployment. No migration is needed for this presentation-only revision. Keep the existing draft PR and separate prior user mobile evidence from verification of the new interactions.

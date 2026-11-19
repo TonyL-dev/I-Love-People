@@ -1,6 +1,6 @@
 # I Love People project plan
 
-Updated November 18, 2026. This document defines the implementation roadmap. Phase 0 is accepted. Phases 1 and 2 are accepted on the protected Preview; Phase 3 is implemented and hosted-verified, awaiting final Auth URL configuration and new-screen device review. VoiceOver remains unverified before release. See [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for evidence and outstanding gates.
+Updated November 19, 2026. This document defines the implementation roadmap. Phase 0 is accepted. Phases 1 and 2 are accepted on the protected Preview; Phase 3 is implemented and hosted-verified, awaiting final Auth URL configuration and new-screen device review. VoiceOver remains unverified before release. See [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for evidence and outstanding gates.
 
 ## Goal and scope
 
@@ -163,3 +163,6 @@ Phase 3 hosted handoff, November 18: application `a559aa5` passes [both Linux CI
 
 
 Phase 3 usability follow-up, November 19: the user reports the existing mobile date/keyboard/text/appearance/error checks work, and requested clearer current-section navigation, success toasts and visible profile opening. These refinements are implemented and locally verified, with hosted validation pending; the latest evidence is in IMPLEMENTATION_STATUS.md. This is not a request for Phase 4. Auth configuration and VoiceOver are not confirmed by this report.
+
+
+November 19 usability follow-up verified: `cedb269` passes [both Linux jobs](https://github.com/TonyL-dev/I-Love-People/actions/runs/44547451534) and hosted HTTP/actual browser checks at [the revised protected Preview](https://i-love-people-kipv1n31u-smooshy.vercel.app). Clear selected sections, focused details/Back and confirmed-success toasts are delivered in draft PR #3. The earlier mobile passes are user-reported; a focused recheck of the revised interactions, final Auth URL configuration and VoiceOver remain outstanding. Phase 4 is not started.

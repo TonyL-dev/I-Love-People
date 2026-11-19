@@ -1,6 +1,6 @@
 # Proposed architecture
 
-Updated November 18, 2026. This describes the target architecture and Phase 0/1/2/3 source. Phases 1 and 2 are accepted on the protected Preview. Current verification status is in IMPLEMENTATION_STATUS.md. Imported architecture history is retained in reference/ARCHITECTURE.md.
+Updated November 19, 2026. This describes the target architecture and Phase 0/1/2/3 source. Phases 1 and 2 are accepted on the protected Preview. Current verification status is in IMPLEMENTATION_STATUS.md. Imported architecture history is retained in reference/ARCHITECTURE.md.
 
 ## Implemented foundation
 
@@ -138,3 +138,6 @@ Phase 3 hosted runtime, November 18: CI-passed `a559aa5`, Alembic `0006_in_app_n
 The library keeps a clearly selected, sticky navigation row and matching section title. Opening a person replaces the list with detail content, moves keyboard focus to the name, and scrolls the detail section below the navigation. Back preserves search/archive settings and returns focus to the initiating row. Navigation to another section closes the previous profile. Navigation height is observed for enlarged-text scroll clearance.
 
 A shared `Toast` presents confirmed mutation results in a polite status region without moving focus. Notifications remain only in account component memory, replace the previous message, offer an accessible dismiss button and expire after seven idle seconds, pausing on hover/focus. Failed requests retain inline errors and never emit success. People, meetup and nudge writes keep the same API/authentication/database paths; there is no schema or contract change.
+
+
+November 19 usability runtime: `cedb269` at https://i-love-people-kipv1n31u-smooshy.vercel.app, protected Preview `dpl_H5GW5rw39kH7ME8AbK5Ut6jgK4uw`. Hosted browser checks confirm the focused detail/Back and mutation-toast path; HTTP/assets/security/readiness checks pass. This revision changes presentation and verification only; API contracts, Alembic 0006 and ownership boundaries are unchanged.
