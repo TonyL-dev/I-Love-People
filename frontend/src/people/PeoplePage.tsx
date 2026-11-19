@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ArrowLeft, Check } from 'lucide-react';
 import type { Session } from '../auth/client';
 import { Button } from '../ui/Button';
 import { Dialog } from '../ui/Dialog';
+import { Toast } from '../ui/Toast';
 import { journal, failureMessage, type Person, type PersonInput, type Meetup } from './client';
 import { DueList, NudgeControls } from './NudgeViews';
 
@@ -36,7 +38,7 @@ function PersonEditor({
 }: {
   person: Person | null;
   session: Session;
-  done: () => void;
+  done: (message: string) => void;
   close: () => void;
 }) {
   const [draft, setDraft] = useState<PersonInput>(
@@ -74,7 +76,10 @@ function PersonEditor({
             person ? 'PUT' : 'POST',
             { ...draft, ...(person ? { revision: person.revision } : {}) },
           )
-            .then(done, (e) => setError(failureMessage(e)))
+            .then(
+              () => done(person ? 'Person saved.' : 'Person added.'),
+              (e) => setError(failureMessage(e)),
+            )
             .finally(() => setBusy(false));
         }}
       >
@@ -175,7 +180,7 @@ function MeetupEditor({
   meetup: Meetup | null;
   timezone: string;
   session: Session;
-  done: () => void;
+  done: (message: string) => void;
   close: () => void;
 }) {
   const [date, setDate] = useState(meetup?.completed_on ?? today(timezone));
@@ -208,7 +213,10 @@ function MeetupEditor({
             meetup ? 'PUT' : 'POST',
             { ...payload, ...(meetup ? { revision: meetup.revision } : { request_id: requestId }) },
           )
-            .then(done, (e) => setError(failureMessage(e)))
+            .then(
+              () => done(meetup ? 'Meetup updated.' : 'Meetup logged.'),
+              (e) => setError(failureMessage(e)),
+            )
             .finally(() => setBusy(false));
         }}
       >
@@ -263,9 +271,57 @@ export function PeoplePage({ session, timezone }: { session: Session; timezone: 
     path: string;
     method: string;
     body?: unknown;
+    success: string;
   } | null>(null);
+  const [toast, setToast] = useState<{ id: number; message: string } | null>(null);
+  const toastSequence = useRef(0);
+  const profileHeading = useRef<HTMLHeadingElement>(null);
+  const profileSection = useRef<HTMLElement>(null);
+  const pageHeading = useRef<HTMLHeadingElement>(null);
+  const navigation = useRef<HTMLElement>(null);
+  const opener = useRef<HTMLButtonElement | null>(null);
+  const dismissToast = useCallback(() => setToast(null), []);
   const [busy, setBusy] = useState(false);
   const person = people?.find((p) => p.id === selected);
+  const viewTitle = { catchup: 'Catch up', people: 'People', review: 'Weekly review' }[view];
+  useEffect(() => {
+    const nav = navigation.current;
+    if (!nav) return;
+    const observer = new ResizeObserver(() => {
+      nav.parentElement?.style.setProperty('--library-nav-height', `${nav.offsetHeight}px`);
+    });
+    observer.observe(nav);
+    return () => observer.disconnect();
+  }, []);
+  useEffect(() => {
+    if (selected && profileHeading.current) {
+      profileHeading.current.focus({ preventScroll: true });
+      profileSection.current?.scrollIntoView({ block: 'start' });
+    }
+  }, [selected]);
+  function openPerson(id: string, trigger?: HTMLButtonElement) {
+    opener.current = trigger ?? null;
+    setHistory(null);
+    setSelected(id);
+  }
+  function backToList() {
+    setSelected(null);
+    requestAnimationFrame(() => {
+      const target =
+        (opener.current?.id && document.getElementById(opener.current.id)) || pageHeading.current;
+      target?.focus({ preventScroll: true });
+      target?.scrollIntoView({ block: 'center' });
+    });
+  }
+  function notify(message: string) {
+    setToast({ id: ++toastSequence.current, message });
+  }
+  function closeEditor() {
+    setEditor(null);
+    requestAnimationFrame(() => {
+      if (document.activeElement === document.body) profileHeading.current?.focus();
+    });
+  }
   useEffect(() => {
     // Refresh across local midnight, returning to the tab, or a timezone change.
     const refresh = () => setAttempt((a) => a + 1);
@@ -311,23 +367,36 @@ export function PeoplePage({ session, timezone }: { session: Session; timezone: 
     setError('');
     setAttempt((a) => a + 1);
   }
-  function done() {
-    setEditor(null);
+  function done(message: string) {
+    closeEditor();
     setConfirmation(null);
     refresh();
+    notify(message);
   }
   return (
     <section className="people-page stack stack--large" aria-label="People and meetup history">
       <div className="page-heading">
-        <h2>Your people</h2>
+        <h2 ref={pageHeading} tabIndex={-1}>
+          {viewTitle}
+        </h2>
         <p className="secondary">A little space to remember time together.</p>
         <p className="supporting secondary">
           Today: {today(timezone)} · {timezone}
         </p>
       </div>
-      <nav className="actions" aria-label="Your library">
+      <nav ref={navigation} className="library-navigation actions" aria-label="Your library">
         {(['catchup', 'people', 'review'] as const).map((value) => (
-          <Button key={value} aria-pressed={view === value} onClick={() => setView(value)}>
+          <Button
+            key={value}
+            variant={view === value ? 'primary' : 'secondary'}
+            aria-current={view === value ? 'page' : undefined}
+            aria-pressed={view === value}
+            onClick={() => {
+              setView(value);
+              setSelected(null);
+            }}
+          >
+            {view === value && <Check aria-hidden="true" size={18} />}
             {{ catchup: 'Catch up', people: 'People', review: 'Weekly review' }[value]}
           </Button>
         ))}
@@ -337,6 +406,7 @@ export function PeoplePage({ session, timezone }: { session: Session; timezone: 
           variant="primary"
           onClick={() => {
             setView('people');
+            setSelected(null);
             setEditingPerson(null);
             setEditor('person');
           }}
@@ -345,7 +415,7 @@ export function PeoplePage({ session, timezone }: { session: Session; timezone: 
         </Button>
         <Button onClick={refresh}>Refresh people</Button>
       </div>
-      {view === 'people' && (
+      {view === 'people' && !person && (
         <>
           <label>
             Search people
@@ -353,7 +423,7 @@ export function PeoplePage({ session, timezone }: { session: Session; timezone: 
           </label>
         </>
       )}
-      {view === 'people' && (
+      {view === 'people' && !person && (
         <label className="checkbox-row">
           <input
             type="checkbox"
@@ -373,6 +443,7 @@ export function PeoplePage({ session, timezone }: { session: Session; timezone: 
         <p>No people yet. Add someone, then log a meetup whenever you like.</p>
       )}
       {view === 'people' &&
+        !person &&
         people &&
         people.length > 0 &&
         !people.some(
@@ -380,23 +451,19 @@ export function PeoplePage({ session, timezone }: { session: Session; timezone: 
             p.archived === archived &&
             p.name.toLocaleLowerCase().includes(query.toLocaleLowerCase()),
         ) && <p>No matching people.</p>}
-      {view !== 'people' && people && (
+      {view !== 'people' && people && !person && (
         <DueList
           people={people}
           review={view === 'review'}
-          open={(id) => {
-            setSelected(id);
-            setHistory(null);
-          }}
-          log={(id) => {
-            setSelected(id);
-            setHistory(null);
+          open={openPerson}
+          log={(id, trigger) => {
+            openPerson(id, trigger);
             setEditingMeetup(null);
             setEditor('meetup');
           }}
         />
       )}
-      {view === 'people' && (
+      {view === 'people' && !person && (
         <div className="stack">
           {people
             ?.filter(
@@ -407,11 +474,9 @@ export function PeoplePage({ session, timezone }: { session: Session; timezone: 
             .map((p) => (
               <div className="surface stack" key={p.id}>
                 <Button
+                  id={`library-person-${p.id}`}
                   variant="quiet"
-                  onClick={() => {
-                    setHistory(null);
-                    setSelected(p.id);
-                  }}
+                  onClick={(event) => openPerson(p.id, event.currentTarget)}
                 >
                   {p.name}
                 </Button>
@@ -423,8 +488,20 @@ export function PeoplePage({ session, timezone }: { session: Session; timezone: 
         </div>
       )}
       {person && (
-        <section className="surface stack" aria-label={`Profile for ${person.name}`}>
-          <h2>{person.name}</h2>
+        <section
+          ref={profileSection}
+          className="person-detail surface stack"
+          aria-label={`Profile for ${person.name}`}
+        >
+          <Button className="self-start" onClick={backToList}>
+            <ArrowLeft aria-hidden="true" size={18} /> Back to {viewTitle}
+          </Button>
+          <div className="stack stack--small">
+            <p className="eyebrow">Person details</p>
+            <h2 ref={profileHeading} tabIndex={-1}>
+              {person.name}
+            </h2>
+          </div>
           <p>
             {person.archived ? 'Archived - ' : ''}
             {levels.find((l) => l[0] === person.priority)?.[1] ?? 'No priority'}
@@ -458,6 +535,7 @@ export function PeoplePage({ session, timezone }: { session: Session; timezone: 
                   title: `${person.archived ? 'Restore' : 'Archive'} ${person.name}? History will be retained.`,
                   path: `people/${person.id}`,
                   method: 'PUT',
+                  success: person.archived ? 'Person restored.' : 'Person archived.',
                   body: {
                     name: person.name,
                     priority: person.priority ?? null,
@@ -478,6 +556,7 @@ export function PeoplePage({ session, timezone }: { session: Session; timezone: 
                   title: `Delete ${person.name} and all their meetup history permanently?`,
                   path: `people/${person.id}?revision=${person.revision}`,
                   method: 'DELETE',
+                  success: 'Person and meetup history deleted.',
                 })
               }
             >
@@ -488,6 +567,7 @@ export function PeoplePage({ session, timezone }: { session: Session; timezone: 
             key={person.id}
             person={person}
             session={session}
+            notify={notify}
             refresh={(updated) => {
               setPeople(
                 (current) => current?.map((p) => (p.id === updated.id ? updated : p)) ?? null,
@@ -521,6 +601,7 @@ export function PeoplePage({ session, timezone }: { session: Session; timezone: 
                         title: `Delete meetup with ${person.name} on ${m.completed_on}?`,
                         path: `meetups/${m.id}?revision=${m.revision}`,
                         method: 'DELETE',
+                        success: 'Meetup deleted.',
                       })
                     }
                   >
@@ -533,12 +614,7 @@ export function PeoplePage({ session, timezone }: { session: Session; timezone: 
         </section>
       )}
       {editor === 'person' && (
-        <PersonEditor
-          person={editingPerson}
-          session={session}
-          done={done}
-          close={() => setEditor(null)}
-        />
+        <PersonEditor person={editingPerson} session={session} done={done} close={closeEditor} />
       )}
       {editor === 'meetup' && person && (
         <MeetupEditor
@@ -547,7 +623,7 @@ export function PeoplePage({ session, timezone }: { session: Session; timezone: 
           timezone={timezone}
           session={session}
           done={done}
-          close={() => setEditor(null)}
+          close={closeEditor}
         />
       )}
       {confirmation && (
@@ -570,7 +646,10 @@ export function PeoplePage({ session, timezone }: { session: Session; timezone: 
                 if (busy) return;
                 setBusy(true);
                 void journal(session, confirmation.path, confirmation.method, confirmation.body)
-                  .then(done, (e) => setError(failureMessage(e)))
+                  .then(
+                    () => done(confirmation.success),
+                    (e) => setError(failureMessage(e)),
+                  )
                   .finally(() => setBusy(false));
               }}
             >
@@ -580,6 +659,7 @@ export function PeoplePage({ session, timezone }: { session: Session; timezone: 
           </div>
         </Dialog>
       )}
+      {toast && <Toast key={toast.id} message={toast.message} dismiss={dismissToast} />}
     </section>
   );
 }

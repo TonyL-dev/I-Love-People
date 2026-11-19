@@ -141,7 +141,14 @@ def main() -> int:
             diagnostics = report.get("diagnostics", {})
             safe = {
                 key: diagnostics.get(key)
-                for key in ("navigation", "loginStatus", "profileStatus", "pageError", "nudgeStep")
+                for key in (
+                    "navigation",
+                    "loginStatus",
+                    "profileStatus",
+                    "pageError",
+                    "nudgeStep",
+                    "sourceLine",
+                )
             }
             print("Browser diagnostic flags: " + json.dumps(safe))
             raise RuntimeError("Live journey failed")

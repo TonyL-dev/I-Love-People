@@ -55,3 +55,8 @@ On iPhone Safari and desktop, sign in and add synthetic Maya with a cadence and 
 
 
 Phase 3 review target: [https://i-love-people-k5cwd4tp3-smooshy.vercel.app](https://i-love-people-k5cwd4tp3-smooshy.vercel.app), application `a559aa5`. Hosted Chrome checks pass; iPhone Safari and VoiceOver are not inferred from those checks. Use the Phase 3 checklist above and report any screen/keyboard/function problems.
+
+
+## Phase 3 usability feedback - November 19, 2026
+
+The user reports existing date controls, software keyboard, long names, light/dark, enlarged text and readable errors work correctly. Navigation clarity, success feedback and mobile person opening need improvement. No new device/OS version or VoiceOver result was provided. After the revised Preview is verified, recheck the clearly selected section, opening a person into details with the name/Back action in view, Back restoring search, and success toasts after snooze/pause and saving a meetup. The earlier report is not automatically evidence for the revised UI.

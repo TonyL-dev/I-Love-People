@@ -160,3 +160,6 @@ Phase 3 progress, November 18: due-date calculations, ordering, durable in-app c
 
 
 Phase 3 hosted handoff, November 18: application `a559aa5` passes [both Linux CI jobs](https://github.com/TonyL-dev/I-Love-People/actions/runs/44416468153), hosted Alembic 0006, HTTP/deployed API/Data API checks and the actual Maya due/snooze/new-meetup/review browser journey at [the protected Preview](https://i-love-people-k5cwd4tp3-smooshy.vercel.app). Cleanup is verified. [Draft PR #3](https://github.com/TonyL-dev/I-Love-People/pull/3) targets the accepted Phase 2 branch. Final exact Auth URL configuration and new-screen iPhone review remain pending; VoiceOver remains a pre-release check. No Phase 3 acceptance, Phase 4, merge or Production promotion.
+
+
+Phase 3 usability follow-up, November 19: the user reports the existing mobile date/keyboard/text/appearance/error checks work, and requested clearer current-section navigation, success toasts and visible profile opening. These refinements are implemented and locally verified, with hosted validation pending; the latest evidence is in IMPLEMENTATION_STATUS.md. This is not a request for Phase 4. Auth configuration and VoiceOver are not confirmed by this report.

@@ -98,3 +98,10 @@ In Phase 0 create the token file, foundational CSS, and a small component refere
 For every UI phase, review light/dark mode, 320/390/768/1440 px layouts, long names, empty/loading/error states, keyboard navigation, visible focus, reduced motion, and 200% zoom. At 320 CSS px ensure reflow without horizontal page scrolling. Measure contrast and check screen-reader names and meaningful reading order. Include real iPhone Safari checks before release.
 
 Save representative screenshots and record visual review separately from automated checks. Passing functional tests alone leaves visual review pending. Changes to tokens or shared components require review of their affected consumers. Update the specification when an intentional design decision changes.
+
+
+## Navigation and action feedback - November 19, 2026
+
+Clearly mark the current library section using the semantic action/on-action pair, a check mark, programmatic current state and a matching heading. Keep section context available when scrolling. Person opening shows an explicit detail view, brings its heading and Back action into view, and returns focus/list context on Back. Account for wrapping navigation at enlarged text sizes.
+
+Show a concise toast only after a mutation is confirmed. Use a polite status announcement, an accessible 44 px dismiss control and a safe-area-aware position. Allow seven idle seconds and pause expiration on hover/focus. Do not steal focus, emit success on failure, store private messages persistently, or invent an Undo operation. Retain useful inline errors.

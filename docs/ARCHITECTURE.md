@@ -131,3 +131,10 @@ Meetup triggers serialize parent changes and clear snooze/dismiss when the lates
 
 
 Phase 3 hosted runtime, November 18: CI-passed `a559aa5`, Alembic `0006_in_app_nudges`, protected Preview https://i-love-people-k5cwd4tp3-smooshy.vercel.app, deployment `dpl_HhGygzx9uQmEpPFsAw4J4V523Hm7`. Real deployed API/Data API and browser journeys confirm the described path, including explicit conflicts, durable preferences, cycle resets, logout/expiry and cleanup. Deployment Protection remains enabled and Preview Feedback remains disabled. No runtime keys, dependencies or Production settings changed. Exact recovery URL configuration and device evidence remain pending in AUTH_SETUP.md and DEVICE_REVIEW.md.
+
+
+## Phase 3 navigation and feedback follow-up - November 19, 2026
+
+The library keeps a clearly selected, sticky navigation row and matching section title. Opening a person replaces the list with detail content, moves keyboard focus to the name, and scrolls the detail section below the navigation. Back preserves search/archive settings and returns focus to the initiating row. Navigation to another section closes the previous profile. Navigation height is observed for enlarged-text scroll clearance.
+
+A shared `Toast` presents confirmed mutation results in a polite status region without moving focus. Notifications remain only in account component memory, replace the previous message, offer an accessible dismiss button and expire after seven idle seconds, pausing on hover/focus. Failed requests retain inline errors and never emit success. People, meetup and nudge writes keep the same API/authentication/database paths; there is no schema or contract change.

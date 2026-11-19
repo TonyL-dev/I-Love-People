@@ -276,3 +276,178 @@ test('people long names and editors reflow at large text with keyboard focus', a
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await page.screenshot({ path: 'artifacts/local/phase2-large-text-editor.png', fullPage: true });
 });
+
+const nudgePerson = {
+  id: owner,
+  name: 'Synthetic Maya',
+  priority: 'closest',
+  cadence_count: 2,
+  cadence_unit: 'weeks',
+  archived: false,
+  revision: 1,
+  created_at: '2020-01-01T00:00:00Z',
+  updated_at: '2020-01-01T00:00:00Z',
+  last_seen: '2020-02-29',
+  paused: false,
+  snoozed_until: null,
+  dismissed_on: null,
+  due_on: '2020-03-14',
+  eligible_on: '2020-03-14',
+  timing: 'now',
+  suppression: null,
+  reason: 'Last meetup 2020-02-29; every 2 weeks; catch-up date 2020-03-14',
+};
+
+test('library navigation, person focus and back preserve mobile context', async ({ page }) => {
+  test.setTimeout(90_000);
+  await mockAccount(page);
+  await page.route('**/api/people', (route) => route.fulfill({ json: [nudgePerson] }));
+  await page.route('**/api/people/*/meetups', (route) => route.fulfill({ json: [] }));
+  await page.goto('/');
+  await signIn(page);
+  const nav = page.getByRole('navigation', { name: 'Your library' });
+  for (const appearance of ['light', 'dark']) {
+    await page.getByLabel('Appearance', { exact: true }).selectOption(appearance);
+    for (const width of [320, 390, 768, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      await nav.getByRole('button', { name: 'People', exact: true }).click();
+      await expect(nav.getByRole('button', { name: 'People', exact: true })).toHaveAttribute(
+        'aria-current',
+        'page',
+      );
+      expect(
+        await nav
+          .getByRole('button', { name: 'People', exact: true })
+          .evaluate((e) => getComputedStyle(e).backgroundColor),
+      ).not.toBe(
+        await nav
+          .getByRole('button', { name: 'Catch up', exact: true })
+          .evaluate((e) => getComputedStyle(e).backgroundColor),
+      );
+      await page.getByLabel('Search people').fill('maya');
+      await page.getByRole('button', { name: 'Synthetic Maya', exact: true }).click();
+      const heading = page.getByRole('heading', { name: 'Synthetic Maya', exact: true });
+      await expect(heading).toBeFocused();
+      await expect(page.getByLabel('Search people')).toHaveCount(0);
+      const bounds = await heading.boundingBox();
+      const navBounds = await nav.boundingBox();
+      expect(bounds!.y).toBeGreaterThanOrEqual(navBounds!.y + navBounds!.height);
+      expect(bounds!.y + bounds!.height).toBeLessThan(900);
+      await expect(
+        page.getByRole('button', { name: 'Back to People', exact: true }),
+      ).toBeInViewport();
+      expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+      await page.screenshot({
+        path: `artifacts/local/phase3-detail-${appearance}-${width}.png`,
+        fullPage: false,
+      });
+      await page.getByRole('button', { name: 'Back to People', exact: true }).click();
+      await expect(page.getByLabel('Search people')).toHaveValue('maya');
+      await expect(page.getByRole('button', { name: 'Synthetic Maya', exact: true })).toBeFocused();
+      await nav.getByRole('button', { name: 'Weekly review', exact: true }).click();
+      await expect(nav.getByRole('button', { name: 'Weekly review', exact: true })).toHaveAttribute(
+        'aria-current',
+        'page',
+      );
+      await expect(page.getByRole('region', { name: 'Weekly review', exact: true })).toContainText(
+        nudgePerson.reason,
+      );
+      await nav.getByRole('button', { name: 'Catch up', exact: true }).click();
+      await expect(nav.getByRole('button', { name: 'Catch up', exact: true })).toHaveAttribute(
+        'aria-current',
+        'page',
+      );
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await page.screenshot({
+        path: `artifacts/local/phase3-navigation-${appearance}-${width}.png`,
+        fullPage: true,
+      });
+    }
+  }
+});
+
+test('nudge toasts wait for success, report failures inline and pause dismissal while hovered', async ({
+  page,
+}) => {
+  await mockAccount(page);
+  let person: Record<string, unknown> = { ...nudgePerson };
+  let fail = false;
+  let release!: () => void;
+  const pending = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route('**/api/people', (route) => route.fulfill({ json: [person] }));
+  await page.route('**/api/people/*/meetups', (route) => route.fulfill({ json: [] }));
+  await page.route('**/api/people/*/nudge', async (route) => {
+    await pending;
+    if (fail) return route.fulfill({ status: 409, json: {} });
+    const body = route.request().postDataJSON() as {
+      action: string;
+      until?: string;
+      revision: number;
+    };
+    expect(body.revision).toBe(person.revision);
+    person = {
+      ...person,
+      revision: body.revision + 1,
+      paused: body.action === 'pause',
+      suppression: body.action === 'pause' ? 'paused' : body.action === 'snooze' ? 'snoozed' : null,
+      snoozed_until: body.until ?? null,
+    };
+    await route.fulfill({ json: person });
+  });
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto('/');
+  await signIn(page);
+  await page.getByRole('button', { name: 'More about Synthetic Maya', exact: true }).click();
+  await page.getByRole('button', { name: 'Pause nudges', exact: true }).click();
+  await expect(page.locator('.toast')).toHaveCount(0);
+  release();
+  await expect(page.locator('.toast').getByRole('status')).toHaveText('Nudges paused.');
+  await page.getByRole('button', { name: 'Dismiss notification' }).click();
+  fail = true;
+  await page.getByRole('button', { name: 'Unpause nudges', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText('changed in another tab');
+  await expect(page.locator('.toast')).toHaveCount(0);
+  fail = false;
+  await page.getByRole('button', { name: 'Unpause nudges', exact: true }).click();
+  await expect(page.locator('.toast').getByRole('status')).toHaveText('Nudges unpaused.');
+  await page.getByLabel('Snooze until', { exact: true }).fill('2099-01-01');
+  await page.getByRole('button', { name: 'Snooze nudge', exact: true }).click();
+  await expect(page.locator('.toast').getByRole('status')).toHaveText(
+    'Nudge snoozed until 2099-01-01.',
+  );
+  await page.clock.install();
+  await page.getByRole('button', { name: 'Dismiss notification' }).focus();
+  await page.clock.fastForward(10_000);
+  await expect(page.locator('.toast')).toBeVisible();
+  await page.getByLabel('Appearance', { exact: true }).selectOption('dark');
+  await page.setViewportSize({ width: 320, height: 900 });
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = '200%';
+  });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  await page.screenshot({ path: 'artifacts/local/phase3-toast-large-dark.png', fullPage: false });
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = '';
+  });
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.getByRole('heading', { name: 'Synthetic Maya', exact: true }).focus();
+  await page.locator('.toast').hover();
+  await page.clock.fastForward(10_000);
+  await expect(page.locator('.toast')).toBeVisible();
+  await page.screenshot({ path: 'artifacts/local/phase3-success-toast.png', fullPage: false });
+  await page.mouse.move(0, 0);
+  await page.clock.fastForward(7001);
+  await expect(page.locator('.toast')).toHaveCount(0);
+  await page.getByLabel('Snooze until', { exact: true }).fill('2099-02-01');
+  await page.getByRole('button', { name: 'Snooze nudge', exact: true }).click();
+  await expect(page.locator('.toast').getByRole('status')).toHaveText(
+    'Nudge snoozed until 2099-02-01.',
+  );
+  await page.getByRole('button', { name: 'Sign out', exact: true }).click();
+  await page.getByRole('button', { name: 'Confirm sign out', exact: true }).click();
+  await expect(page.locator('.toast')).toHaveCount(0);
+});

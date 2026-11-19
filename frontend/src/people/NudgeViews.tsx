@@ -7,10 +7,12 @@ export function NudgeControls({
   person,
   session,
   refresh,
+  notify,
 }: {
   person: Person;
   session: Session;
   refresh: (updated: Person) => void;
+  notify: (message: string) => void;
 }) {
   const [until, setUntil] = useState('');
   const [busy, setBusy] = useState(false);
@@ -26,6 +28,16 @@ export function NudgeControls({
         ...(action === 'snooze' ? { until } : {}),
       });
       refresh(updated);
+      notify(
+        {
+          snooze: `Nudge snoozed until ${until}.`,
+          unsnooze: 'Snooze cleared.',
+          pause: 'Nudges paused.',
+          unpause: 'Nudges unpaused.',
+          dismiss: 'Nudge dismissed for today.',
+          undismiss: 'Nudge shown again today.',
+        }[action] ?? 'Nudge preferences saved.',
+      );
     } catch (failure) {
       setError(
         failure instanceof AccountError && failure.status === 422
@@ -121,8 +133,8 @@ export function DueList({
 }: {
   people: Person[];
   review: boolean;
-  open: (id: string) => void;
-  log: (id: string) => void;
+  open: (id: string, trigger: HTMLButtonElement) => void;
+  log: (id: string, trigger: HTMLButtonElement) => void;
 }) {
   const visible = people.filter(
     (p) =>
@@ -170,8 +182,18 @@ export function DueList({
                   </>
                 )}
                 <div className="actions">
-                  <Button onClick={() => log(p.id)}>Log meetup with {p.name}</Button>
-                  <Button onClick={() => open(p.id)}>More about {p.name}</Button>
+                  <Button
+                    id={`library-log-${p.id}`}
+                    onClick={(event) => log(p.id, event.currentTarget)}
+                  >
+                    Log meetup with {p.name}
+                  </Button>
+                  <Button
+                    id={`library-person-${p.id}`}
+                    onClick={(event) => open(p.id, event.currentTarget)}
+                  >
+                    More about {p.name}
+                  </Button>
                 </div>
               </article>
             ))}

@@ -117,3 +117,10 @@ The real browser exposed stale revisions between sequential nudge actions. Retur
 
 
 Phase 3 rollout confirmation, November 18: deploy the exact CI-passed application commit to the existing protected synthetic Preview after the additive Alembic migration. Keep Production unchanged. Combine hosted API/RLS/browser evidence with separate user device evidence; do not infer an iPhone or VoiceOver pass. A no-email probe confirms the new exact recovery target is not yet allowlisted, so provider configuration and new-origin recovery verification remain open.
+
+
+## Phase 3 usability feedback - November 19, 2026
+
+Use the existing primary-action tokens plus a check mark and `aria-current` to distinguish the selected section in both appearances. Keep ordinary keyboard-operable navigation buttons rather than adding partial ARIA tab semantics. Match the page heading to the selection. Show one focused person detail view with a Back action instead of appending it below a potentially long list.
+
+Use short success toasts only after a confirmed mutation, with no suggested Undo for irreversible changes. Keep error recovery inline. Seven idle seconds, pause on hover/focus and explicit dismissal make feedback readable without interrupting forms. Account unmount clears messages alongside other private state. These are Phase 3 refinements, with no change to hosting cost, identity, schema or phase sequencing.

@@ -70,33 +70,48 @@ try {
   const dueGroup = page.getByRole('region', { name: 'Time to catch up', exact: true });
   await expect(dueGroup).toContainText('Synthetic Maya');
   diagnostics.nudgeStep = 2;
+  await page.getByRole('button', { name: 'More about Synthetic Maya', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Synthetic Maya', exact: true })).toBeFocused();
   await page.getByLabel('Snooze until', { exact: true }).fill('2099-01-01');
   await page.getByRole('button', { name: 'Snooze nudge', exact: true }).click();
   diagnostics.nudgeStep = 3;
-  await expect(page.getByRole('region', { name: 'Taking a pause', exact: true })).toContainText(
-    'Snoozed until 2099-01-01',
-  );
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Nudge snoozed until 2099-01-01.' }),
+  ).toBeVisible();
   await expect(page.getByRole('region', { name: 'Nudge preferences' })).toContainText(
     'Catch-up date: 2020-03-14',
   );
   diagnostics.nudgeStep = 4;
+  await page.getByRole('button', { name: 'Back to Catch up', exact: true }).click();
+  await expect(page.getByRole('region', { name: 'Taking a pause', exact: true })).toContainText(
+    'Snoozed until 2099-01-01',
+  );
   await page.getByRole('button', { name: 'Weekly review', exact: true }).click();
   await expect(page.getByRole('region', { name: 'Weekly review', exact: true })).toContainText(
     'Last meetup 2020-02-29; every 2 weeks; catch-up date 2020-03-14',
   );
   diagnostics.nudgeStep = 5;
+  await page.getByRole('button', { name: 'More about Synthetic Maya', exact: true }).click();
   await page.getByRole('button', { name: 'Pause nudges', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Unpause nudges', exact: true })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: 'Nudges paused.' })).toBeVisible();
+  await page.getByRole('button', { name: 'Back to Weekly review', exact: true }).click();
   await expect(page.getByRole('region', { name: 'Weekly review', exact: true })).not.toContainText(
     'Synthetic Maya',
   );
   diagnostics.nudgeStep = 6;
+  await page.getByRole('button', { name: 'People', exact: true }).click();
+  await page.getByRole('button', { name: 'Synthetic Maya', exact: true }).click();
   await page.getByRole('button', { name: 'Unpause nudges', exact: true }).click();
   diagnostics.nudgeStep = 7;
   await page.getByRole('button', { name: 'Dismiss for today', exact: true }).click();
+  diagnostics.nudgeStep = 72;
   await expect(page.getByRole('button', { name: 'Show again today', exact: true })).toBeVisible();
+  diagnostics.nudgeStep = 73;
   await page.getByRole('button', { name: 'Log meetup', exact: true }).click();
+  diagnostics.nudgeStep = 74;
   await dialog.getByLabel('Meetup date').fill('2020-03-31');
+  diagnostics.nudgeStep = 75;
   await dialog.getByRole('button', { name: 'Save meetup', exact: true }).click();
   diagnostics.nudgeStep = 8;
   await expect(page.getByRole('button', { name: 'Clear snooze', exact: true })).toHaveCount(0);
@@ -138,6 +153,7 @@ try {
   await page.evaluate(() => {
     globalThis.document.documentElement.style.fontSize = '';
   });
+  await page.getByRole('button', { name: 'More about Synthetic Maya', exact: true }).click();
   await page.getByRole('button', { name: 'Log meetup', exact: true }).click();
   await page.screenshot({ path: 'artifacts/local/phase3-meetup-dialog.png', fullPage: true });
   page.once('dialog', (d) => d.accept());
@@ -215,7 +231,8 @@ try {
   assert.equal((await context.request.get('http://127.0.0.1:8000/api/profile')).status(), 401);
   stage = 'passed';
   await context.close();
-} catch {
+} catch (failure) {
+  diagnostics.sourceLine = Number(failure.stack?.match(/local_browser_auth\.mjs:(\d+):/)?.[1] ?? 0);
   // Playwright exceptions may contain filled values or reset URLs. Do not print them.
   process.exitCode = 1;
 } finally {
