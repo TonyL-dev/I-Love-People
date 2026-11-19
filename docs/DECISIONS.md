@@ -1,6 +1,6 @@
 # Decisions
 
-Updated November 17, 2026. The architecture entries define the selected direction. The foundation decisions below are implemented locally; hosted/provider behavior is still subject to phase acceptance.
+Updated November 19, 2026. The architecture entries define the selected direction. The foundation decisions below are implemented locally; hosted/provider behavior is still subject to phase acceptance.
 
 | Decision | Rationale and consequence |
 | --- | --- |
@@ -105,3 +105,41 @@ Phase 2 hosted evidence confirms explicit PT409 fixes the conflict timeouts with
 
 
 Phase 2 acceptance, November 18: combine independently observed CI/deployed privacy/concurrency/browser checks with explicitly user-reported iPhone Safari/desktop results. Verify the newly configured exact recovery target using a disposable hosted account without sending email. Keep VoiceOver as an outstanding private-release check. Phase acceptance does not authorize Phase 3, merge or Production promotion.
+
+
+## Phase 3 calendar and nudge state - November 18, 2026
+
+Calendar-month addition starts at the latest meetup and clamps once to the target month, including leap years. Today, the inclusive seven-day window and dismiss expiry use the saved account timezone. Snooze changes eligibility while the original catch-up date remains visible. Suppressed entries have their own Catch up group. Weekly review includes originally due/soon people with snooze/dismiss context, excluding archive/pause.
+
+Keep the three small preferences on `people` instead of adding a separate preferences table: this reuses its verified RLS, cascade, revision and parent lock. Only an advancing latest date resets a nonempty cycle; older entries, same-date duplicates and note-only edits preserve it. Removing the final meetup clears snooze/dismiss and recurring eligibility. Pause survives meetup logging. Alembic owns the additive migration and functions remain invoker-scoped.
+
+The real browser exposed stale revisions between sequential nudge actions. Return a derived person after a preference mutation and apply confirmed state before enabling the next action. External notifications remain Phase 4 work.
+
+
+Phase 3 rollout confirmation, November 18: deploy the exact CI-passed application commit to the existing protected synthetic Preview after the additive Alembic migration. Keep Production unchanged. Combine hosted API/RLS/browser evidence with separate user device evidence; do not infer an iPhone or VoiceOver pass. A no-email probe confirms the new exact recovery target is not yet allowlisted, so provider configuration and new-origin recovery verification remain open.
+
+
+## Phase 3 usability feedback - November 19, 2026
+
+Use the existing primary-action tokens plus a check mark and `aria-current` to distinguish the selected section in both appearances. Keep ordinary keyboard-operable navigation buttons rather than adding partial ARIA tab semantics. Match the page heading to the selection. Show one focused person detail view with a Back action instead of appending it below a potentially long list.
+
+Use short success toasts only after a confirmed mutation, with no suggested Undo for irreversible changes. Keep error recovery inline. Seven idle seconds, pause on hover/focus and explicit dismissal make feedback readable without interrupting forms. Account unmount clears messages alongside other private state. These are Phase 3 refinements, with no change to hosting cost, identity, schema or phase sequencing.
+
+
+November 19 rollout confirmation: reuse the Git-built protected Preview after confirming its exact commit matches successful Linux CI, avoiding a duplicate deployment. No migration is needed for this presentation-only revision. Keep the existing draft PR and separate prior user mobile evidence from verification of the new interactions.
+
+
+## Settings on demand and toast alignment - November 19, 2026
+
+Move infrequently used preferences/account controls into a modal side drawer rather than leaving them below every library view. Reuse the native dialog for inert background, keyboard behavior and focus return; initially focus Close so opening the menu does not open a software keyboard. Keep library state mounted and preserve in-memory timezone drafts. Dismissal cancels only the local logout confirmation, without submitting changes.
+
+Place the toast success icon alongside the first message line on all widths. Let text wrap naturally and limit spacing growth on narrow enlarged-text layouts, keeping the explicit dismiss target at least 44 px. Preserve confirmed-success semantics, inline failures and notification lifetime. This is a Phase 3 presentation refinement with no new dependencies, runtime services, schema or cost.
+
+
+Settings-menu rollout confirmation: reuse the exact Git-built protected Preview after Linux CI passes. The native drawer and inline toast cue pass both local and actual hosted journeys without another migration. Preserve the draft PR, synthetic cleanup and separate device/recovery gates; no release or phase change follows this presentation refinement.
+
+
+Phase 3 readiness, November 19: accept the user's latest UI approval as the requested review evidence without inventing a new device/OS or VoiceOver run. Preserve the already-recorded final-origin recovery gate: direct provider evidence shows the final reset destination is absent. Close that gate after the exact URL save and independent disposable recovery check. Do not repeat unrelated implementation tests for this documentation-only review or make VoiceOver an extra Phase 3 prerequisite.
+
+
+Phase 3 acceptance, November 19: combine existing application 97e40ea CI/hosted evidence, the user-reported UI approval and URL save, and independently observed exact-origin managed recovery to accept Phase 3. The disposable browser test sent no email and verified cleanup; do not infer another owner-inbox or device/OS test. VoiceOver remains a pre-release check. Preserve phase ordering: Phase 4 requires a request; acceptance does not merge or promote Production.

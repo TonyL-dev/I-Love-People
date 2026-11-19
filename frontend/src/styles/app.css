@@ -527,7 +527,8 @@ textarea {
 }
 .skip-link {
   position: absolute;
-  top: -80px;
+  top: 0;
+  transform: translateY(-100%);
   left: var(--space-4);
   z-index: 10;
   padding: var(--space-3) var(--space-4);
@@ -535,6 +536,7 @@ textarea {
 }
 .skip-link:focus {
   top: var(--space-4);
+  transform: none;
 }
 .skeleton {
   border-radius: 6px;
@@ -706,6 +708,115 @@ input[type='checkbox'] {
 .people-page {
   min-width: 0;
   overflow-wrap: anywhere;
+}
+
+.people-page h4 {
+  margin: 0;
+  font-size: var(--font-body);
+  line-height: var(--line-label);
+  font-weight: 600;
+}
+
+.library-navigation {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  padding-block: var(--space-3);
+  background: var(--color-page);
+  border-bottom: 1px solid var(--color-separator);
+}
+
+.person-detail {
+  scroll-margin-top: calc(var(--library-nav-height, 80px) + var(--space-4));
+}
+
+.toast {
+  position: fixed;
+  z-index: 20;
+  bottom: max(var(--space-4), env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--space-3);
+  width: min(var(--width-form), calc(100% - 40px));
+  max-height: 50dvh;
+  overflow: auto;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-boundary);
+  border-radius: var(--radius-surface);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--color-text) 15%, transparent);
+}
+
+.toast .button {
+  padding: var(--space-2);
+  min-width: 44px;
+}
+
+.toast__message {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: min(var(--space-2), 8px);
+}
+
+.toast__message > svg {
+  margin-top: calc((var(--line-body) - 24px) / 2);
+}
+
+@media (max-width: 480px) {
+  .toast {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: min(var(--space-2), 8px);
+    padding: min(var(--space-3), 16px);
+  }
+  .toast .button {
+    padding: min(var(--space-2), 8px);
+  }
+}
+
+.account-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.account-heading .button {
+  flex-shrink: 0;
+}
+
+.dialog.account-drawer {
+  margin: 0 0 0 auto;
+  width: min(440px, calc(100% - 20px));
+  max-width: none;
+  height: 100dvh;
+  max-height: 100dvh;
+  border-radius: var(--radius-sheet) 0 0 var(--radius-sheet);
+  padding: 0 var(--space-4) max(var(--space-6), env(safe-area-inset-bottom));
+  overflow-wrap: anywhere;
+}
+
+.account-drawer .dialog__heading {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--color-surface);
+  padding-top: max(var(--space-4), env(safe-area-inset-top));
+  padding-bottom: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.account-drawer .dialog__heading h2 {
+  flex: 1 1 180px;
+  min-width: 0;
+}
+
+.account-drawer .stack {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .private-account,

@@ -58,3 +58,29 @@ The verified Phase 2 target is [https://i-love-people-c2mef0l08-smooshy.vercel.a
 
 
 Phase 2 Auth configuration verified, November 18, 2026. The user confirmed saving the new Site URL and exact reset redirect for https://i-love-people-c2mef0l08-smooshy.vercel.app. A disposable hosted Chrome journey independently verified the actual new-origin redirect, password replacement, old-password rejection and used-link rejection. No email was sent; the account was deleted and absence verified. This closes the new-origin configuration check. Owner inbox delivery remains supported by the earlier Phase 1 user report; no new inbox claim is inferred.
+
+
+## Phase 3 Preview handoff - November 18, 2026
+
+The verified Phase 3 application is `a559aa5` at [https://i-love-people-k5cwd4tp3-smooshy.vercel.app](https://i-love-people-k5cwd4tp3-smooshy.vercel.app). In [Auth URL configuration](https://supabase.com/dashboard/project/efuixughigoyyyflyelm/auth/url-configuration), save:
+
+- **Site URL:** `https://i-love-people-k5cwd4tp3-smooshy.vercel.app`
+- **Redirect URL:** `https://i-love-people-k5cwd4tp3-smooshy.vercel.app/reset-password`
+
+Keep the previous exact Phase 2 redirect until the new one is verified; add no wildcard. A disposable no-email probe confirms the new reset destination is currently absent and falls back to the Phase 2 origin. Connected Supabase tools do not expose this configuration; the Computer Use skill's Windows guidance forbids changing in-app security settings. The dashboard save is therefore a user step. After it is saved, independently verify the new-origin password replacement, old-password and used-link rejection with a disposable account. No new owner-inbox claim is inferred; earlier real delivery evidence remains Phase 1 evidence.
+
+
+## November 19 usability Preview
+
+The latest verified application is `cedb269` at [https://i-love-people-kipv1n31u-smooshy.vercel.app](https://i-love-people-kipv1n31u-smooshy.vercel.app). For recovery on this exact origin, save **Site URL** `https://i-love-people-kipv1n31u-smooshy.vercel.app` and exact **Redirect URL** `https://i-love-people-kipv1n31u-smooshy.vercel.app/reset-password` in [Auth URL configuration](https://supabase.com/dashboard/project/efuixughigoyyyflyelm/auth/url-configuration). Retain the previously verified exact redirect until the new one is verified; do not add a wildcard. The user's usability report did not confirm Auth settings. No new-origin recovery check is claimed for this follow-up; after the save, use the existing disposable no-email recovery verification workflow.
+
+
+## Settings-menu Preview
+
+The latest verified application is `97e40ea` at [https://i-love-people-pfoktasn6-smooshy.vercel.app](https://i-love-people-pfoktasn6-smooshy.vercel.app). Recovery on this exact origin uses **Site URL** `https://i-love-people-pfoktasn6-smooshy.vercel.app` and **Redirect URL** `https://i-love-people-pfoktasn6-smooshy.vercel.app/reset-password` in [Auth URL configuration](https://supabase.com/dashboard/project/efuixughigoyyyflyelm/auth/url-configuration). Keep the previous exact redirect until the new target is independently verified; add no wildcard. The menu/toast request did not confirm provider settings, and no new-origin hosted recovery claim is made. Managed Auth and recovery code are unchanged; the existing disposable no-email recovery workflow can verify the target after the dashboard save.
+
+
+Final-origin probe, November 19: the requested pfoktasn6 reset URL is still absent from the allowlist and falls back to `https://i-love-people-kipv1n31u-smooshy.vercel.app`. The disposable no-email probe user was deleted and absence verified. The latest UI is now approved by the user; the final exact Site URL/reset redirect save above and subsequent disposable new-origin recovery check are the only remaining Phase 3 acceptance item. Existing owner-inbox delivery evidence does not need to be repeated for this unchanged provider.
+
+
+Final Auth configuration verified, November 19: the user confirms the Site URL `https://i-love-people-pfoktasn6-smooshy.vercel.app` and exact redirect `https://i-love-people-pfoktasn6-smooshy.vercel.app/reset-password` are saved. Independent disposable hosted Chrome recovery follows that exact destination, changes the password, rejects the old password and used link, and accepts replacement-password login. Account deletion/absence and temporary protection-access revocation passed. No email was sent; owner-inbox evidence remains the Phase 1 report. This closes the final Phase 3 Auth gate.

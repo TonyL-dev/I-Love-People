@@ -1,6 +1,6 @@
 # Proposed architecture
 
-Updated November 18, 2026. This describes the target architecture and Phase 0/1/2 source. Phases 1 and 2 are accepted on the protected Preview. Current verification status is in IMPLEMENTATION_STATUS.md. Imported architecture history is retained in reference/ARCHITECTURE.md.
+Updated November 19, 2026. This describes the target architecture and Phase 0/1/2/3 source. Phases 1 and 2 are accepted on the protected Preview. Current verification status is in IMPLEMENTATION_STATUS.md. Imported architecture history is retained in reference/ARCHITECTURE.md.
 
 ## Implemented foundation
 
@@ -119,3 +119,41 @@ Current Phase 2 runtime: CI-passed d377735 on protected Preview https://i-love-p
 
 
 Phase 2 acceptance confirmation, November 18: the new exact Auth redirect now passes independent hosted browser recovery and the user reports the people/history iPhone and desktop journeys pass. The accepted architecture remains caller-scoped repositories, forced owner/session RLS, Alembic migrations, exact dates and explicit PT409 conflicts. No architectural or runtime code change accompanies closure; see IMPLEMENTATION_STATUS.md for evidence.
+
+
+## Phase 3 due dates and in-app nudges - November 18, 2026
+
+`people/due.py` derives calendar due dates from the latest surviving meetup and explicit cadence on each authenticated people read. Days/weeks use calendar arithmetic; months clamp to the target month's last day. The saved IANA timezone determines today. Timing groups use the original due date; snooze independently sets the next eligible date. Sorting uses timing, private priority (unranked last), due date, case-folded name and UUID. No process timer or stored due-date copy determines server eligibility.
+
+Alembic `0006_in_app_nudges` puts pause, snooze and dismissal on the existing forced-RLS owner/session-protected people row. `/api/people/{id}/nudge` follows router, PeopleService and caller-scoped PeopleRepository to SECURITY INVOKER `nudge_write`. It locks the owned row, checks revision and validates dates in the saved timezone. The API returns a freshly derived person so the UI applies the confirmed revision before enabling another action.
+
+Meetup triggers serialize parent changes and clear snooze/dismiss when the latest date advances or the final meetup is removed. Backdates, same-date additions and note-only edits preserve the cycle. Other edits/deletes recalculate from surviving history; pause remains independent. Meetup date mutations increment the parent revision, making stale person/cadence/nudge writes conflict. The tab refreshes each minute and on focus/timezone change. Catch up, People and Weekly review share existing editors and semantic tokens; private state stays in memory. No external delivery is implemented.
+
+
+Phase 3 hosted runtime, November 18: CI-passed `a559aa5`, Alembic `0006_in_app_nudges`, protected Preview https://i-love-people-k5cwd4tp3-smooshy.vercel.app, deployment `dpl_HhGygzx9uQmEpPFsAw4J4V523Hm7`. Real deployed API/Data API and browser journeys confirm the described path, including explicit conflicts, durable preferences, cycle resets, logout/expiry and cleanup. Deployment Protection remains enabled and Preview Feedback remains disabled. No runtime keys, dependencies or Production settings changed. Exact recovery URL configuration and device evidence remain pending in AUTH_SETUP.md and DEVICE_REVIEW.md.
+
+
+## Phase 3 navigation and feedback follow-up - November 19, 2026
+
+The library keeps a clearly selected, sticky navigation row and matching section title. Opening a person replaces the list with detail content, moves keyboard focus to the name, and scrolls the detail section below the navigation. Back preserves search/archive settings and returns focus to the initiating row. Navigation to another section closes the previous profile. Navigation height is observed for enlarged-text scroll clearance.
+
+A shared `Toast` presents confirmed mutation results in a polite status region without moving focus. Notifications remain only in account component memory, replace the previous message, offer an accessible dismiss button and expire after seven idle seconds, pausing on hover/focus. Failed requests retain inline errors and never emit success. People, meetup and nudge writes keep the same API/authentication/database paths; there is no schema or contract change.
+
+
+November 19 usability runtime: `cedb269` at https://i-love-people-kipv1n31u-smooshy.vercel.app, protected Preview `dpl_H5GW5rw39kH7ME8AbK5Ut6jgK4uw`. Hosted browser checks confirm the focused detail/Back and mutation-toast path; HTTP/assets/security/readiness checks pass. This revision changes presentation and verification only; API contracts, Alembic 0006 and ownership boundaries are unchanged.
+
+
+## Settings drawer and inline toast icon - November 19, 2026
+
+The authenticated account screen keeps preferences, signed-in identity, recovery link and sign-out controls in a right-side native `Dialog`, opened by Menu. The library stays mounted beneath its modal/inert layer, preserving selection, filtered search and drafts. Opening focuses Close to avoid summoning the mobile keyboard. Close, Escape or backdrop dismissal restores the opener and cancels an unsubmitted logout confirmation. Timezone drafts stay in parent component memory; saving and Auth operations keep their existing clients and verified APIs. Account validation errors appear in the active context, and saved-timezone feedback is inside the drawer.
+
+`Dialog` adds optional styling, ID, initial-focus and backdrop-dismiss behavior while keeping existing form defaults. Toast message content groups the success icon beside the first text line; its dismiss control remains separate. Text enlargement keeps semantic colors and seven-second hover/focus-paused lifetime. No data/API/schema or credential changes.
+
+
+Settings-menu runtime: `97e40ea` at https://i-love-people-pfoktasn6-smooshy.vercel.app, Git-built protected Preview `dpl_FpMv9MC2UzDTZzuUqXBfCo9ySJDg`. Real hosted browser operations confirm the drawer uses the same saved-profile and managed Auth paths, keeps library context, and renders the toast icon beside the first message line. Alembic remains at 0006 with no API or ownership-boundary changes.
+
+
+Readiness review, November 19: latest UI approval is user-reported; the accepted runtime boundaries and application 97e40ea are unchanged. A fresh no-email Auth redirect probe still falls back from the final Preview to the older kipv1n31u origin. Final provider URL configuration and new-origin recovery verification remain open; no runtime or schema change accompanies this status review.
+
+
+Phase 3 acceptance, November 19: the user confirmed final Auth URL configuration and approved the UI. Independent hosted Chrome recovery now reaches the exact pfoktasn6 `/reset-password` target and passes password replacement, old-password and used-link rejection. Runtime remains 97e40ea on the protected Preview, Alembic 0006 and existing ownership/Auth boundaries; no architecture change. VoiceOver remains a pre-release check; Phase 4, merge and Production promotion have not occurred.

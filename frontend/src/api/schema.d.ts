@@ -110,6 +110,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/people/{person}/nudge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Edit Nudge */
+        put: operations["edit_nudge_api_people__person__nudge_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/profile": {
         parameters: {
             query?: never;
@@ -250,6 +267,18 @@ export interface components {
             /** Revision */
             revision: number;
         };
+        /** NudgeEdit */
+        NudgeEdit: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "snooze" | "unsnooze" | "dismiss" | "undismiss" | "pause" | "unpause";
+            /** Revision */
+            revision: number;
+            /** Until */
+            until?: string | null;
+        };
         /** Person */
         Person: {
             /**
@@ -266,6 +295,12 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /** Dismissed On */
+            dismissed_on?: string | null;
+            /** Due On */
+            due_on?: string | null;
+            /** Eligible On */
+            eligible_on?: string | null;
             /**
              * Id
              * Format: uuid
@@ -275,10 +310,30 @@ export interface components {
             last_seen?: string | null;
             /** Name */
             name: string;
+            /**
+             * Paused
+             * @default false
+             */
+            paused: boolean;
             /** Priority */
             priority?: ("closest" | "close" | "occasional" | "distant") | null;
+            /**
+             * Reason
+             * @default No meetup logged
+             */
+            reason: string;
             /** Revision */
             revision: number;
+            /** Snoozed Until */
+            snoozed_until?: string | null;
+            /** Suppression */
+            suppression?: ("archived" | "paused" | "snoozed" | "dismissed") | null;
+            /**
+             * Timing
+             * @default unknown
+             * @enum {string}
+             */
+            timing: "now" | "soon" | "later" | "unknown";
             /**
              * Updated At
              * Format: date-time
@@ -658,6 +713,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Meetup"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    edit_nudge_api_people__person__nudge_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                person: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NudgeEdit"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Person"];
                 };
             };
             /** @description Validation Error */

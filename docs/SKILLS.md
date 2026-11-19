@@ -1,6 +1,6 @@
 # Workflow and skills notes
 
-Updated November 17, 2026. Imported notes are retained in reference/SKILLS.md.
+Updated November 19, 2026. Imported notes are retained in reference/SKILLS.md.
 
 Initial planning adapted documentation and reviewed official provider sources. Subsequent interface planning and Phase 0 work are recorded below; current evidence is in IMPLEMENTATION_STATUS.md.
 
@@ -79,3 +79,35 @@ Phase 2 hosted completion: authenticated Vercel fetch plus a temporary expiring 
 
 
 Phase 2 closure, November 18: reused the previously reviewed Vercel protected-access and managed Supabase/Playwright workflows. The disposable hosted browser recovery passed the new exact origin, replacement-password login and old-password/used-link rejection; account cleanup and temporary token-file removal are verified. Device results and Auth-settings changes are user-reported. This is documentation-only closure; no implementation tests were added or repeated.
+
+
+## Phase 3 workflow - November 18, 2026
+
+Read the Supabase skill, current changelog and official RLS guidance; retained repository-mandated Alembic ownership. Applied React review and full-flow verification to browser, Python API, caller-scoped Data API/PostgreSQL and confirmed UI state. No subagents or new dependencies. Used pinned tasks and installed Chrome (`ILP_BROWSER_EXECUTABLE`), synthetic users, no credential traces and verified cleanup. Local/hosted/device evidence remains separate in IMPLEMENTATION_STATUS.md.
+
+
+Phase 3 hosted verification, November 18: used GitHub tree/commit/branch/draft-PR tools and Linux CI, Vercel deployment/protected-access skills and tools, and Supabase Alembic/advisory checks. Deployed HTTP/API/RLS and actual Chrome due/snooze/new-meetup/review/persistence/logout/expiry checks pass for a559aa5. Credentials stayed in the ignored harness/process memory; no test email was sent. Interrupted-harness fixtures were removed, final admin inspection found zero synthetic verification accounts, and the expiring share token was revoked and its local file removed.
+
+Computer Use inventory found only native user browser windows, with no connected dashboard tab. Its Windows guidance explicitly says, "Do not change Windows security settings, Windows privacy settings, or any in-app security or privacy settings." No security UI was changed. The connected Supabase tools do not expose Auth URL configuration, so the final exact Site URL/reset redirect save remains a user step. The existing leaked-password-protection advisory is unchanged; no paid feature was enabled.
+
+
+## Phase 3 usability follow-up - November 19, 2026
+
+Applied React review guidance to navigation/focus, cancellable reads, notification lifecycle and keyboard/screen-reader semantics. Existing semantic tokens and bundled Lucide icons are reused. Behavioral Playwright checks cover selected state, profile focus/scroll/back with filtered search, delayed success, inline conflicts, repeated toasts, hover/focus timeout and logout cleanup. No subagents, new dependencies or API/schema changes. Real-device feedback and agent browser evidence remain separately attributed.
+
+
+November 19 final verification: existing task runner, installed Chrome and React/full-flow review covered the new UI locally; GitHub Linux CI passed both jobs. Reused the exact Git-built Vercel Preview and existing protected-access harness for HTTP plus actual synthetic browser navigation/toast/meetup/persistence/logout/expiry checks. No backend reimplementation or migration. Verified synthetic cleanup, revoked temporary share access, removed its local token file, and stopped local services. Inspected phone/detail/toast screenshots, including readable 200% text feedback after widening its narrow-screen layout. No Computer Use or subagents were used in this follow-up.
+
+
+## Menu and toast follow-up - November 19, 2026
+
+Applied the already-read React review guidance to native-dialog reuse, focus/keyboard behavior, preservation of private component state and inline notification alignment. Updated existing browser/account journeys to reach preferences and logout through Menu. Added behavior and visual checks for hidden-by-default settings, drawer side placement, Escape/backdrop close, background focus exclusion, context restoration, large-text reflow and the icon beside the first text line. No Computer Use, subagents, provider configuration or new dependency was needed. Local/CI/hosted/device evidence remains separate.
+
+
+Final settings-menu verification: source checks/build, all 36 browser regressions and the real local account/nudge/recovery journey pass. Linux CI passes both jobs for 97e40ea. Reused the protected Git-built Preview and private harness for hosted HTTP, real drawer timezone/appearance/logout, nudge/meetup/persistence/expiry and measured first-line icon alignment. Inspected actual hosted drawer/toast and local light/dark phone/desktop/enlarged screenshots. Verified account cleanup, revoked temporary access and removed its file; local services are stopped. No Computer Use, subagents, provider settings, migrations or new dependencies.
+
+
+Readiness review, November 19: reused the existing disposable managed-Auth redirect probe for the final pfoktasn6 Preview. The provider falls back to the older kipv1n31u origin, confirming one remaining configuration/recovery gate. No email was sent; temporary account deletion and absence were verified. Recorded the user's UI approval separately from agent-observed evidence. No application code, schema, provider configuration, Computer Use or subagent activity; source/browser suites were not needlessly repeated.
+
+
+Phase 3 acceptance verification, November 19: reused the disposable managed-Auth recovery workflow and installed Chrome, adapting the private harness to reach preferences/sign-out through Menu. Verified actual final-origin recovery, password replacement, old-password/used-link rejection and account cleanup without email or credential output. Revoked temporary protected access, removed its file and confirmed zero synthetic accounts. Documentation-only closure; full source suites were not repeated. No Computer Use, subagents, schema or provider-setting changes.

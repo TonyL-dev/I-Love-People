@@ -27,6 +27,21 @@ class Person(PersonInput):
     created_at: datetime
     updated_at: datetime
     last_seen: date | None = None
+    paused: bool = False
+    snoozed_until: date | None = None
+    dismissed_on: date | None = None
+    due_on: date | None = None
+    eligible_on: date | None = None
+    timing: Literal["now", "soon", "later", "unknown"] = "unknown"
+    suppression: Literal["archived", "paused", "snoozed", "dismissed"] | None = None
+    reason: str = "No meetup logged"
+
+
+class NudgeEdit(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    revision: int = Field(ge=1)
+    action: Literal["snooze", "unsnooze", "dismiss", "undismiss", "pause", "unpause"]
+    until: date | None = None
 
 
 class PersonEdit(PersonInput):

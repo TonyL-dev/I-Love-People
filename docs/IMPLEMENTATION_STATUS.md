@@ -1,18 +1,18 @@
 # Implementation status
 
-Updated November 18, 2026. Phase 0 is accepted. Phase 1 is accepted: source/CI, protected Preview security/browser checks, synthetic hosted recovery and user-reported owner-email/iPhone journeys pass. VoiceOver remains an unverified release check. The user approved development from the reviewed mockup.
+Updated November 19, 2026. Phases 0, 1, 2 and 3 are accepted. Phase 3 is accepted November 19, 2026 for 97e40ea after user UI approval and independent final-origin recovery verification. VoiceOver remains unverified before release. See the Phase 3 evidence below.
 
 | Phase | State |
 | --- | --- |
 | 0 Foundation | Accepted; real Safari pass reported, VoiceOver remains a release check |
 | 1 Login and privacy | Accepted on the protected Preview; Production unchanged |
 | 2 People and meetups | Accepted on the protected Preview; iPhone/desktop pass reported |
-| 3 Due list | Planned |
+| 3 Due list | Accepted on the protected Preview; UI approval and final-origin recovery pass |
 | 4 PWA and Web Push | Planned, scheduler feasibility pending |
 | 5 Personal release | Planned |
 | 6 Enhancements | Backlog |
 
-## Current Phase 1 evidence — November 18, 2026
+## Phase 1 evidence (historical) — November 18, 2026
 
 Login, logout, forgotten/reset-password, expired-session and recovery-error flows are implemented. Access tokens stay in tab memory; reload requires sign-in. Account preferences persist in an owner-scoped timezone profile. People and meetup persistence remain unimplemented.
 
@@ -243,3 +243,92 @@ The user confirmed the new Supabase Auth URL settings and reported every request
 An independent disposable Chrome recovery on [https://i-love-people-c2mef0l08-smooshy.vercel.app](https://i-love-people-c2mef0l08-smooshy.vercel.app) passed the actual hosted reset redirect, password replacement, rejection of the old password and rejection of the used link. Login/profile returned 200, no page errors were observed, and the synthetic account was deleted with absence verified. No test email was sent. Temporary protection-token storage was removed.
 
 Combined with both successful Linux CI jobs in [run 44398237798](https://github.com/TonyL-dev/I-Love-People/actions/runs/44398237798), 62 Python/7 frontend/33 browser tests, deployed API/Data API isolation/concurrency/privacy checks and live browser persistence for application d377735, this satisfies Phase 2 acceptance. Alembic remains at 0005_explicit_conflicts. Phase 3 remains planned; VoiceOver remains unverified before private release. No merge or Production promotion.
+
+
+## Phase 3 local implementation - November 18, 2026
+
+Implemented calendar days/weeks/months with month-end clamping, due-now/inclusive-seven-day/later/unknown states, deterministic priority/date/name/ID ordering, durable snooze/dismiss/pause/unpause and weekly due reasons. Cadence remains independently editable. Profiles retain the original catch-up date. Archive/pause and missing history suppress recurring nudges. Advancing latest dates and final-meetup removal atomically clear snooze/dismiss; older entries and note-only edits preserve them. Reads recalculate eligibility across fresh service instances.
+
+Local source checks pass (83 Python and 7 frontend tests, Ruff/mypy/ESLint/TypeScript, generated-contract drift, token contrast and production build); 33 browser regressions pass in installed Chrome. Real local Alembic 0006 repeat-upgrade/readiness/Auth/two-user API/Data API checks cover preferences, conflicts and cycle resets. The actual Maya browser journey passes due, snooze with unchanged due date, weekly review, pause/unpause, dismissal and a newer meetup clearing snooze/dismiss. Reload/login, history persistence, logout and captured-email recovery remain covered. Disposable users/mail and owned review servers are cleaned up.
+
+Visual evidence includes synthetic 320/390/768/1440 px light/dark screenshots, reduced motion, axe checks and 200% text reflow. Representative phone and enlarged review images were inspected. Review found a fixed-offset skip link peeking over the header with enlarged text; it now hides by its own height. A real sequential-action race was corrected by applying the confirmed API state before enabling controls.
+
+Hosted exact-source CI, migration/deployment/API/browser verification and new iPhone Safari review remain pending. VoiceOver remains untested before private release. No Phase 3 acceptance, Phase 4, merge or Production promotion is claimed.
+
+
+## Phase 3 hosted handoff - November 18, 2026
+
+| Verification | Observed result |
+| --- | --- |
+| Application | `a559aa5c7500e3c8325c709572352de3c1280e4e`; [draft PR #3](https://github.com/TonyL-dev/I-Love-People/pull/3) based on accepted Phase 2 |
+| Linux CI | [Run 44416468153](https://github.com/TonyL-dev/I-Love-People/actions/runs/44416468153) passed both jobs: 83 Python, 7 frontend and 33 browser tests plus real local database/Auth/browser checks |
+| Hosted migration | Alembic `0006_in_app_nudges` applied and repeated successfully on the isolated synthetic project |
+| Preview | [https://i-love-people-k5cwd4tp3-smooshy.vercel.app](https://i-love-people-k5cwd4tp3-smooshy.vercel.app), `dpl_HhGygzx9uQmEpPFsAw4J4V523Hm7`, READY; Node 24, protection enabled, feedback disabled |
+| HTTP smoke | HTTPS, SPA routes/assets, security headers, no-store health/readiness and API 404 passed |
+| Deployed API/Data API | Two-user ownership, anonymous/forged-token denial, logout/disable rejection, retries/conflicts, cadence due dates, durable nudge controls and meetup-cycle resets passed; direct Data API newer-meetup edits also clear the cycle |
+| Actual deployed browser | Maya add/cadence/backdated meetup, due, snooze preserving original due date, weekly reasons, pause/unpause, dismissal, new latest meetup clearing state, reload/login persistence, logout and expiry passed |
+| Visual review | Actual hosted synthetic light/dark 320/390/768/1440 px screenshots, reduced motion, axe and 200% text reflow passed; representative phone/desktop/enlarged screenshots inspected |
+| Cleanup | Zero synthetic verification accounts remain. An interrupted harness's two fixtures were explicitly removed. Temporary protected-access token revoked and local token file removed. Local services stopped |
+| Recovery/device | No-email probe confirms the new exact reset target is absent and falls back to the accepted Phase 2 origin. New Auth URL configuration and independent new-origin recovery check await the dashboard save. New-screen iPhone and VoiceOver evidence remain unverified |
+
+The security advisor still reports the pre-existing [leaked-password-protection setting](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection); no new schema advisories were returned. No paid feature was enabled. The remaining checks are in AUTH_SETUP.md and DEVICE_REVIEW.md. Phase 3 is implemented and hosted-verified, with acceptance pending those configuration/device steps. No Phase 4, merge or Production promotion.
+
+
+## Phase 3 usability feedback - November 19, 2026
+
+The user reports that date controls, software keyboard, long names, light/dark, enlarged text and readable errors work correctly on the existing Phase 3 UI. They request a more obvious current section, success feedback for actions such as snooze/pause, and an unmistakable result when opening a person on mobile. No new device/OS version, Auth URL save or VoiceOver result was supplied. This is user-reported evidence for the previous Preview, not an agent-observed device run or acceptance of the revised interactions.
+
+Implemented selected primary navigation with a check mark, `aria-current` and matching page titles; a single focused person-detail view with Back restoring filtered-list context; and dismissible confirmed-success toasts for people, meetup and nudge mutations. Toasts pause expiration on hover/focus, replace previous feedback and clear on account unmount. Errors remain inline. Local source/build checks pass (83 Python and 7 frontend tests). The 35 browser regressions pass across the full run and isolated rerun of a login test that hit its overall time limit; new navigation/toast checks pass. The real local account/nudge/recovery journey passes with synthetic cleanup. Hosted verification of this revision remains pending. No backend/schema/contract changes, Phase 4, merge or Production promotion.
+
+
+## November 19 usability verification and handoff
+
+| Check | Observed result |
+| --- | --- |
+| Current application | `cedb269aa5d9f60cd1aecbbcd7095461f0384d19` in draft PR #3 |
+| Linux CI | [Run 44547451534](https://github.com/TonyL-dev/I-Love-People/actions/runs/44547451534) passed both jobs: source/contracts/build, 83 Python/7 frontend/35 browser checks and real local database/Auth/browser journey |
+| Preview | [https://i-love-people-kipv1n31u-smooshy.vercel.app](https://i-love-people-kipv1n31u-smooshy.vercel.app); Git-built `dpl_H5GW5rw39kH7ME8AbK5Ut6jgK4uw`, READY with exact commit verified |
+| Hosted HTTP/browser | Routing/assets/headers/no-store/health/readiness/404 pass. Actual login, new focused detail/Back, snooze/pause success messages, dismiss/new-meetup cycle, review, persistence, logout and expiry pass; no page errors |
+| New interaction checks | Selected current state and distinct styling, filtered-search Back focus, visible heading/Back below sticky navigation, pending request without success, conflict inline without toast, repeated messages, hover/focus timeout, dismiss and logout cleanup pass |
+| Visual evidence | Light/dark 320/390/768/1440 px, axe and enlarged-text checks pass; phone detail and enlarged-toast viewport screenshots inspected. Mobile toast text uses the full second row to avoid excessive wrapping at 200% |
+| Cleanup | Real local and hosted fixtures removed; final hosted account inspection found zero synthetic verification accounts. Temporary share link revoked and file removed. Local services stopped |
+| Remaining evidence | The user reports prior date/keyboard/long-name/appearance/enlarged-text/error checks pass. Revised interactions need a quick device recheck. No Auth URL save or VoiceOver result was supplied; no new-origin recovery claim is made |
+
+No backend, schema, dependency or API contract changes. No Phase 3 acceptance, Phase 4, merge or Production promotion. Source verification remains attached to the application commit above; the subsequent handoff commit changes documentation only.
+
+
+## Settings menu and toast feedback follow-up - November 19, 2026
+
+Implemented the user-requested side menu for Your preferences and Account, including saved identity/recovery/sign-out controls. A labeled Menu button opens a right-side native modal with deliberate Close focus, Escape/backdrop dismissal and focus return. The underlying library selection/search stay mounted. Closing cancels a pending logout confirmation; timezone edits remain in memory until explicitly saved. Loading/error and saved-timezone feedback remain accessible in the active context.
+
+The success checkmark now sits beside the first toast line, with naturally wrapping text and unchanged lifetime/dismissal. Normal and 200% text alignment is measured in browser checks. Initial visual review found an overly narrow enlarged drawer heading; wrapping and narrow-toast spacing were corrected. Source checks pass (83 Python/7 frontend, lint/types/contracts/design/build); all 36 browser checks and the actual local account/nudge/recovery journey pass with verified synthetic cleanup. Hosted evidence follows after verification. No API, schema, dependency, Production or Phase 4 changes.
+
+
+## Settings-menu verification and handoff - November 19, 2026
+
+| Check | Observed result |
+| --- | --- |
+| Application | `97e40eafd3a695b422cd248b291d0505a18f7777` in draft PR #3 |
+| Linux CI | [Run 44554413689](https://github.com/TonyL-dev/I-Love-People/actions/runs/44554413689) passed both jobs: 83 Python, 7 frontend, 36 browser checks and real local database/Auth/browser |
+| Preview | [https://i-love-people-pfoktasn6-smooshy.vercel.app](https://i-love-people-pfoktasn6-smooshy.vercel.app), `dpl_FpMv9MC2UzDTZzuUqXBfCo9ySJDg`, READY; exact Git commit and protected Preview target verified |
+| Drawer behavior | Hidden by default; right-side layout, deliberate Close focus, native background-focus exclusion, Escape/backdrop close, restored opener/library/search, timezone/appearance and logout confirmation pass |
+| Toast behavior | Icon is beside the first text line at normal and 200% text; measured local and actual hosted alignment passes. Success/failure, timeout/hover/focus, dismiss and logout cleanup remain covered |
+| Visual review | Light/dark at 320/390/768/1440 px, axe and enlarged text pass. Header wrapping and sticky coverage were corrected after visual inspection; representative actual hosted drawer/toast images inspected |
+| Hosted flow | HTTP routing/assets/headers/no-store/readiness/404 plus actual login, drawer preference/appearance, snooze/pause/dismiss, meetup/review/persistence, logout and expiry pass; no page errors |
+| Cleanup | Zero hosted synthetic verification accounts remain. Temporary share access revoked and local file removed. Local services stopped |
+
+This is presentation-only: no backend, API, schema, dependency or credential change. Revised iPhone/VoiceOver and exact Auth URL confirmation remain unverified. No Phase 3 acceptance, Phase 4, merge or Production promotion. The following handoff commit changes documentation only; source verification is attached to the application commit above.
+
+
+## Phase 3 readiness review - November 19, 2026
+
+The user reports the latest settings-menu/toast UI looks good after the requested review. This closes the revised UI review by user report; no new device/OS version or VoiceOver result was supplied. Existing implementation, local/CI and hosted checks for 97e40ea remain the source evidence; no code changed and no unrelated test suite was repeated.
+
+A fresh disposable no-email recovery-link probe requested `https://i-love-people-pfoktasn6-smooshy.vercel.app/reset-password`. The provider did not allowlist it and instead selected `https://i-love-people-kipv1n31u-smooshy.vercel.app`. Temporary account deletion and absence passed. The remaining Phase 3 acceptance item is the exact final Site URL/reset allowlist save followed by independent new-origin recovery verification. VoiceOver remains a later pre-release check. No Phase 3 acceptance, Phase 4, merge or Production promotion yet.
+
+
+## Phase 3 accepted - November 19, 2026
+
+Phase 3 is accepted for application `97e40ea` at [the protected Preview](https://i-love-people-pfoktasn6-smooshy.vercel.app). The user approves the latest UI and confirms saving the final Auth URLs. An independent disposable hosted Chrome journey verified the exact `/reset-password` redirect, password replacement, old-password rejection and used-link rejection, with login/profile responses 200 and no page errors. No test email was sent. Account deletion and absence passed; zero synthetic verification accounts remain. Temporary protected access was revoked and its local file removed.
+
+Together with [both passing Linux CI jobs](https://github.com/TonyL-dev/I-Love-People/actions/runs/44554413689), hosted API/RLS/browser evidence and the recorded user device/UI review, this closes Phase 3 acceptance. VoiceOver remains untested before private release. Phase 4 has not started; no merge or Production promotion occurred. The application, Alembic 0006 and API contracts are unchanged by this documentation-only closure.

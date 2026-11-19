@@ -47,3 +47,33 @@ Phase 2 review target: [https://i-love-people-c2mef0l08-smooshy.vercel.app](http
 
 
 Phase 2 user journey report — November 18, 2026. The user confirmed saving the new Auth settings and reported every requested test passed in iPhone Safari and desktop with no screen, keyboard or functional problems. This covers the preceding Phase 2 people/history checklist, including persistence after fresh sign-in and on desktop. The user did not report a new device/OS version or a VoiceOver run. VoiceOver remains unverified before private release.
+
+
+## Phase 3 review on the final Preview
+
+On iPhone Safari and desktop, sign in and add synthetic Maya with a cadence and backdated meetup. Confirm Catch up shows her due and More opens her profile. Snooze to a future date: the catch-up date stays visible and Maya moves to Taking a pause. Review the last-seen/cadence reason in Weekly review. Try dismiss-for-today and pause/unpause. Log a newer meetup and confirm snooze/dismiss clear; change cadence and archive/restore. Check date controls, software keyboard, long names, light/dark, enlarged text and readable errors. Record actual device/version/results separately. VoiceOver remains an outstanding pre-release check.
+
+
+Phase 3 review target: [https://i-love-people-k5cwd4tp3-smooshy.vercel.app](https://i-love-people-k5cwd4tp3-smooshy.vercel.app), application `a559aa5`. Hosted Chrome checks pass; iPhone Safari and VoiceOver are not inferred from those checks. Use the Phase 3 checklist above and report any screen/keyboard/function problems.
+
+
+## Phase 3 usability feedback - November 19, 2026
+
+The user reports existing date controls, software keyboard, long names, light/dark, enlarged text and readable errors work correctly. Navigation clarity, success feedback and mobile person opening need improvement. No new device/OS version or VoiceOver result was provided. After the revised Preview is verified, recheck the clearly selected section, opening a person into details with the name/Back action in view, Back restoring search, and success toasts after snooze/pause and saving a meetup. The earlier report is not automatically evidence for the revised UI.
+
+
+Revised review target, November 19: [https://i-love-people-kipv1n31u-smooshy.vercel.app](https://i-love-people-kipv1n31u-smooshy.vercel.app), `cedb269`. Recheck just the requested improvements: selected section remains unmistakable while scrolling; opening a person shows details with name and Back visible; Back returns to the filtered list; snooze/pause and meetup saves show a readable success toast. Prior reported mobile passes remain recorded above. No new VoiceOver pass is inferred.
+
+
+## Settings menu and toast follow-up
+
+On the revised Preview, check that preferences/account panels are hidden until Menu opens the side drawer. Opening should focus Close without automatically raising the keyboard; timezone/appearance and logout remain usable inside. Close or tap the backdrop and confirm the open person/search remain. Check enlarged-text scrolling and the Close control. Confirm a snooze/pause toast keeps its checkmark beside the first message line. This request alone does not establish a device pass or a VoiceOver result.
+
+
+Settings-menu review target: [https://i-love-people-pfoktasn6-smooshy.vercel.app](https://i-love-people-pfoktasn6-smooshy.vercel.app), `97e40ea`. Recheck Menu opening/closing, timezone/appearance and logout within the drawer, preserved person/search on close, enlarged-text drawer scrolling, and the toast checkmark on the first message line. Agent Chrome results do not establish a new iPhone or VoiceOver pass.
+
+
+Latest UI approval, November 19: the user reports everything looks good after the settings-menu/toast update and requested phone recheck. Record this as user-reported approval of the revised interactions, with no new device/OS identifier or VoiceOver claim. This closes the outstanding UI review; provider recovery URL configuration is separately tracked in AUTH_SETUP.md.
+
+
+Phase 3 acceptance, November 19: the user approves the revised UI, including the on-demand preferences/account menu and toast checkmark alignment. No new device/OS or VoiceOver result was supplied. Final-origin recovery also passes independently after the user confirms saving Auth URLs, closing Phase 3 alongside existing CI/hosted evidence. VoiceOver remains explicitly untested before private release; acceptance does not establish a new agent-observed real-device session.
