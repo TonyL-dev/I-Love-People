@@ -1,13 +1,13 @@
 # Implementation status
 
-Updated November 19, 2026. Phases 0, 1 and 2 are accepted. Phase 3 is implemented and hosted-verified for 97e40ea; final Auth URL configuration and new-screen device review remain pending. VoiceOver and new-screen iPhone review remain unverified. See the Phase 3 evidence below.
+Updated November 19, 2026. Phases 0, 1 and 2 are accepted. Phase 3 is implemented and hosted-verified for 97e40ea; the user approves the revised UI, and final Auth URL/recovery verification remains pending. VoiceOver remains unverified before release. See the Phase 3 evidence below.
 
 | Phase | State |
 | --- | --- |
 | 0 Foundation | Accepted; real Safari pass reported, VoiceOver remains a release check |
 | 1 Login and privacy | Accepted on the protected Preview; Production unchanged |
 | 2 People and meetups | Accepted on the protected Preview; iPhone/desktop pass reported |
-| 3 Due list | Implemented and hosted-verified; final Auth URL/device review pending |
+| 3 Due list | UI approved; final Auth URL/recovery verification pending |
 | 4 PWA and Web Push | Planned, scheduler feasibility pending |
 | 5 Personal release | Planned |
 | 6 Enhancements | Backlog |
@@ -318,3 +318,10 @@ The success checkmark now sits beside the first toast line, with naturally wrapp
 | Cleanup | Zero hosted synthetic verification accounts remain. Temporary share access revoked and local file removed. Local services stopped |
 
 This is presentation-only: no backend, API, schema, dependency or credential change. Revised iPhone/VoiceOver and exact Auth URL confirmation remain unverified. No Phase 3 acceptance, Phase 4, merge or Production promotion. The following handoff commit changes documentation only; source verification is attached to the application commit above.
+
+
+## Phase 3 readiness review - November 19, 2026
+
+The user reports the latest settings-menu/toast UI looks good after the requested review. This closes the revised UI review by user report; no new device/OS version or VoiceOver result was supplied. Existing implementation, local/CI and hosted checks for 97e40ea remain the source evidence; no code changed and no unrelated test suite was repeated.
+
+A fresh disposable no-email recovery-link probe requested `https://i-love-people-pfoktasn6-smooshy.vercel.app/reset-password`. The provider did not allowlist it and instead selected `https://i-love-people-kipv1n31u-smooshy.vercel.app`. Temporary account deletion and absence passed. The remaining Phase 3 acceptance item is the exact final Site URL/reset allowlist save followed by independent new-origin recovery verification. VoiceOver remains a later pre-release check. No Phase 3 acceptance, Phase 4, merge or Production promotion yet.

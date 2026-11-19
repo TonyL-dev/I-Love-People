@@ -151,3 +151,6 @@ The authenticated account screen keeps preferences, signed-in identity, recovery
 
 
 Settings-menu runtime: `97e40ea` at https://i-love-people-pfoktasn6-smooshy.vercel.app, Git-built protected Preview `dpl_FpMv9MC2UzDTZzuUqXBfCo9ySJDg`. Real hosted browser operations confirm the drawer uses the same saved-profile and managed Auth paths, keeps library context, and renders the toast icon beside the first message line. Alembic remains at 0006 with no API or ownership-boundary changes.
+
+
+Readiness review, November 19: latest UI approval is user-reported; the accepted runtime boundaries and application 97e40ea are unchanged. A fresh no-email Auth redirect probe still falls back from the final Preview to the older kipv1n31u origin. Final provider URL configuration and new-origin recovery verification remain open; no runtime or schema change accompanies this status review.

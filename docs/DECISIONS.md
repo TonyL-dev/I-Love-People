@@ -137,3 +137,6 @@ Place the toast success icon alongside the first message line on all widths. Let
 
 
 Settings-menu rollout confirmation: reuse the exact Git-built protected Preview after Linux CI passes. The native drawer and inline toast cue pass both local and actual hosted journeys without another migration. Preserve the draft PR, synthetic cleanup and separate device/recovery gates; no release or phase change follows this presentation refinement.
+
+
+Phase 3 readiness, November 19: accept the user's latest UI approval as the requested review evidence without inventing a new device/OS or VoiceOver run. Preserve the already-recorded final-origin recovery gate: direct provider evidence shows the final reset destination is absent. Close that gate after the exact URL save and independent disposable recovery check. Do not repeat unrelated implementation tests for this documentation-only review or make VoiceOver an extra Phase 3 prerequisite.

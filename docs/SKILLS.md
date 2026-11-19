@@ -105,3 +105,6 @@ Applied the already-read React review guidance to native-dialog reuse, focus/key
 
 
 Final settings-menu verification: source checks/build, all 36 browser regressions and the real local account/nudge/recovery journey pass. Linux CI passes both jobs for 97e40ea. Reused the protected Git-built Preview and private harness for hosted HTTP, real drawer timezone/appearance/logout, nudge/meetup/persistence/expiry and measured first-line icon alignment. Inspected actual hosted drawer/toast and local light/dark phone/desktop/enlarged screenshots. Verified account cleanup, revoked temporary access and removed its file; local services are stopped. No Computer Use, subagents, provider settings, migrations or new dependencies.
+
+
+Readiness review, November 19: reused the existing disposable managed-Auth redirect probe for the final pfoktasn6 Preview. The provider falls back to the older kipv1n31u origin, confirming one remaining configuration/recovery gate. No email was sent; temporary account deletion and absence were verified. Recorded the user's UI approval separately from agent-observed evidence. No application code, schema, provider configuration, Computer Use or subagent activity; source/browser suites were not needlessly repeated.

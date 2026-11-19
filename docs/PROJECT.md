@@ -1,6 +1,6 @@
 # I Love People project plan
 
-Updated November 19, 2026. This document defines the implementation roadmap. Phase 0 is accepted. Phases 1 and 2 are accepted on the protected Preview; Phase 3 is implemented and hosted-verified, awaiting final Auth URL configuration and new-screen device review. VoiceOver remains unverified before release. See [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for evidence and outstanding gates.
+Updated November 19, 2026. This document defines the implementation roadmap. Phase 0 is accepted. Phases 1 and 2 are accepted on the protected Preview; Phase 3 is implemented and hosted-verified, with UI review approved and final Auth URL/recovery verification pending. VoiceOver remains unverified before release. See [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for evidence and outstanding gates.
 
 ## Goal and scope
 
@@ -172,3 +172,6 @@ Phase 3 menu refinement, November 19: implement the user's requested on-demand p
 
 
 Settings-menu follow-up verified: `97e40ea` passes [both Linux CI jobs](https://github.com/TonyL-dev/I-Love-People/actions/runs/44554413689) and actual hosted drawer/toast/account/library checks at [the updated protected Preview](https://i-love-people-pfoktasn6-smooshy.vercel.app). Preferences/account are hidden until Menu opens; toast cues align with the first line. Draft PR #3 is updated. Current-device review, exact recovery URL configuration and VoiceOver remain unconfirmed. No Phase 4, merge or Production promotion.
+
+
+Phase 3 readiness review, November 19: the user now approves the revised UI. Implementation, CI, hosted browser/security and UI review evidence are complete for 97e40ea. A fresh no-email probe confirms that password recovery for the final pfoktasn6 Preview still falls back to the older kipv1n31u origin. Save the final exact Auth URLs in AUTH_SETUP.md, then verify new-origin password replacement and old-password/used-link rejection to close Phase 3 acceptance. VoiceOver remains a pre-release check; Phase 4 has not started.

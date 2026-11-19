@@ -71,3 +71,6 @@ On the revised Preview, check that preferences/account panels are hidden until M
 
 
 Settings-menu review target: [https://i-love-people-pfoktasn6-smooshy.vercel.app](https://i-love-people-pfoktasn6-smooshy.vercel.app), `97e40ea`. Recheck Menu opening/closing, timezone/appearance and logout within the drawer, preserved person/search on close, enlarged-text drawer scrolling, and the toast checkmark on the first message line. Agent Chrome results do not establish a new iPhone or VoiceOver pass.
+
+
+Latest UI approval, November 19: the user reports everything looks good after the settings-menu/toast update and requested phone recheck. Record this as user-reported approval of the revised interactions, with no new device/OS identifier or VoiceOver claim. This closes the outstanding UI review; provider recovery URL configuration is separately tracked in AUTH_SETUP.md.
