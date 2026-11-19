@@ -74,3 +74,6 @@ Settings-menu review target: [https://i-love-people-pfoktasn6-smooshy.vercel.app
 
 
 Latest UI approval, November 19: the user reports everything looks good after the settings-menu/toast update and requested phone recheck. Record this as user-reported approval of the revised interactions, with no new device/OS identifier or VoiceOver claim. This closes the outstanding UI review; provider recovery URL configuration is separately tracked in AUTH_SETUP.md.
+
+
+Phase 3 acceptance, November 19: the user approves the revised UI, including the on-demand preferences/account menu and toast checkmark alignment. No new device/OS or VoiceOver result was supplied. Final-origin recovery also passes independently after the user confirms saving Auth URLs, closing Phase 3 alongside existing CI/hosted evidence. VoiceOver remains explicitly untested before private release; acceptance does not establish a new agent-observed real-device session.

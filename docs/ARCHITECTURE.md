@@ -154,3 +154,6 @@ Settings-menu runtime: `97e40ea` at https://i-love-people-pfoktasn6-smooshy.verc
 
 
 Readiness review, November 19: latest UI approval is user-reported; the accepted runtime boundaries and application 97e40ea are unchanged. A fresh no-email Auth redirect probe still falls back from the final Preview to the older kipv1n31u origin. Final provider URL configuration and new-origin recovery verification remain open; no runtime or schema change accompanies this status review.
+
+
+Phase 3 acceptance, November 19: the user confirmed final Auth URL configuration and approved the UI. Independent hosted Chrome recovery now reaches the exact pfoktasn6 `/reset-password` target and passes password replacement, old-password and used-link rejection. Runtime remains 97e40ea on the protected Preview, Alembic 0006 and existing ownership/Auth boundaries; no architecture change. VoiceOver remains a pre-release check; Phase 4, merge and Production promotion have not occurred.

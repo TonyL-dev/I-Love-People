@@ -1,13 +1,13 @@
 # Implementation status
 
-Updated November 19, 2026. Phases 0, 1 and 2 are accepted. Phase 3 is implemented and hosted-verified for 97e40ea; the user approves the revised UI, and final Auth URL/recovery verification remains pending. VoiceOver remains unverified before release. See the Phase 3 evidence below.
+Updated November 19, 2026. Phases 0, 1, 2 and 3 are accepted. Phase 3 is accepted November 19, 2026 for 97e40ea after user UI approval and independent final-origin recovery verification. VoiceOver remains unverified before release. See the Phase 3 evidence below.
 
 | Phase | State |
 | --- | --- |
 | 0 Foundation | Accepted; real Safari pass reported, VoiceOver remains a release check |
 | 1 Login and privacy | Accepted on the protected Preview; Production unchanged |
 | 2 People and meetups | Accepted on the protected Preview; iPhone/desktop pass reported |
-| 3 Due list | UI approved; final Auth URL/recovery verification pending |
+| 3 Due list | Accepted on the protected Preview; UI approval and final-origin recovery pass |
 | 4 PWA and Web Push | Planned, scheduler feasibility pending |
 | 5 Personal release | Planned |
 | 6 Enhancements | Backlog |
@@ -325,3 +325,10 @@ This is presentation-only: no backend, API, schema, dependency or credential cha
 The user reports the latest settings-menu/toast UI looks good after the requested review. This closes the revised UI review by user report; no new device/OS version or VoiceOver result was supplied. Existing implementation, local/CI and hosted checks for 97e40ea remain the source evidence; no code changed and no unrelated test suite was repeated.
 
 A fresh disposable no-email recovery-link probe requested `https://i-love-people-pfoktasn6-smooshy.vercel.app/reset-password`. The provider did not allowlist it and instead selected `https://i-love-people-kipv1n31u-smooshy.vercel.app`. Temporary account deletion and absence passed. The remaining Phase 3 acceptance item is the exact final Site URL/reset allowlist save followed by independent new-origin recovery verification. VoiceOver remains a later pre-release check. No Phase 3 acceptance, Phase 4, merge or Production promotion yet.
+
+
+## Phase 3 accepted - November 19, 2026
+
+Phase 3 is accepted for application `97e40ea` at [the protected Preview](https://i-love-people-pfoktasn6-smooshy.vercel.app). The user approves the latest UI and confirms saving the final Auth URLs. An independent disposable hosted Chrome journey verified the exact `/reset-password` redirect, password replacement, old-password rejection and used-link rejection, with login/profile responses 200 and no page errors. No test email was sent. Account deletion and absence passed; zero synthetic verification accounts remain. Temporary protected access was revoked and its local file removed.
+
+Together with [both passing Linux CI jobs](https://github.com/TonyL-dev/I-Love-People/actions/runs/44554413689), hosted API/RLS/browser evidence and the recorded user device/UI review, this closes Phase 3 acceptance. VoiceOver remains untested before private release. Phase 4 has not started; no merge or Production promotion occurred. The application, Alembic 0006 and API contracts are unchanged by this documentation-only closure.

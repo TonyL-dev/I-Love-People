@@ -2,7 +2,7 @@
 
 Updated November 19, 2026. Read docs/PROJECT.md, docs/IMPLEMENTATION_STATUS.md, docs/ARCHITECTURE.md, docs/DECISIONS.md, and docs/PROJECT_GUIDELINES.md before changes.
 
-This project is a private responsive website with a $0 monthly hosting target. The active roadmap is in docs/PROJECT.md. Implement phases in order when requested. Phase 0 foundation acceptance is met; local checks, GitHub Linux CI, hosted HTTP/database smoke, and local loopback binding pass. Safari review passed by user report. Phases 1 and 2 are accepted on the protected Preview; Phase 3 is implemented and hosted-verified, with UI review approved and final Auth URL/recovery verification pending. VoiceOver remains an open pre-release check. Imported resume-project files are preserved in docs/reference as historical reference material. Their implementation claims and commands do not establish this project's state.
+This project is a private responsive website with a $0 monthly hosting target. The active roadmap is in docs/PROJECT.md. Implement phases in order when requested. Phase 0 foundation acceptance is met; local checks, GitHub Linux CI, hosted HTTP/database smoke, and local loopback binding pass. Safari review passed by user report. Phases 1, 2 and 3 are accepted on the protected Preview. Phase 3 acceptance is recorded November 19, 2026 for application 97e40ea; UI approval and final-origin recovery verification pass. VoiceOver remains an open pre-release check. Imported resume-project files are preserved in docs/reference as historical reference material. Their implementation claims and commands do not establish this project's state.
 
 Read docs/DESIGN_STANDARDS.md for UI, code, and documentation changes. Apply its typography, semantic tokens, spacing, accessibility, interaction states, and visual review gates from Phase 0. Use local Supabase and synthetic data for repeatable development checks before hosted verification.
 
@@ -86,3 +86,10 @@ Phase 3 settings-menu handoff, November 19, 2026. CI-passed 97e40ea is READY at 
 
 
 Phase 3 readiness review, November 19, 2026. The user approved the latest settings-menu/toast UI as looking good, closing the revised UI review by user report. A fresh disposable no-email probe confirms the final 97e40ea Preview reset target is not allowlisted and falls back to the older kipv1n31u Preview; the probe account was deleted and absence verified. The only remaining Phase 3 acceptance item is saving the final exact Site URL/reset redirect in AUTH_SETUP.md and passing the new-origin recovery check. VoiceOver remains a later pre-release check, not an additional Phase 3 blocker. No Phase 3 acceptance, Phase 4, merge or Production promotion yet.
+
+
+## Phase 3 accepted - November 19, 2026
+
+Phase 3 is accepted for application `97e40ea` at [the protected Preview](https://i-love-people-pfoktasn6-smooshy.vercel.app). The user approves the latest UI and confirms saving the final Auth URLs. An independent disposable hosted Chrome journey verified the exact `/reset-password` redirect, password replacement, old-password rejection and used-link rejection, with login/profile responses 200 and no page errors. No test email was sent. Account deletion and absence passed; zero synthetic verification accounts remain. Temporary protected access was revoked and its local file removed.
+
+Together with [both passing Linux CI jobs](https://github.com/TonyL-dev/I-Love-People/actions/runs/44554413689), hosted API/RLS/browser evidence and the recorded user device/UI review, this closes Phase 3 acceptance. VoiceOver remains untested before private release. Phase 4 has not started; no merge or Production promotion occurred. The application, Alembic 0006 and API contracts are unchanged by this documentation-only closure.

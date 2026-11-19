@@ -1,6 +1,6 @@
 # I Love People project plan
 
-Updated November 19, 2026. This document defines the implementation roadmap. Phase 0 is accepted. Phases 1 and 2 are accepted on the protected Preview; Phase 3 is implemented and hosted-verified, with UI review approved and final Auth URL/recovery verification pending. VoiceOver remains unverified before release. See [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for evidence and outstanding gates.
+Updated November 19, 2026. This document defines the implementation roadmap. Phase 0 is accepted. Phases 1, 2 and 3 are accepted on the protected Preview. Phase 3 acceptance is recorded November 19, 2026 for application 97e40ea after UI approval and final-origin recovery verification. VoiceOver remains unverified before release. See [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for evidence and outstanding gates.
 
 ## Goal and scope
 
@@ -175,3 +175,10 @@ Settings-menu follow-up verified: `97e40ea` passes [both Linux CI jobs](https://
 
 
 Phase 3 readiness review, November 19: the user now approves the revised UI. Implementation, CI, hosted browser/security and UI review evidence are complete for 97e40ea. A fresh no-email probe confirms that password recovery for the final pfoktasn6 Preview still falls back to the older kipv1n31u origin. Save the final exact Auth URLs in AUTH_SETUP.md, then verify new-origin password replacement and old-password/used-link rejection to close Phase 3 acceptance. VoiceOver remains a pre-release check; Phase 4 has not started.
+
+
+## Phase 3 accepted - November 19, 2026
+
+Phase 3 is accepted for application `97e40ea` at [the protected Preview](https://i-love-people-pfoktasn6-smooshy.vercel.app). The user approves the latest UI and confirms saving the final Auth URLs. An independent disposable hosted Chrome journey verified the exact `/reset-password` redirect, password replacement, old-password rejection and used-link rejection, with login/profile responses 200 and no page errors. No test email was sent. Account deletion and absence passed; zero synthetic verification accounts remain. Temporary protected access was revoked and its local file removed.
+
+Together with [both passing Linux CI jobs](https://github.com/TonyL-dev/I-Love-People/actions/runs/44554413689), hosted API/RLS/browser evidence and the recorded user device/UI review, this closes Phase 3 acceptance. VoiceOver remains untested before private release. Phase 4 has not started; no merge or Production promotion occurred. The application, Alembic 0006 and API contracts are unchanged by this documentation-only closure.

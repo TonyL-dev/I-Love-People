@@ -140,3 +140,6 @@ Settings-menu rollout confirmation: reuse the exact Git-built protected Preview 
 
 
 Phase 3 readiness, November 19: accept the user's latest UI approval as the requested review evidence without inventing a new device/OS or VoiceOver run. Preserve the already-recorded final-origin recovery gate: direct provider evidence shows the final reset destination is absent. Close that gate after the exact URL save and independent disposable recovery check. Do not repeat unrelated implementation tests for this documentation-only review or make VoiceOver an extra Phase 3 prerequisite.
+
+
+Phase 3 acceptance, November 19: combine existing application 97e40ea CI/hosted evidence, the user-reported UI approval and URL save, and independently observed exact-origin managed recovery to accept Phase 3. The disposable browser test sent no email and verified cleanup; do not infer another owner-inbox or device/OS test. VoiceOver remains a pre-release check. Preserve phase ordering: Phase 4 requires a request; acceptance does not merge or promote Production.

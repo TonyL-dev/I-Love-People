@@ -81,3 +81,6 @@ The latest verified application is `97e40ea` at [https://i-love-people-pfoktasn6
 
 
 Final-origin probe, November 19: the requested pfoktasn6 reset URL is still absent from the allowlist and falls back to `https://i-love-people-kipv1n31u-smooshy.vercel.app`. The disposable no-email probe user was deleted and absence verified. The latest UI is now approved by the user; the final exact Site URL/reset redirect save above and subsequent disposable new-origin recovery check are the only remaining Phase 3 acceptance item. Existing owner-inbox delivery evidence does not need to be repeated for this unchanged provider.
+
+
+Final Auth configuration verified, November 19: the user confirms the Site URL `https://i-love-people-pfoktasn6-smooshy.vercel.app` and exact redirect `https://i-love-people-pfoktasn6-smooshy.vercel.app/reset-password` are saved. Independent disposable hosted Chrome recovery follows that exact destination, changes the password, rejects the old password and used link, and accepts replacement-password login. Account deletion/absence and temporary protection-access revocation passed. No email was sent; owner-inbox evidence remains the Phase 1 report. This closes the final Phase 3 Auth gate.
