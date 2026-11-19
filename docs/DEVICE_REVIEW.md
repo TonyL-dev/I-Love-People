@@ -63,3 +63,8 @@ The user reports existing date controls, software keyboard, long names, light/da
 
 
 Revised review target, November 19: [https://i-love-people-kipv1n31u-smooshy.vercel.app](https://i-love-people-kipv1n31u-smooshy.vercel.app), `cedb269`. Recheck just the requested improvements: selected section remains unmistakable while scrolling; opening a person shows details with name and Back visible; Back returns to the filtered list; snooze/pause and meetup saves show a readable success toast. Prior reported mobile passes remain recorded above. No new VoiceOver pass is inferred.
+
+
+## Settings menu and toast follow-up
+
+On the revised Preview, check that preferences/account panels are hidden until Menu opens the side drawer. Opening should focus Close without automatically raising the keyboard; timezone/appearance and logout remain usable inside. Close or tap the backdrop and confirm the open person/search remain. Check enlarged-text scrolling and the Close control. Confirm a snooze/pause toast keeps its checkmark beside the first message line. This request alone does not establish a device pass or a VoiceOver result.

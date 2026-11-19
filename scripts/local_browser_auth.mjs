@@ -37,7 +37,20 @@ try {
     await page.getByRole('button', { name: 'Sign in', exact: true }).click();
     await page.getByRole('heading', { name: 'Your private space.' }).waitFor();
   }
+  async function openAccountMenu() {
+    const menu = page.getByRole('dialog', { name: 'Settings and account' });
+    if (!(await menu.isVisible()))
+      await page.getByRole('button', { name: 'Menu', exact: true }).click();
+    return menu;
+  }
+  async function closeAccountMenu() {
+    await page
+      .getByRole('dialog', { name: 'Settings and account' })
+      .getByRole('button', { name: 'Close', exact: true })
+      .click();
+  }
   async function logout() {
+    await openAccountMenu();
     await page.getByRole('button', { name: 'Sign out', exact: true }).click();
     await page.getByRole('button', { name: 'Confirm sign out' }).click();
     await page.getByRole('heading', { name: 'Keep your people close.' }).waitFor();
@@ -48,9 +61,11 @@ try {
   stage = 'managed-login';
   await login(fixture.password);
   stage = 'owned-preference';
+  await openAccountMenu();
   await page.getByLabel('Timezone', { exact: true }).fill('America/Toronto');
   await page.getByRole('button', { name: 'Save timezone' }).click();
   await page.getByText('Timezone saved.', { exact: true }).waitFor();
+  await closeAccountMenu();
   stage = 'people-and-meetup-persistence';
   await page.getByRole('button', { name: 'Add person', exact: true }).click();
   const dialog = page.getByRole('dialog');
@@ -121,7 +136,9 @@ try {
   diagnostics.nudgeStep = 9;
   mkdirSync('artifacts/local', { recursive: true });
   for (const appearance of ['light', 'dark']) {
+    await openAccountMenu();
     await page.getByLabel('Appearance', { exact: true }).selectOption(appearance);
+    await closeAccountMenu();
     for (const width of [320, 390, 768, 1440]) {
       await page.setViewportSize({ width, height: 900 });
       await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -170,7 +187,9 @@ try {
   await page.reload();
   await page.getByRole('heading', { name: 'Keep your people close.' }).waitFor();
   await login(fixture.password);
+  await openAccountMenu();
   assert.equal(await page.getByLabel('Timezone', { exact: true }).inputValue(), 'America/Toronto');
+  await closeAccountMenu();
   await page.getByRole('button', { name: 'People', exact: true }).click();
   await page.getByRole('button', { name: 'Synthetic Maya', exact: true }).click();
   await expect(page.getByText('Synthetic walk', { exact: true })).toBeVisible();

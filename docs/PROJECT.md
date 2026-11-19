@@ -166,3 +166,6 @@ Phase 3 usability follow-up, November 19: the user reports the existing mobile d
 
 
 November 19 usability follow-up verified: `cedb269` passes [both Linux jobs](https://github.com/TonyL-dev/I-Love-People/actions/runs/44547451534) and hosted HTTP/actual browser checks at [the revised protected Preview](https://i-love-people-kipv1n31u-smooshy.vercel.app). Clear selected sections, focused details/Back and confirmed-success toasts are delivered in draft PR #3. The earlier mobile passes are user-reported; a focused recheck of the revised interactions, final Auth URL configuration and VoiceOver remain outstanding. Phase 4 is not started.
+
+
+Phase 3 menu refinement, November 19: implement the user's requested on-demand preferences/account side menu and first-line mobile toast checkmark. Existing authentication, due logic and phase scope stay unchanged. Source/build, 36 browser checks and the real local account journey pass; hosted verification is pending. Revised device review, Auth URL configuration and VoiceOver remain unconfirmed; Phase 4 is not started.

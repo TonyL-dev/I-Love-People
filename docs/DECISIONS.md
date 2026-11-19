@@ -127,3 +127,10 @@ Use short success toasts only after a confirmed mutation, with no suggested Undo
 
 
 November 19 rollout confirmation: reuse the Git-built protected Preview after confirming its exact commit matches successful Linux CI, avoiding a duplicate deployment. No migration is needed for this presentation-only revision. Keep the existing draft PR and separate prior user mobile evidence from verification of the new interactions.
+
+
+## Settings on demand and toast alignment - November 19, 2026
+
+Move infrequently used preferences/account controls into a modal side drawer rather than leaving them below every library view. Reuse the native dialog for inert background, keyboard behavior and focus return; initially focus Close so opening the menu does not open a software keyboard. Keep library state mounted and preserve in-memory timezone drafts. Dismissal cancels only the local logout confirmation, without submitting changes.
+
+Place the toast success icon alongside the first message line on all widths. Let text wrap naturally and limit spacing growth on narrow enlarged-text layouts, keeping the explicit dismiss target at least 44 px. Preserve confirmed-success semantics, inline failures and notification lifetime. This is a Phase 3 presentation refinement with no new dependencies, runtime services, schema or cost.

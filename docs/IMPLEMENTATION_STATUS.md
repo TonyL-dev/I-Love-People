@@ -295,3 +295,10 @@ Implemented selected primary navigation with a check mark, `aria-current` and ma
 | Remaining evidence | The user reports prior date/keyboard/long-name/appearance/enlarged-text/error checks pass. Revised interactions need a quick device recheck. No Auth URL save or VoiceOver result was supplied; no new-origin recovery claim is made |
 
 No backend, schema, dependency or API contract changes. No Phase 3 acceptance, Phase 4, merge or Production promotion. Source verification remains attached to the application commit above; the subsequent handoff commit changes documentation only.
+
+
+## Settings menu and toast feedback follow-up - November 19, 2026
+
+Implemented the user-requested side menu for Your preferences and Account, including saved identity/recovery/sign-out controls. A labeled Menu button opens a right-side native modal with deliberate Close focus, Escape/backdrop dismissal and focus return. The underlying library selection/search stay mounted. Closing cancels a pending logout confirmation; timezone edits remain in memory until explicitly saved. Loading/error and saved-timezone feedback remain accessible in the active context.
+
+The success checkmark now sits beside the first toast line, with naturally wrapping text and unchanged lifetime/dismissal. Normal and 200% text alignment is measured in browser checks. Initial visual review found an overly narrow enlarged drawer heading; wrapping and narrow-toast spacing were corrected. Source checks pass (83 Python/7 frontend, lint/types/contracts/design/build); all 36 browser checks and the actual local account/nudge/recovery journey pass with verified synthetic cleanup. Hosted evidence follows after verification. No API, schema, dependency, Production or Phase 4 changes.

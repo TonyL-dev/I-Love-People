@@ -1,8 +1,9 @@
 import { PeoplePage } from '../people/PeoplePage';
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type FormEvent } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Menu } from 'lucide-react';
 import { Link } from '../navigation';
 import { Button } from '../ui/Button';
+import { Dialog } from '../ui/Dialog';
 import { Notice } from '../ui/Notice';
 import { AppearanceField, type Appearance } from '../ui/Appearance';
 import {
@@ -314,6 +315,7 @@ function PrivateAccount({
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   useEffect(() => {
     const abort = new AbortController();
     void client.profile(session, undefined, abort.signal).then(
@@ -366,77 +368,109 @@ function PrivateAccount({
         );
     });
   }
+  function closeMenu() {
+    setMenuOpen(false);
+    setConfirmLogout(false);
+  }
+  const accountError = error && (
+    <Notice title="Please try again." variant="error">
+      <p role="alert">{error}</p>
+      <Button
+        onClick={() => {
+          setProfile(null);
+          setAttempt((value) => value + 1);
+        }}
+      >
+        Try again
+      </Button>
+    </Notice>
+  );
   return (
     <section className="private-account stack stack--large">
-      <div className="page-heading">
+      <div className="account-heading">
         <h1>Your private space.</h1>
-        <p className="secondary">Signed in as {session.email}</p>
+        <Button
+          onClick={() => setMenuOpen(true)}
+          aria-haspopup="dialog"
+          aria-expanded={menuOpen}
+          aria-controls="account-menu"
+        >
+          <Menu aria-hidden="true" size={20} /> Menu
+        </Button>
       </div>
       {profile && <PeoplePage session={session} timezone={profile.timezone} />}
       {!profile && !error && <p role="status">Loading your account…</p>}
-      {error && (
-        <Notice title="Please try again." variant="error">
-          <p role="alert">{error}</p>
-          <Button
-            onClick={() => {
-              setProfile(null);
-              setAttempt((value) => value + 1);
-            }}
-          >
-            Try again
-          </Button>
-        </Notice>
-      )}
-      {profile && (
-        <form
-          className="surface stack"
-          onSubmit={(event) => {
-            void save(event);
-          }}
+      {!menuOpen && accountError}
+      {menuOpen && (
+        <Dialog
+          open
+          id="account-menu"
+          title="Settings and account"
+          className="account-drawer"
+          initialFocus="close"
+          closeOnBackdrop
+          onRequestClose={closeMenu}
         >
-          <h2>Your preferences</h2>
-          <label htmlFor="account-timezone">
-            Timezone
-            <input
-              id="account-timezone"
-              value={timezone}
-              onChange={(e) => setTimezone(e.target.value)}
-              required
-              maxLength={64}
-              aria-describedby="timezone-help"
-            />
-          </label>
-          <p id="timezone-help" className="supporting secondary">
-            Use an IANA name, such as America/Toronto.
-          </p>
-          <Button type="submit" variant="primary" className="self-start" busy={busy}>
-            {busy ? 'Saving…' : 'Save timezone'}
-          </Button>
-          <AppearanceField value={appearance} onChange={setAppearance} id="account-appearance" />
-        </form>
-      )}
-      {notice && <p role="status">{notice}</p>}
-      <div className="surface stack">
-        <h2>Account</h2>
-        <Link className="text-link" href="/forgot-password">
-          Change password
-        </Link>
-        {confirmLogout ? (
-          <div className="stack">
-            <p>Sign out on all devices? This tab’s account data will be cleared.</p>
-            <div className="actions">
-              <Button onClick={() => setConfirmLogout(false)}>Stay signed in</Button>
-              <Button variant="danger" onClick={logout}>
-                Confirm sign out
-              </Button>
+          <div className="stack stack--large">
+            {accountError}
+            {profile && (
+              <form
+                className="surface stack"
+                onSubmit={(event) => {
+                  void save(event);
+                }}
+              >
+                <h2>Your preferences</h2>
+                <label htmlFor="account-timezone">
+                  Timezone
+                  <input
+                    id="account-timezone"
+                    value={timezone}
+                    onChange={(e) => setTimezone(e.target.value)}
+                    required
+                    maxLength={64}
+                    aria-describedby="timezone-help"
+                  />
+                </label>
+                <p id="timezone-help" className="supporting secondary">
+                  Use an IANA name, such as America/Toronto.
+                </p>
+                <Button type="submit" variant="primary" className="self-start" busy={busy}>
+                  {busy ? 'Saving…' : 'Save timezone'}
+                </Button>
+                <AppearanceField
+                  value={appearance}
+                  onChange={setAppearance}
+                  id="account-appearance"
+                />
+              </form>
+            )}
+            {notice && <p role="status">{notice}</p>}
+            <div className="surface stack">
+              <h2>Account</h2>
+              <p className="secondary">Signed in as {session.email}</p>
+              <Link className="text-link" href="/forgot-password">
+                Change password
+              </Link>
+              {confirmLogout ? (
+                <div className="stack">
+                  <p>Sign out on all devices? This tab’s account data will be cleared.</p>
+                  <div className="actions">
+                    <Button onClick={() => setConfirmLogout(false)}>Stay signed in</Button>
+                    <Button variant="danger" onClick={logout}>
+                      Confirm sign out
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <Button className="self-start" onClick={() => setConfirmLogout(true)}>
+                  Sign out
+                </Button>
+              )}
             </div>
           </div>
-        ) : (
-          <Button className="self-start" onClick={() => setConfirmLogout(true)}>
-            Sign out
-          </Button>
-        )}
-      </div>
+        </Dialog>
+      )}
     </section>
   );
 }

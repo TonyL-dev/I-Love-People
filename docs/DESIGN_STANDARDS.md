@@ -105,3 +105,10 @@ Save representative screenshots and record visual review separately from automat
 Clearly mark the current library section using the semantic action/on-action pair, a check mark, programmatic current state and a matching heading. Keep section context available when scrolling. Person opening shows an explicit detail view, brings its heading and Back action into view, and returns focus/list context on Back. Account for wrapping navigation at enlarged text sizes.
 
 Show a concise toast only after a mutation is confirmed. Use a polite status announcement, an accessible 44 px dismiss control and a safe-area-aware position. Allow seven idle seconds and pause expiration on hover/focus. Do not steal focus, emit success on failure, store private messages persistently, or invent an Undo operation. Retain useful inline errors.
+
+
+## Settings drawer and inline success cue - November 19, 2026
+
+Keep preferences/account controls behind a labeled Menu action in a right-side native modal. Preserve the current library view underneath; provide Close, Escape/backdrop dismissal and focus return. Initial focus belongs on Close to avoid opening a mobile keyboard without intent. Let the heading/Close row wrap at large text sizes and keep Close visible during scrolling.
+
+The toast success icon sits beside the first message line at mobile and desktop widths. The message can wrap; constrain gaps/padding growth on narrow enlarged-text layouts so ordinary words remain readable. Preserve the accessible dismiss target and existing announcement/lifetime rules.

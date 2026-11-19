@@ -21,9 +21,9 @@ export function Toast({ message, dismiss }: { message: string; dismiss: () => vo
         if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false);
       }}
     >
-      <CheckCircle2 className="success-text" aria-hidden="true" size={24} />
-      <p role="status" aria-live="polite" aria-atomic="true">
-        {message}
+      <p className="toast__message" role="status" aria-live="polite" aria-atomic="true">
+        <CheckCircle2 className="success-text" aria-hidden="true" size={24} />
+        <span>{message}</span>
       </p>
       <Button variant="quiet" aria-label="Dismiss notification" onClick={dismiss}>
         <X aria-hidden="true" size={20} />

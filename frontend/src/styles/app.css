@@ -737,8 +737,8 @@ input[type='checkbox'] {
   left: 50%;
   transform: translateX(-50%);
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
   gap: var(--space-3);
   width: min(var(--width-form), calc(100% - 40px));
   max-height: 50dvh;
@@ -756,21 +756,67 @@ input[type='checkbox'] {
   min-width: 44px;
 }
 
+.toast__message {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: min(var(--space-2), 8px);
+}
+
+.toast__message > svg {
+  margin-top: calc((var(--line-body) - 24px) / 2);
+}
+
 @media (max-width: 480px) {
   .toast {
     grid-template-columns: minmax(0, 1fr) auto;
-    gap: var(--space-2);
-    padding: var(--space-3);
-  }
-  .toast > svg {
-    grid-area: 1 / 1;
+    gap: min(var(--space-2), 8px);
+    padding: min(var(--space-3), 16px);
   }
   .toast .button {
-    grid-area: 1 / 2;
+    padding: min(var(--space-2), 8px);
   }
-  .toast p {
-    grid-area: 2 / 1 / 3 / -1;
-  }
+}
+
+.account-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.account-heading .button {
+  flex-shrink: 0;
+}
+
+.dialog.account-drawer {
+  margin: 0 0 0 auto;
+  width: min(440px, calc(100% - 20px));
+  max-width: none;
+  height: 100dvh;
+  max-height: 100dvh;
+  border-radius: var(--radius-sheet) 0 0 var(--radius-sheet);
+  padding: 0 var(--space-4) max(var(--space-6), env(safe-area-inset-bottom));
+  overflow-wrap: anywhere;
+}
+
+.account-drawer .dialog__heading {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--color-surface);
+  padding-top: max(var(--space-4), env(safe-area-inset-top));
+  padding-bottom: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.account-drawer .dialog__heading h2 {
+  flex: 1 1 180px;
+  min-width: 0;
+}
+
+.account-drawer .stack {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .private-account,

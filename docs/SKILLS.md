@@ -97,3 +97,8 @@ Applied React review guidance to navigation/focus, cancellable reads, notificati
 
 
 November 19 final verification: existing task runner, installed Chrome and React/full-flow review covered the new UI locally; GitHub Linux CI passed both jobs. Reused the exact Git-built Vercel Preview and existing protected-access harness for HTTP plus actual synthetic browser navigation/toast/meetup/persistence/logout/expiry checks. No backend reimplementation or migration. Verified synthetic cleanup, revoked temporary share access, removed its local token file, and stopped local services. Inspected phone/detail/toast screenshots, including readable 200% text feedback after widening its narrow-screen layout. No Computer Use or subagents were used in this follow-up.
+
+
+## Menu and toast follow-up - November 19, 2026
+
+Applied the already-read React review guidance to native-dialog reuse, focus/keyboard behavior, preservation of private component state and inline notification alignment. Updated existing browser/account journeys to reach preferences and logout through Menu. Added behavior and visual checks for hidden-by-default settings, drawer side placement, Escape/backdrop close, background focus exclusion, context restoration, large-text reflow and the icon beside the first text line. No Computer Use, subagents, provider configuration or new dependency was needed. Local/CI/hosted/device evidence remains separate.

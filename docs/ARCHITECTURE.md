@@ -141,3 +141,10 @@ A shared `Toast` presents confirmed mutation results in a polite status region w
 
 
 November 19 usability runtime: `cedb269` at https://i-love-people-kipv1n31u-smooshy.vercel.app, protected Preview `dpl_H5GW5rw39kH7ME8AbK5Ut6jgK4uw`. Hosted browser checks confirm the focused detail/Back and mutation-toast path; HTTP/assets/security/readiness checks pass. This revision changes presentation and verification only; API contracts, Alembic 0006 and ownership boundaries are unchanged.
+
+
+## Settings drawer and inline toast icon - November 19, 2026
+
+The authenticated account screen keeps preferences, signed-in identity, recovery link and sign-out controls in a right-side native `Dialog`, opened by Menu. The library stays mounted beneath its modal/inert layer, preserving selection, filtered search and drafts. Opening focuses Close to avoid summoning the mobile keyboard. Close, Escape or backdrop dismissal restores the opener and cancels an unsubmitted logout confirmation. Timezone drafts stay in parent component memory; saving and Auth operations keep their existing clients and verified APIs. Account validation errors appear in the active context, and saved-timezone feedback is inside the drawer.
+
+`Dialog` adds optional styling, ID, initial-focus and backdrop-dismiss behavior while keeping existing form defaults. Toast message content groups the success icon beside the first text line; its dismiss control remains separate. Text enlargement keeps semantic colors and seven-second hover/focus-paused lifetime. No data/API/schema or credential changes.
