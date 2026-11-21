@@ -292,8 +292,9 @@ textarea {
   color: var(--color-text);
 }
 .navigation a[aria-current='page'] {
-  color: var(--color-action);
-  background: var(--color-surface);
+  color: var(--color-on-action);
+  background: var(--color-action);
+  transition: none;
 }
 .main-content {
   padding: var(--space-8);
