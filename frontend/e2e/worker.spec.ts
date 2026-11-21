@@ -2,17 +2,10 @@ import { expect, test } from '@playwright/test';
 
 const origin = 'http://127.0.0.1:4174';
 
-test('production worker caches only public bundles and shows a generic desktop notification', async ({
+test('production worker caches only public bundles and requests a generic notification', async ({
   page,
   context,
 }) => {
-  await context.grantPermissions(['notifications'], { origin });
-  const cdp = await context.newCDPSession(page);
-  let registrationId: string | undefined;
-  cdp.on('ServiceWorker.workerRegistrationUpdated', ({ registrations }) => {
-    registrationId = registrations.find((item) => item.scopeURL === origin + '/')?.registrationId;
-  });
-  await cdp.send('ServiceWorker.enable');
   await page.route(origin + '/api/auth/config', (route) =>
     route.fulfill({
       json: {
@@ -24,29 +17,42 @@ test('production worker caches only public bundles and shows a generic desktop n
   );
   await page.goto(origin);
   await page.evaluate(async () => (await navigator.serviceWorker.ready).scope);
-  await expect.poll(() => registrationId).toBeTruthy();
   await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
-  await cdp.send('ServiceWorker.deliverPushMessage', {
-    origin,
-    registrationId: registrationId!,
-    data: JSON.stringify({ name: 'Synthetic Maya', url: 'https://example.test/' }),
+  const worker = context
+    .serviceWorkers()
+    .find((candidate) => candidate.url() === origin + '/service-worker.js');
+  expect(worker).toBeDefined();
+  // Exercise the installed worker without depending on a native notification daemon in CI.
+  const notification = await worker!.evaluate(async () => {
+    const registration = (self as unknown as { registration: ServiceWorkerRegistration })
+      .registration;
+    const original = registration.showNotification;
+    let notification:
+      { title: string; body: string | undefined; tag: string | undefined } | undefined;
+    let work: Promise<unknown> | undefined;
+    registration.showNotification = async (title, options) => {
+      notification = { title, body: options?.body, tag: options?.tag };
+    };
+    try {
+      self.dispatchEvent(
+        Object.assign(new Event('push'), {
+          data: { json: () => ({ name: 'Synthetic Maya', url: 'https://example.test/' }) },
+          waitUntil: (result: Promise<unknown>) => {
+            work = result;
+          },
+        }),
+      );
+      await work;
+      return notification;
+    } finally {
+      registration.showNotification = original;
+    }
   });
-  const notifications = () =>
-    page.evaluate(async () => {
-      const registration = await navigator.serviceWorker.ready;
-      return (await registration.getNotifications()).map(({ title, body, tag }) => ({
-        title,
-        body,
-        tag,
-      }));
-    });
-  await expect.poll(notifications).toEqual([
-    {
-      title: 'I Love People',
-      body: 'A little time to reconnect. Open I Love People when you have a moment.',
-      tag: 'ilp-catch-up',
-    },
-  ]);
+  expect(notification).toEqual({
+    title: 'I Love People',
+    body: 'A little time to reconnect. Open I Love People when you have a moment.',
+    tag: 'ilp-catch-up',
+  });
 
   const manifest = await page.request.get(origin + '/manifest.webmanifest');
   expect(await manifest.json()).toMatchObject({ display: 'standalone', start_url: '/' });
