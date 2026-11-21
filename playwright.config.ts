@@ -14,9 +14,17 @@ export default defineConfig({
       ? { executablePath: process.env.ILP_BROWSER_EXECUTABLE }
       : {},
   },
-  webServer: {
-    command: 'node node_modules/vite/bin/vite.js --host 127.0.0.1',
-    url: 'http://127.0.0.1:5173',
-    reuseExistingServer: !process.env.CI,
-  },
+  webServer: [
+    {
+      command: 'node node_modules/vite/bin/vite.js --host 127.0.0.1',
+      url: 'http://127.0.0.1:5173',
+      reuseExistingServer: !process.env.CI,
+    },
+    {
+      command:
+        'node node_modules/vite/bin/vite.js build --outDir artifacts/local/worker-build && node node_modules/vite/bin/vite.js preview --outDir artifacts/local/worker-build --host 127.0.0.1 --port 4174 --strictPort',
+      url: 'http://127.0.0.1:4174',
+      reuseExistingServer: !process.env.CI,
+    },
+  ],
 });

@@ -6,6 +6,8 @@ import { Button } from '../ui/Button';
 import { Dialog } from '../ui/Dialog';
 import { Notice } from '../ui/Notice';
 import { AppearanceField, type Appearance } from '../ui/Appearance';
+import { NotificationSettings } from '../push/NotificationSettings';
+import { disableDevice, supportsPush } from '../push/client';
 import {
   AccountClient,
   AccountError,
@@ -315,6 +317,10 @@ function PrivateAccount({
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
+  const [optOutOnLogout, setOptOutOnLogout] = useState(true);
+  const [pushBusy, setPushBusy] = useState(false);
+  const [logoutBusy, setLogoutBusy] = useState(false);
+  const [logoutError, setLogoutError] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   useEffect(() => {
     const abort = new AbortController();
@@ -358,7 +364,22 @@ function PrivateAccount({
       setBusy(false);
     }
   }
-  function logout() {
+  async function logout() {
+    if (logoutBusy || pushBusy) return;
+    setLogoutBusy(true);
+    setLogoutError('');
+    if (optOutOnLogout) {
+      try {
+        await disableDevice(session);
+      } catch {
+        setLogoutError(
+          'Notifications could not be turned off. Reconnect and try again, or clear the checkbox to sign out and keep them on.',
+        );
+        setLogoutBusy(false);
+        return;
+      }
+    }
+    if (sessionStore.getSnapshot().session !== session) return;
     // Unmounting this keyed account view discards its profile, drafts, and in-flight reads.
     sessionStore.clear('Signed out.');
     void client.signOut(session).catch(() => {
@@ -371,6 +392,7 @@ function PrivateAccount({
   function closeMenu() {
     setMenuOpen(false);
     setConfirmLogout(false);
+    setLogoutError('');
   }
   const accountError = error && (
     <Notice title="Please try again." variant="error">
@@ -446,6 +468,14 @@ function PrivateAccount({
               </form>
             )}
             {notice && <p role="status">{notice}</p>}
+            {profile && !confirmLogout && (
+              <NotificationSettings
+                session={session}
+                timezone={profile.timezone}
+                busy={pushBusy || logoutBusy}
+                setBusy={setPushBusy}
+              />
+            )}
             <div className="surface stack">
               <h2>Account</h2>
               <p className="secondary">Signed in as {session.email}</p>
@@ -455,15 +485,37 @@ function PrivateAccount({
               {confirmLogout ? (
                 <div className="stack">
                   <p>Sign out on all devices? This tab’s account data will be cleared.</p>
+                  {supportsPush() && (
+                    <label className="checkbox-row">
+                      <input
+                        type="checkbox"
+                        checked={optOutOnLogout}
+                        disabled={logoutBusy}
+                        onChange={(event) => setOptOutOnLogout(event.target.checked)}
+                      />
+                      Turn off notifications on this device
+                    </label>
+                  )}
+                  {logoutError && (
+                    <p role="alert" className="error-text">
+                      {logoutError}
+                    </p>
+                  )}
                   <div className="actions">
-                    <Button onClick={() => setConfirmLogout(false)}>Stay signed in</Button>
-                    <Button variant="danger" onClick={logout}>
+                    <Button disabled={logoutBusy} onClick={() => setConfirmLogout(false)}>
+                      Stay signed in
+                    </Button>
+                    <Button variant="danger" busy={logoutBusy} onClick={() => void logout()}>
                       Confirm sign out
                     </Button>
                   </div>
                 </div>
               ) : (
-                <Button className="self-start" onClick={() => setConfirmLogout(true)}>
+                <Button
+                  className="self-start"
+                  disabled={pushBusy || logoutBusy}
+                  onClick={() => setConfirmLogout(true)}
+                >
                   Sign out
                 </Button>
               )}

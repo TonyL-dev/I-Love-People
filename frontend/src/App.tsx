@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { Heart, Users, CalendarDays, Settings, Palette, type LucideIcon } from 'lucide-react';
 import { Link, usePath } from './navigation';
 import { Button } from './ui/Button';
 import { Dialog } from './ui/Dialog';
 import { EmptyState } from './ui/EmptyState';
+import { Notice } from './ui/Notice';
 import { samplePeople, type SamplePerson } from './design/fixtures';
 import { MeetupDialog } from './design/MeetupDialog';
 import { AccountPage } from './auth/AccountPage';
@@ -34,8 +35,18 @@ const destinations: { path: string; label: string; icon: LucideIcon }[] = [
   { path: '/design/components', label: 'Components', icon: Palette },
 ];
 
+function subscribeToConnection(update: () => void) {
+  window.addEventListener('online', update);
+  window.addEventListener('offline', update);
+  return () => {
+    window.removeEventListener('online', update);
+    window.removeEventListener('offline', update);
+  };
+}
+
 export function App() {
   const path = usePath();
+  const online = useSyncExternalStore(subscribeToConnection, () => navigator.onLine);
   const isDesign = path === '/design' || path.startsWith('/design/');
   const [appearance, setAppearance] = useState<Appearance>(initialAppearance);
   const [sampleState, setSampleState] = useState<SampleState>('ready');
@@ -183,6 +194,13 @@ export function App() {
           </nav>
         )}
         <main id="main" ref={mainRef} tabIndex={-1} className="main-content">
+          {!online && (
+            <Notice title="You’re offline.">
+              <p role="status">
+                Reconnect before saving. Keep this page open to preserve unsaved text.
+              </p>
+            </Notice>
+          )}
           {renderPage()}
           {notice && (
             <div className="feedback" role="status">

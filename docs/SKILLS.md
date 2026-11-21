@@ -111,3 +111,7 @@ Readiness review, November 19: reused the existing disposable managed-Auth redir
 
 
 Phase 3 acceptance verification, November 19: reused the disposable managed-Auth recovery workflow and installed Chrome, adapting the private harness to reach preferences/sign-out through Menu. Verified actual final-origin recovery, password replacement, old-password/used-link rejection and account cleanup without email or credential output. Revoked temporary protected access, removed its file and confirmed zero synthetic accounts. Documentation-only closure; full source suites were not repeated. No Computer Use, subagents, schema or provider-setting changes.
+
+## Phase 4 implementation tools - November 19, 2026
+
+Applied Supabase and Postgres guidance to the private schema, limited queries, explicit role revocation and transaction locking. Applied React and verification guidance to the settings drawer, in-memory state, browser permission workflow and production service worker. Used local managed Auth/Postgres with two synthetic accounts and installed desktop Chrome for repeatable verification. PyWebPush 2.5.0 and its transitive dependencies are locked. The notification adapter uses its encryption routine and py-vapid signing.

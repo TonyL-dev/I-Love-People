@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     supabase_publishable_key: str | None = None
     jwt_audience: str = "authenticated"
     jwt_algorithms: tuple[str, ...] = ("ES256", "RS256")
+    push_private_key: SecretStr | None = None
+    push_subject: str | None = None
+    push_job_secret: SecretStr | None = None
 
 
 @lru_cache

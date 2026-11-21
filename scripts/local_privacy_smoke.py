@@ -11,6 +11,7 @@ from ilp.main import create_app
 from local_auth_smoke import AUTH_URL, cleanup_synthetic_data
 from local_services import status
 from people_smoke import exercise_people
+from push_smoke import exercise_push
 
 
 async def exercise(
@@ -23,6 +24,7 @@ async def exercise(
     data_url: str = "http://127.0.0.1:54321/rest/v1",
     admin_headers: dict[str, str] | None = None,
     check_password_policy: bool = False,
+    check_push: bool = False,
 ) -> None:
     public = {"apikey": public_key}
     admin = admin_headers or {**public, "Authorization": "Bearer " + admin_key}
@@ -92,6 +94,9 @@ async def exercise(
                     )
                 ).status_code == 422
             await exercise_people(api, sessions, public_key, data_url)
+            if check_push:
+                await exercise_push(api, sessions, public_key, data_url)
+                print("Phase 4 device isolation, pause, concurrent jobs and revocation passed.")
             with httpx.Client(base_url=data_url, timeout=20, trust_env=False) as data:
                 assert data.get("/profiles", headers=public).status_code in (401, 403)
                 for index, (owner, token) in enumerate(sessions):
@@ -170,7 +175,9 @@ def main() -> int:
             "apikey": local["ANON_KEY"],
             "Authorization": "Bearer " + local["SERVICE_ROLE_KEY"],
         }
-        asyncio.run(exercise(local["ANON_KEY"], local["SERVICE_ROLE_KEY"], ids, emails))
+        asyncio.run(
+            exercise(local["ANON_KEY"], local["SERVICE_ROLE_KEY"], ids, emails, check_push=True)
+        )
         print(
             "Two-user API ownership/RLS, anonymous denial, logout-token rejection "
             "and account-disable checks passed.",

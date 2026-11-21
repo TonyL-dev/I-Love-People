@@ -16,6 +16,8 @@ htmlcov/
 !.env.example
 !**/.env.example
 .vercel/
+scheduler/.dev.vars*
+scheduler/.wrangler/
 supabase/.temp/
 supabase/.branches/
 supabase/signing_keys.json

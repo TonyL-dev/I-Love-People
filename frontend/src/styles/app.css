@@ -800,14 +800,23 @@ input[type='checkbox'] {
   overflow-wrap: anywhere;
 }
 
+.dialog.account-drawer[open] {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+}
+
 .account-drawer .dialog__heading {
-  position: sticky;
-  top: 0;
-  z-index: 1;
   background: var(--color-surface);
   padding-top: max(var(--space-4), env(safe-area-inset-top));
   padding-bottom: var(--space-3);
   flex-wrap: wrap;
+}
+
+.account-drawer > .stack {
+  align-content: start;
+  overflow: auto;
+  padding: var(--space-1);
 }
 
 .account-drawer .dialog__heading h2 {

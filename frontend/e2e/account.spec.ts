@@ -557,3 +557,78 @@ test('settings drawer stays out of the library and preserves context with keyboa
   await expect(page.getByRole('button', { name: 'Confirm sign out', exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Sign out', exact: true })).toBeVisible();
 });
+
+test('notification preferences require opt-in and sign-out turns off this device', async ({
+  page,
+}) => {
+  await mockAccount(page);
+  await page.addInitScript(() => {
+    let subscription: object | null = null;
+    Object.defineProperty(Notification, 'permission', {
+      get: () => (subscription ? 'granted' : 'default'),
+    });
+    const registration = {
+      active: true,
+      pushManager: {
+        getSubscription: () => Promise.resolve(subscription),
+        subscribe: () => {
+          subscription = {
+            endpoint: 'https://fcm.googleapis.com/wp/synthetic-browser',
+            options: {},
+            toJSON: () => ({ keys: { p256dh: 'synthetic-public', auth: 'synthetic-auth' } }),
+            unsubscribe: () => {
+              subscription = null;
+              return Promise.resolve(true);
+            },
+          };
+          return Promise.resolve(subscription);
+        },
+      },
+    };
+    navigator.serviceWorker.getRegistration = () =>
+      Promise.resolve(registration as unknown as ServiceWorkerRegistration);
+  });
+  const calls: string[] = [];
+  await page.route('**/api/push/**', (route) => {
+    const action = route.request().url().split('/').at(-1);
+    if (action === 'config') return route.fulfill({ json: { public_key: 'AQ' } });
+    if (action === 'status') return route.fulfill({ json: { quiet_start: 1260, quiet_end: 540 } });
+    calls.push(action ?? '');
+    if (action === 'unsubscribe') return route.fulfill({ status: 204 });
+    const data = route.request().postDataJSON() as { quiet_start: number; quiet_end: number };
+    return route.fulfill({ json: { quiet_start: data.quiet_start, quiet_end: data.quiet_end } });
+  });
+  await page.goto('/');
+  await signIn(page);
+  const drawer = await openAccountMenu(page);
+  const scope = drawer.getByRole('region', { name: 'Notifications on this device' });
+  const enable = scope.getByRole('button', { name: 'Enable on this device' });
+  await expect(enable).toBeEnabled();
+  expect(calls).toEqual([]);
+  await enable.click();
+  await expect(scope.getByText('Enabled on this device.', { exact: true })).toBeVisible();
+  await scope.getByLabel('Quiet hours start').fill('22:00');
+  await scope.getByRole('button', { name: 'Save quiet hours' }).click();
+  await expect(scope.getByText('Quiet hours saved.')).toBeVisible();
+  for (const [width, colorScheme] of [
+    [390, 'light'],
+    [1440, 'dark'],
+  ] as const) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.emulateMedia({ colorScheme });
+    await scope.getByRole('heading').scrollIntoViewIfNeeded();
+    await expect
+      .poll(() => drawer.evaluate((node) => node.scrollWidth <= node.clientWidth))
+      .toBe(true);
+    await page.screenshot({
+      path: test.info().outputPath(`notifications-${width}-${colorScheme}.png`),
+    });
+  }
+  await drawer.getByRole('button', { name: 'Sign out', exact: true }).click();
+  await expect(
+    drawer.getByRole('checkbox', { name: 'Turn off notifications on this device' }),
+  ).toBeChecked();
+  await drawer.getByRole('button', { name: 'Confirm sign out' }).click();
+  await expect(page.getByRole('button', { name: 'Sign in', exact: true })).toBeVisible();
+  expect(calls).toEqual(['device', 'device', 'unsubscribe']);
+});

@@ -77,6 +77,8 @@ Acceptance requires deterministic date/timezone tests and a real browser journey
 
 ## Phase 4 — Home Screen installation and external nudges
 
+Current progress: implementation exists on the Phase 4 review branch. Local verification and remaining hosted/device gates are tracked in [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md). The protected scheduler and device procedure is in [PUSH_SETUP.md](PUSH_SETUP.md).
+
 - Add a web manifest, install guidance, and a service worker caching only public app assets. Keep auth, API responses, personal records, and push subscriptions out of offline caches. Show a useful offline state and retain unsaved form text only in memory.
 - Add explicit notification opt-in, permission-denied guidance, per-device push subscriptions, unsubscribe, and generic notification wording that keeps names and rankings private.
 - Prototype a daily scheduled Web Push sender with durable database delivery records. Evaluate a free scheduled worker invoking a bounded protected API job. Keep delivery logic in services and transport adapters. Verify actual scheduler, Python invocation, cryptographic libraries, execution limits, and free quotas before adopting the route in DECISIONS.md.

@@ -1,6 +1,6 @@
 # I Love People documentation
 
-Start with the project plan for the ordered roadmap. Phases 0, 1 and 2 are accepted on the protected Preview. Phase 3 remains planned and VoiceOver is unverified before release. The repository [README](../README.md) documents the local setup and runnable commands.
+Start with the project plan for the ordered roadmap. Phases 0 through 3 are accepted. Phase 4 is implemented locally and its hosted and device acceptance gates are open. The repository [README](../README.md) documents the local setup and runnable commands.
 
 | Document | Purpose |
 | --- | --- |
@@ -13,6 +13,7 @@ Start with the project plan for the ordered roadmap. Phases 0, 1 and 2 are accep
 | [Implementation status](IMPLEMENTATION_STATUS.md) | Current progress and verification limits |
 | [Device review](DEVICE_REVIEW.md) | Real iPhone Safari and VoiceOver steps and evidence requirements |
 | [Hosted authentication setup](AUTH_SETUP.md) | Provider settings, owner provisioning, and hosted login/recovery acceptance |
+| [Web Push setup](PUSH_SETUP.md) | Protected scheduler configuration and real-device acceptance |
 | [Workflow notes](SKILLS.md) | Development and maintenance workflow |
 | [Third-party notices](THIRD_PARTY_NOTICES.md) | Bundled asset licenses |
 | [Repository instructions](../AGENTS.md) | Instructions for contributors and coding agents |

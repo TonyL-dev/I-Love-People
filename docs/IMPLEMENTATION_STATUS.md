@@ -1,6 +1,6 @@
 # Implementation status
 
-Updated November 19, 2026. Phases 0, 1, 2 and 3 are accepted. Phase 3 is accepted November 19, 2026 for 97e40ea after user UI approval and independent final-origin recovery verification. VoiceOver remains unverified before release. See the Phase 3 evidence below.
+Updated November 19, 2026. Phases 0 through 3 are accepted. Phase 4 is implemented locally. Hosted scheduling, live-device delivery, revocation and VoiceOver evidence remain open.
 
 | Phase | State |
 | --- | --- |
@@ -8,7 +8,7 @@ Updated November 19, 2026. Phases 0, 1, 2 and 3 are accepted. Phase 3 is accepte
 | 1 Login and privacy | Accepted on the protected Preview; Production unchanged |
 | 2 People and meetups | Accepted on the protected Preview; iPhone/desktop pass reported |
 | 3 Due list | Accepted on the protected Preview; UI approval and final-origin recovery pass |
-| 4 PWA and Web Push | Planned, scheduler feasibility pending |
+| 4 PWA and Web Push | Implemented locally, hosted scheduler and live-device acceptance pending |
 | 5 Personal release | Planned |
 | 6 Enhancements | Backlog |
 
@@ -332,3 +332,15 @@ A fresh disposable no-email recovery-link probe requested `https://i-love-people
 Phase 3 is accepted for application `97e40ea` at [the protected Preview](https://i-love-people-pfoktasn6-smooshy.vercel.app). The user approves the latest UI and confirms saving the final Auth URLs. An independent disposable hosted Chrome journey verified the exact `/reset-password` redirect, password replacement, old-password rejection and used-link rejection, with login/profile responses 200 and no page errors. No test email was sent. Account deletion and absence passed; zero synthetic verification accounts remain. Temporary protected access was revoked and its local file removed.
 
 Together with [both passing Linux CI jobs](https://github.com/TonyL-dev/I-Love-People/actions/runs/44554413689), hosted API/RLS/browser evidence and the recorded user device/UI review, this closes Phase 3 acceptance. VoiceOver remains untested before private release. Phase 4 has not started; no merge or Production promotion occurred. The application, Alembic 0006 and API contracts are unchanged by this documentation-only closure.
+
+## Phase 4 local implementation - November 19, 2026
+
+The Phase 4 review branch adds Home Screen installation, per-device notifications and quiet hours, sign-out opt-out, offline handling, and a bounded sender with private Alembic 0007 records. The sender evaluates the same calendar recurrence as Catch up and emits generic text. The candidate Cloudflare cron invokes the FastAPI job with a separate server secret.
+
+Local Alembic upgrade repeatability, API readiness, two-user application RLS and managed Auth pass. The Phase 4 database smoke verifies owned enrollment, rejection of foreign enrollment, absence through the Data API, pause suppression, concurrent job deduplication, unsubscribing and provider revocation using a controlled transport. Unit tests exercise actual VAPID signing and aes128gcm encryption with a synthetic recipient. Local Chrome's production worker received a DevTools-injected push, showed generic text, cached only hashed JS/CSS, retained an open-page draft offline and showed the generic fallback after reload. This evidence covers the worker and local job, with live-provider delivery and closed-app device acceptance still pending.
+
+Phase 4 acceptance is open. Hosted cron execution, real desktop/browser-provider delivery, permission revocation, closed Home Screen iPhone delivery and VoiceOver remain to be verified. Follow [PUSH_SETUP.md](PUSH_SETUP.md).
+
+Source verification passed with 93 Python tests, seven frontend tests, OpenAPI drift and the production build. The 38-test Chrome suite passed, with focused reruns for the drawer, notification controls and production worker after visual adjustments. The local managed Auth/browser journey also passed. A light 390 px and dark 1440 px screenshot review exposed a clipped mobile heading when jumping to the section. The drawer now scrolls its content below the header.
+
+The local scheduler handler made the expected protected POST with a stub HTTP response. A live Chrome subscription probe received a permission denial in an isolated context and timed out in a fresh persistent profile, so there is no live desktop delivery evidence. A deployed scheduler and real iPhone are still needed for acceptance. Local Supabase was stopped after testing.

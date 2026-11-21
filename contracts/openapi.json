@@ -20,6 +20,88 @@
         "title": "AccountProfile",
         "type": "object"
       },
+      "DeviceStatus": {
+        "properties": {
+          "quiet_end": {
+            "maximum": 1439.0,
+            "minimum": 0.0,
+            "title": "Quiet End",
+            "type": "integer"
+          },
+          "quiet_start": {
+            "maximum": 1439.0,
+            "minimum": 0.0,
+            "title": "Quiet Start",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "quiet_start",
+          "quiet_end"
+        ],
+        "title": "DeviceStatus",
+        "type": "object"
+      },
+      "Endpoint": {
+        "additionalProperties": false,
+        "properties": {
+          "endpoint": {
+            "maxLength": 2048,
+            "minLength": 1,
+            "title": "Endpoint",
+            "type": "string"
+          }
+        },
+        "required": [
+          "endpoint"
+        ],
+        "title": "Endpoint",
+        "type": "object"
+      },
+      "Enrollment": {
+        "additionalProperties": false,
+        "properties": {
+          "auth": {
+            "maxLength": 24,
+            "minLength": 22,
+            "title": "Auth",
+            "type": "string"
+          },
+          "endpoint": {
+            "maxLength": 2048,
+            "minLength": 1,
+            "title": "Endpoint",
+            "type": "string"
+          },
+          "p256dh": {
+            "maxLength": 88,
+            "minLength": 87,
+            "title": "P256Dh",
+            "type": "string"
+          },
+          "quiet_end": {
+            "maximum": 1439.0,
+            "minimum": 0.0,
+            "title": "Quiet End",
+            "type": "integer"
+          },
+          "quiet_start": {
+            "maximum": 1439.0,
+            "minimum": 0.0,
+            "title": "Quiet Start",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "quiet_start",
+          "quiet_end",
+          "endpoint",
+          "p256dh",
+          "auth"
+        ],
+        "title": "Enrollment",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -49,6 +131,37 @@
           }
         },
         "title": "HealthResponse",
+        "type": "object"
+      },
+      "JobResult": {
+        "properties": {
+          "checked": {
+            "default": 0,
+            "title": "Checked",
+            "type": "integer"
+          },
+          "failed": {
+            "default": 0,
+            "title": "Failed",
+            "type": "integer"
+          },
+          "retry": {
+            "default": 0,
+            "title": "Retry",
+            "type": "integer"
+          },
+          "revoked": {
+            "default": 0,
+            "title": "Revoked",
+            "type": "integer"
+          },
+          "sent": {
+            "default": 0,
+            "title": "Sent",
+            "type": "integer"
+          }
+        },
+        "title": "JobResult",
         "type": "object"
       },
       "Meetup": {
@@ -558,6 +671,26 @@
           "publishable_key"
         ],
         "title": "PublicAuthConfig",
+        "type": "object"
+      },
+      "PushConfig": {
+        "properties": {
+          "public_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Public Key"
+          }
+        },
+        "required": [
+          "public_key"
+        ],
+        "title": "PushConfig",
         "type": "object"
       },
       "ReadinessResponse": {
@@ -1215,6 +1348,197 @@
         "summary": "Update Profile",
         "tags": [
           "account"
+        ]
+      }
+    },
+    "/api/push/config": {
+      "get": {
+        "operationId": "get_push_config",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PushConfig"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Config",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/api/push/device": {
+      "put": {
+        "operationId": "enroll_push_device",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Enrollment"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Enroll",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/api/push/job": {
+      "post": {
+        "operationId": "run_push_job",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Run",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/api/push/status": {
+      "post": {
+        "operationId": "get_push_status",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Endpoint"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/DeviceStatus"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get Push Status"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Status",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/api/push/unsubscribe": {
+      "post": {
+        "operationId": "unsubscribe_push_device",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Endpoint"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Unsubscribe",
+        "tags": [
+          "notifications"
         ]
       }
     },
