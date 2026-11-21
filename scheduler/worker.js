@@ -20,7 +20,8 @@ export default {
       response = await fetch(new URL('/api/push/job', origin), {
         method: 'POST',
         headers,
-        redirect: 'error',
+        // Workers supports manual redirects. The non-2xx check below rejects them.
+        redirect: 'manual',
         signal: AbortSignal.timeout(50_000),
       });
     } catch {
