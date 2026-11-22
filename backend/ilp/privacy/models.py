@@ -3,8 +3,9 @@ from typing import Annotated, Literal
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
-from ilp.people.models import MeetupInput, PersonInput
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator, model_validator
+
+from ilp.people.models import MeetupInput, PersonInput
 
 BACKUP_BYTES = 4_000_000
 

@@ -4,6 +4,8 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.routing import APIRoute
+from starlette.types import Message
+
 from ilp.auth.models import Identity
 from ilp.auth.router import auth_service, identity
 from ilp.auth.service import public_config
@@ -11,7 +13,6 @@ from ilp.infrastructure.settings import get_settings
 from ilp.privacy.models import BACKUP_BYTES, Backup, DeleteRequest, RestorePreview, RestoreRequest
 from ilp.privacy.repository import PrivacyFailure, PrivacyRepository
 from ilp.privacy.service import PrivacyService
-from starlette.types import Message
 
 
 class BoundedPrivacyRoute(APIRoute):
