@@ -1,20 +1,20 @@
 # Implementation status
 
-Updated November 22, 2026. Phases 0 through 4 are accepted. The Phase 4 protected Preview trial is closed after iPhone delivery, permission revocation and cleanup verification. VoiceOver remains a private-release check.
+Updated November 22, 2026. Phases 0 through 4 are accepted. The Phase 5 iPhone VoiceOver review passed by user report. Production verification remains open.
 
 | Phase | State |
 | --- | --- |
-| 0 Foundation | Accepted; real Safari pass reported, VoiceOver remains a release check |
+| 0 Foundation | Accepted, with a real Safari pass reported |
 | 1 Login and privacy | Accepted on the protected Preview; Production unchanged |
 | 2 People and meetups | Accepted on the protected Preview; iPhone/desktop pass reported |
 | 3 Due list | Accepted on the protected Preview; UI approval and final-origin recovery pass |
 | 4 PWA and Web Push | Accepted on the protected Preview. Hosted schedule, desktop and iPhone evidence recorded |
-| 5 Personal release | Recovery verified on the protected Preview. VoiceOver and Production release gates remain open. |
+| 5 Personal release | Recovery verified on the protected Preview. iPhone VoiceOver passed by user report. Production release gates remain open. |
 | 6 Enhancements | Backlog |
 
 ## Phase 5 implementation — November 22, 2026
 
-Settings now offers JSON export, validated restore with preview and conflict handling, and application-data deletion with same-account password reauthentication. Alembic 0008 adds caller-scoped recovery routines and transactional locking. The [operating runbook](OPERATIONS.md) covers backups, inactive-project/database recovery, serialized trusted migration, staged promotion, rollback and the November 22 published-quota review. Production dashboard usage, owner recovery and device/VoiceOver acceptance require live evidence.
+Settings now offers JSON export, validated restore with preview and conflict handling, and application-data deletion with same-account password reauthentication. Alembic 0008 adds caller-scoped recovery routines and transactional locking. The [operating runbook](OPERATIONS.md) covers backups, inactive-project/database recovery, serialized trusted migration, staged promotion, rollback and the November 22 published-quota review.
 
 | Verification | Observed result |
 | --- | --- |
@@ -25,10 +25,17 @@ Settings now offers JSON export, validated restore with preview and conflict han
 | Protected Preview | [Application `931b522`](https://i-love-people-b28h7198z-smooshy.vercel.app), deployment `dpl_3BsksFZhnceHFc1S2tBV1syF5QPy`. Alembic 0008, repeat upgrade, and restricted challenge-table and function privileges verified. Hosted HTTP, CSP, readiness, two-account recovery, conflict handling, password confirmation, revocation, and ownership checks passed. |
 | Hosted Chrome | Actual sign-in, create/read meetup, JSON download, existing-library conflict, fresh-account upload/restore, restored note, confirmed deletion, and reload sign-in passed without page errors. Verified disposable account and row cleanup and revoked temporary Preview access. |
 | Contrast follow-up | `91a315f` switches destructive button colors together during appearance changes. Four targeted Chrome checks passed locally, and [both exact-source Linux jobs](https://github.com/TonyL-dev/I-Love-People/actions/runs/45074208998) passed with all 40 browser tests. Readiness, CSP and live light/dark button colors passed on the [current protected Preview](https://i-love-people-p1ey31ju3-smooshy.vercel.app), deployment `dpl_A1nrt8LnbYRLz9MDoRd52xdquHKU`. Temporary access was revoked. The earlier hosted recovery drill covered the same backup and deletion code. |
+| iPhone and VoiceOver | User-reported pass on iPhone 16 Pro, iOS 27. Backup download to Files, restore conflict and cancellation, empty-account restore, and password-confirmed deletion on a disposable account passed. The user also verified reading order, text, keyboard presentation, menu focus, and both appearances. [Device evidence](DEVICE_REVIEW.md#phase-5-device-result--november-22-2026) |
 
 The hosted advisor still reports disabled leaked-password protection. It also notes RLS tables without policies. The private challenge and push tables deny direct access to the client roles. The quota review estimates $0 for the planned personal workload. Production usage totals and billing remain unverified.
 
-Private-release acceptance still requires the physical iPhone and VoiceOver review, an isolated owner database and stable Production origin, real owner-email recovery, the trusted production migration and post-promotion hosted smoke, and measured dashboard usage. Local services were stopped after verification.
+Private-release acceptance still requires an isolated owner database and stable Production origin, real owner-email recovery, the trusted production migration and post-promotion hosted smoke, and measured dashboard usage. Local services were stopped after verification.
+
+### Production rollout preflight — November 22, 2026
+
+Vercel now reports **All Deployments** protection for `i-love-people`. An unauthenticated request to the stable Production URL returned a Vercel sign-in redirect. The project update also requested manual domain assignment and disabled Production Feedback. The existing rollback deployment is `dpl_J1CyonHCA4e9u2Yj5skHUvLjRMKk` from Phase 0. Vercel reports zero Production environment variables.
+
+Supabase shows one active project in the Smooshy Free organization and quoted $0 per month for the separate Production project. GitHub reports that `main` is unprotected and the `production` environment is absent. Draft review branches contain the release source. Database provisioning, protected release workflow setup and promotion are pending.
 
 ## Phase 1 evidence (historical) — November 18, 2026
 

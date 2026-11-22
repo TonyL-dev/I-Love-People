@@ -2,7 +2,7 @@
 
 Updated November 22, 2026. Read docs/PROJECT.md, docs/IMPLEMENTATION_STATUS.md, docs/ARCHITECTURE.md, docs/DECISIONS.md, and docs/PROJECT_GUIDELINES.md before changes.
 
-This project is a private responsive website with a $0 monthly hosting target. The active roadmap is in docs/PROJECT.md. Implement phases in order when requested. Phases 0 through 4 are accepted. Phase 5 introduces portable recovery and release controls. Verify each release gate against docs/IMPLEMENTATION_STATUS.md. VoiceOver remains a pre-release check. Imported resume-project files in docs/reference preserve historical source material.
+This project is a private responsive website with a $0 monthly hosting target. The active roadmap is in docs/PROJECT.md. Implement phases in order when requested. Phases 0 through 4 are accepted. Phase 5 introduces portable recovery and release controls. The user reports passing the Phase 5 iPhone VoiceOver review. Verify the remaining Production release gates against docs/IMPLEMENTATION_STATUS.md. Imported resume-project files in docs/reference preserve historical source material.
 
 Read docs/DESIGN_STANDARDS.md for UI, code, and documentation changes. Apply its typography, semantic tokens, spacing, accessibility, interaction states, and visual review gates from Phase 0. Use local Supabase and synthetic data for repeatable development checks before hosted verification.
 
@@ -117,3 +117,7 @@ The settings drawer offers portable JSON backup, review-first restore into an em
 Application `931b522` passed both Linux jobs and the deployed two-account API and Chrome backup drill on the protected Preview. Alembic 0008 and role isolation are verified there. Disposable users and temporary Preview access were removed. The physical VoiceOver check, Production setup and live usage review remain open.
 
 The `91a315f` follow-up keeps destructive controls legible during appearance changes. Both Linux jobs and all 40 browser tests passed. The current protected Preview passed readiness, CSP and the live contrast check.
+
+The user reports the Phase 5 backup, conflict, restore and disposable-account deletion flows passed with VoiceOver on iPhone 16 Pro, iOS 27. [docs/DEVICE_REVIEW.md](docs/DEVICE_REVIEW.md) records the device evidence. Production rollout, owner-email recovery and measured usage remain open.
+
+Private rollout preflight verified Vercel sign-in on the stable Production URL after enabling All Deployments protection. Keep Production credentials separate from Preview and complete the gated migration and smoke checks before promotion. [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md) records the current rollout state.

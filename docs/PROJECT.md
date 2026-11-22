@@ -1,6 +1,6 @@
 # I Love People project plan
 
-Updated November 22, 2026. This document defines the implementation roadmap. Phases 0 through 4 are accepted. Phase 5 recovery and release controls are implemented, with device and private Production gates tracked in [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md).
+Updated November 22, 2026. This document defines the implementation roadmap. Phases 0 through 4 are accepted. Phase 5 recovery and release controls are implemented, and the iPhone VoiceOver review passed by user report. Private Production gates are tracked in [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md).
 
 ## Goal and scope
 
