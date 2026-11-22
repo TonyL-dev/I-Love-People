@@ -8,6 +8,14 @@ type Backup = components['schemas']['Backup'];
 type Preview = components['schemas']['RestorePreview'];
 type Review = { file: string; preview: Preview };
 
+function peopleCount(count: number) {
+  return `${count} ${count === 1 ? 'person' : 'people'}`;
+}
+
+function backupCounts({ people, meetups }: Preview) {
+  return `${peopleCount(people)} and ${meetups} ${meetups === 1 ? 'meetup' : 'meetups'}`;
+}
+
 export function PrivacySettings({
   session,
   onChanged,
@@ -102,7 +110,7 @@ export function PrivacySettings({
       );
       if (!isCurrent()) return;
       setReview(null);
-      setStatus(`Restored ${review.preview.people} people and ${review.preview.meetups} meetups.`);
+      setStatus(`Restored ${backupCounts(review.preview)}.`);
       onChanged();
     }, 'Restore could not be confirmed. Check your library before trying again.');
   }
@@ -161,15 +169,15 @@ export function PrivacySettings({
         <div className="stack stack--small">
           <h3>Review backup</h3>
           <p role="status">
-            {review.preview.people} people and {review.preview.meetups} meetups. Backup timezone{' '}
+            {backupCounts(review.preview)}. Backup timezone{' '}
             <strong>{review.preview.timezone}</strong>.
             {review.preview.timezone !== review.preview.current_timezone &&
               ` Your current timezone is ${review.preview.current_timezone}.`}
           </p>
           {review.preview.current_people > 0 && (
             <p>
-              Your library already has {review.preview.current_people} people. Restore requires an
-              empty library. Cancel to keep your current data.
+              Your library already has {peopleCount(review.preview.current_people)}. Restore
+              requires an empty library. Cancel to keep your current data.
             </p>
           )}
           <div className="actions">
