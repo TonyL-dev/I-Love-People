@@ -6,6 +6,7 @@ import uuid
 from pathlib import Path
 
 import httpx
+from backup_smoke import exercise_backup
 from ilp.infrastructure.settings import get_settings
 from ilp.main import create_app
 from local_auth_smoke import AUTH_URL, cleanup_synthetic_data
@@ -97,6 +98,19 @@ async def exercise(
             if check_push:
                 await exercise_push(api, sessions, public_key, data_url)
                 print("Phase 4 device isolation, pause, concurrent jobs and revocation passed.")
+                database_url = get_settings().database_url
+                assert database_url
+                with httpx.Client(base_url=data_url, timeout=20, trust_env=False) as backup_data:
+                    await exercise_backup(
+                        api,
+                        auth,
+                        backup_data,
+                        public_key,
+                        admin,
+                        ids,
+                        emails,
+                        database_url.get_secret_value(),
+                    )
             with httpx.Client(base_url=data_url, timeout=20, trust_env=False) as data:
                 assert data.get("/profiles", headers=public).status_code in (401, 403)
                 for index, (owner, token) in enumerate(sessions):

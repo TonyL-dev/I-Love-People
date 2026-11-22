@@ -115,3 +115,13 @@ Phase 3 acceptance verification, November 19: reused the disposable managed-Auth
 ## Phase 4 implementation tools - November 19, 2026
 
 Applied Supabase and Postgres guidance to the private schema, limited queries, explicit role revocation and transaction locking. Applied React and verification guidance to the settings drawer, in-memory state, browser permission workflow and production service worker. Used local managed Auth/Postgres with two synthetic accounts and installed desktop Chrome for repeatable verification. PyWebPush 2.5.0 and its transitive dependencies are locked. The notification adapter uses its encryption routine and py-vapid signing.
+
+## Phase 4 hosted trial tools — November 21, 2026
+
+Used GitHub Linux check logs, Vercel protected Preview and branch-scoped sensitive settings, the existing Supabase Preview Session pooler and role checks, and authenticated Wrangler 4.166.0 on the bundled Node 24 runtime. Replaced the Linux CI dependency on native notification display with an assertion at the installed service worker boundary. Reproduced the Cloudflare redirect failure using Workerd's loopback scheduled endpoint and verified that the corrected Worker reaches Vercel and rejects a returned authentication redirect. Used a separate desktop Chrome test against the hosted Preview to exercise the real provider path.
+
+November 22 closure used the existing Wrangler OAuth session, Cloudflare schedules and secret APIs, Vercel protected status checks and metadata-only Supabase queries. Recorded the user's iPhone account separately from independently verified delivery, inactive state, zero-send job invocation and trial cleanup. Documentation-only acceptance update.
+
+## Phase 5 implementation tools — November 22, 2026
+
+Supabase and Postgres guidance informed caller-scoped recovery, role grants, portable identifiers and transactional locking. React and full-flow verification guidance informed the existing drawer's file, conflict, password, error and status controls. Vercel deployment guidance informed the protected migration and staged release sequence. Browser, database, GitHub CI, hosted smoke and device evidence are tracked separately.

@@ -12,6 +12,8 @@ The notification settings are enabled when the server has a valid P-256 VAPID pr
 
 ## iPhone and desktop
 
+The November 21–22 trial used [the exact Phase 4 Preview](https://i-love-people-8fi33jomc-smooshy.vercel.app). The trial is closed and its disposable credentials have been removed. For a future trial, provision a new disposable account and seed a due meetup before the device check. Use the Vercel account with Preview access at the Vercel prompt, then the disposable account at the I Love People prompt. Keep the phone online and outside quiet hours during the test.
+
 1. Use a supported iPhone, open the exact HTTPS Preview in Safari, share it to the Home Screen, open the installed app and sign in. Resolve Preview Authentication in the installed context if prompted.
 2. In Menu, choose **Enable on this device** and allow notifications. Check quiet hours and ensure the synthetic person has a due meetup and the current time is outside the quiet window.
 3. Close the Home Screen web app. Verify the next scheduled run produces a generic notification with no person or priority information. Tap it and verify the app opens at the normal entry point and applies its usual account checks.
@@ -20,3 +22,7 @@ The notification settings are enabled when the server has a valid P-256 VAPID pr
 6. Try airplane mode with a partially filled form. Verify the open page retains the text in memory, shows the offline notice, and allows saving after reconnecting. Reload offline to verify the generic fallback. Include VoiceOver and enlarged text in pre-release review.
 
 Record real-device evidence, the hosted schedule and source CI independently in `IMPLEMENTATION_STATUS.md`. Remove synthetic data and disable trial scheduling when the test ends. iPhone support starts with Home Screen web apps on iOS 16.4. [WebKit Web Push](https://webkit.org/blog/13878/)
+
+## End the Preview trial
+
+Disable the Cloudflare Cron Trigger and verify the schedules list is empty. Remove the trial secret bindings from the Worker. Revoke the temporary project automation bypass in the Vercel project and confirm the credential stops working. Remove the disposable Auth accounts and their ignored local credential files. Remove the ignored Windows-encrypted `.tools/phase4-access.dpapi` trial credentials after verification.

@@ -77,7 +77,7 @@ Acceptance requires deterministic date/timezone tests and a real browser journey
 
 ## Phase 4 — Home Screen installation and external nudges
 
-Current progress: implementation exists on the Phase 4 review branch. Local verification and remaining hosted/device gates are tracked in [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md). The protected scheduler and device procedure is in [PUSH_SETUP.md](PUSH_SETUP.md).
+Current progress: accepted November 22, 2026 for application `64bd569` and scheduler `78fd411` on the protected Preview. The trial schedule was disabled after desktop, iPhone and revocation verification. Evidence is tracked in [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md). The protected scheduler and device procedure is in [PUSH_SETUP.md](PUSH_SETUP.md).
 
 - Add a web manifest, install guidance, and a service worker caching only public app assets. Keep auth, API responses, personal records, and push subscriptions out of offline caches. Show a useful offline state and retain unsaved form text only in memory.
 - Add explicit notification opt-in, permission-denied guidance, per-device push subscriptions, unsubscribe, and generic notification wording that keeps names and rankings private.
@@ -97,6 +97,8 @@ Sources are [WebKit web push](https://webkit.org/blog/13878/), [Cloudflare Cron 
 - Deploy migrations in a serialized trusted job before compatible application promotion. Maintain backward compatibility during rollout and check health plus login/CRUD on the real hosted release.
 
 Acceptance requires an actual export/restore drill, passing ownership/security regression checks, hosted login and meetup smoke, and a recorded monthly cost review within free quotas. Track local checks, hosted CI, and hosted smoke separately.
+
+Phase 5 source implements portable recovery and password-confirmed application-data deletion. Release steps and the November 22 quota review are in [OPERATIONS.md](OPERATIONS.md). See [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for verified results and open private-release gates.
 
 ## Phase 6 — Selected improvements
 

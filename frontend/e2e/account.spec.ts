@@ -84,6 +84,116 @@ async function openAccountMenu(page: Page) {
   return drawer;
 }
 
+test('backup review, conflict, download and password confirmation work on a phone layout', async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 320, height: 740 });
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await mockAccount(page);
+  const backup = { version: 1, timezone: 'America/Toronto', people: [], meetups: [] };
+  let currentPeople = 1;
+  let deletionAttempts = 0;
+  await page.route('**/api/privacy/**', (route) => {
+    expect(route.request().headers().authorization).toBe('Bearer synthetic-access');
+    const url = route.request().url();
+    if (url.endsWith('/backup')) return route.fulfill({ json: backup });
+    if (url.endsWith('/preview')) {
+      if (route.request().postData() === 'invalid') return route.fulfill({ status: 422, json: {} });
+      expect(route.request().postDataJSON()).toEqual(backup);
+      return route.fulfill({
+        json: {
+          current_people: currentPeople,
+          current_timezone: 'UTC',
+          timezone: backup.timezone,
+          people: 0,
+          meetups: 0,
+          preview_token: 'a'.repeat(64),
+        },
+      });
+    }
+    if (url.endsWith('/delete-all')) {
+      expect(route.request().postDataJSON()).toEqual({
+        password: 'SyntheticPassword123',
+        confirmation: 'DELETE',
+      });
+      deletionAttempts++;
+      if (deletionAttempts === 1) return route.fulfill({ status: 403, json: {} });
+    } else {
+      expect(route.request().postDataJSON()).toEqual({
+        backup,
+        preview_token: 'a'.repeat(64),
+      });
+    }
+    return route.fulfill({ status: 204 });
+  });
+
+  await page.goto('/');
+  await signIn(page);
+  const drawer = await openAccountMenu(page);
+  const privacy = drawer.getByRole('region', { name: 'Backups and data' });
+  const downloaded = page.waitForEvent('download');
+  await privacy.getByRole('button', { name: 'Download backup' }).click();
+  expect((await downloaded).suggestedFilename()).toBe('i-love-people-backup.json');
+
+  const file = privacy.getByLabel('Choose a backup to restore');
+  const upload = (contents: string) =>
+    file.setInputFiles({
+      name: 'synthetic.json',
+      mimeType: 'application/json',
+      buffer: Buffer.from(contents),
+    });
+  await upload('invalid');
+  await expect(privacy.getByRole('alert')).toContainText('unsupported format');
+  await upload(JSON.stringify(backup));
+  await expect(privacy.getByText('Restore requires an empty library.')).toBeVisible();
+  await expect(privacy.getByRole('button', { name: 'Restore backup' })).toHaveCount(0);
+  await privacy.getByRole('button', { name: 'Cancel restore' }).click();
+
+  currentPeople = 0;
+  await upload(JSON.stringify(backup));
+  await expect(privacy.getByRole('heading', { name: 'Review backup' })).toBeVisible();
+  await privacy.getByRole('button', { name: 'Restore backup' }).click();
+  await expect(privacy.getByRole('status')).toHaveText('Restored 0 people and 0 meetups.');
+
+  await privacy.getByRole('button', { name: 'Delete all data' }).click();
+  const password = privacy.getByLabel('Current password');
+  const confirmation = privacy.getByLabel('Type DELETE to confirm');
+  const deleteButton = privacy.getByRole('button', { name: 'Permanently delete data' });
+  await expect(deleteButton).toBeDisabled();
+  await password.fill('SyntheticPassword123');
+  await confirmation.fill('DELETE');
+  await deleteButton.click();
+  await expect(privacy.getByRole('alert')).toContainText('Your password could not be verified');
+  await expect(password).toHaveValue('');
+
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 800 });
+    for (const colorScheme of ['light', 'dark'] as const) {
+      await page.emulateMedia({ colorScheme, reducedMotion: 'reduce' });
+      await expect(drawer).toBeVisible();
+      expect(await drawer.evaluate((node) => node.scrollWidth)).toBeLessThanOrEqual(
+        await drawer.evaluate((node) => node.clientWidth),
+      );
+      if (width === 320 || width === 1440) {
+        expect(
+          (await new AxeBuilder({ page }).include('#account-menu').analyze()).violations,
+        ).toEqual([]);
+      }
+    }
+  }
+  await page.screenshot({ path: 'artifacts/local/privacy-delete-1440.png' });
+  await page.setViewportSize({ width: 320, height: 740 });
+  await page.evaluate(() => (document.documentElement.style.fontSize = '200%'));
+  expect(await drawer.evaluate((node) => node.scrollWidth)).toBeLessThanOrEqual(
+    await drawer.evaluate((node) => node.clientWidth),
+  );
+  await password.fill('SyntheticPassword123');
+  await page.screenshot({ path: 'artifacts/local/privacy-delete-320.png' });
+  await deleteButton.press('Enter');
+  await expect(privacy.getByRole('status')).toHaveText('All application data deleted.');
+});
+
 async function setAccountAppearance(page: Page, value: string) {
   const drawer = await openAccountMenu(page);
   await drawer.getByLabel('Appearance', { exact: true }).selectOption(value);

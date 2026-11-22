@@ -97,3 +97,19 @@ Together with [both passing Linux CI jobs](https://github.com/TonyL-dev/I-Love-P
 ## Phase 4 implementation - November 19, 2026
 
 Home Screen installation, a public-asset service worker, in-memory offline drafts, per-device opt-in and quiet hours, and a bounded Web Push sender are implemented on `codex/phase-4-external-nudges`. Alembic 0007 adds private device and delivery records. Devices can turn off notifications directly or during sign-out. The Cloudflare Worker is a scheduler prototype. Hosted scheduler and closed-app iPhone acceptance are pending. Use [docs/PUSH_SETUP.md](docs/PUSH_SETUP.md) for the verification procedure.
+
+## Phase 4 protected Preview trial — November 21, 2026
+
+The CI-passed application `64bd569` is deployed to the [protected Phase 4 Preview](https://i-love-people-8fi33jomc-smooshy.vercel.app). Alembic 0007 and role isolation are verified on the synthetic Preview database. The private Cloudflare Worker is attached to a five-minute schedule. The scheduler source fix `78fd411` uses manual redirect handling to match the actual Workers runtime. Device acceptance is tracked in docs/IMPLEMENTATION_STATUS.md. Follow docs/PUSH_SETUP.md for the synthetic phone account and trial cleanup.
+
+Hosted scheduling, live closed-page Chrome notification delivery, daily deduplication and browser opt-out passed. The canary and desktop accounts were removed and the synthetic iPhone test remains open.
+
+## Phase 4 accepted — November 22, 2026
+
+Application `64bd569` and scheduler `78fd411` are accepted for the protected Preview demonstrated on November 21–22. The user reports that a scheduled reminder arrived while the iPhone Home Screen app was closed, that tapping it opened the app at sign-in, and that notification permission was then turned off. Sign-in after a closed-app launch follows the existing in-memory session design.
+
+The hosted iPhone device had one successful receipt at 21:05 UTC. At the post-opt-out check its endpoint and encryption keys were cleared, and an authenticated hosted job returned zero checked devices and zero sent. Together with Linux CI, hosted scheduling, Chrome closed-page delivery and Chrome opt-out, this satisfies Phase 4 acceptance. The Cloudflare trial schedule was removed, both Worker secret bindings were cleared, and Vercel rejected its revoked automation credential. The synthetic account and temporary local credentials were removed. The hosted database contained zero trial accounts, push devices and delivery receipts after cleanup. VoiceOver remains a private-release check.
+
+## Phase 5 implementation — November 22, 2026
+
+The settings drawer offers portable JSON backup, review-first restore into an empty library, and delete-all with a current password and typed confirmation. Alembic 0008 keeps recovery writes atomic and caller-scoped. The isolated owner database and stable Production rollout follow [docs/OPERATIONS.md](docs/OPERATIONS.md). Record local, CI, protected Preview and private-release evidence separately in [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md).

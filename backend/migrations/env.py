@@ -13,6 +13,7 @@ def run_migrations() -> None:
     engine = create_engine(url.get_secret_value(), hide_parameters=True)
     try:
         with engine.connect() as connection:
+            acquire_migration_lock(connection)
             prepare_version_schema(connection)
             context.configure(
                 connection=connection,
@@ -23,6 +24,15 @@ def run_migrations() -> None:
                 context.run_migrations()
     finally:
         engine.dispose()
+
+
+def acquire_migration_lock(connection: Connection) -> None:
+    # Session-scoped so it also covers version-schema initialization and its commit.
+    acquired = connection.execute(
+        text("SELECT pg_try_advisory_lock(hashtextextended('i-love-people:alembic', 0))")
+    ).scalar_one()
+    if not acquired:
+        raise RuntimeError("An I Love People migration is already running.")
 
 
 def prepare_version_schema(connection: Connection) -> None:

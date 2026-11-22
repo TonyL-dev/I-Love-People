@@ -127,6 +127,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/privacy/backup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export */
+        get: operations["export_api_privacy_backup_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/privacy/delete-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Delete */
+        post: operations["delete_api_privacy_delete_all_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/privacy/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore */
+        post: operations["restore_api_privacy_restore_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/privacy/restore/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview */
+        post: operations["preview_api_privacy_restore_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/profile": {
         parameters: {
             query?: never;
@@ -263,6 +331,83 @@ export interface components {
              * @default UTC
              */
             timezone: string;
+        };
+        /** Backup */
+        Backup: {
+            /** Meetups */
+            meetups: components["schemas"]["BackupMeetup"][];
+            /** People */
+            people: components["schemas"]["BackupPerson"][];
+            /** Timezone */
+            timezone: string;
+            /**
+             * Version
+             * @constant
+             */
+            version: 1;
+        };
+        /** BackupMeetup */
+        BackupMeetup: {
+            /**
+             * Completed On
+             * Format: date
+             */
+            completed_on: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+            /**
+             * Person Id
+             * Format: uuid
+             */
+            person_id: string;
+        };
+        /** BackupPerson */
+        BackupPerson: {
+            /**
+             * Archived
+             * @default false
+             */
+            archived: boolean;
+            /** Cadence Count */
+            cadence_count?: number | null;
+            /** Cadence Unit */
+            cadence_unit?: ("days" | "weeks" | "months") | null;
+            /** Dismissed On */
+            dismissed_on: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Paused */
+            paused: boolean;
+            /** Priority */
+            priority?: ("closest" | "close" | "occasional" | "distant") | null;
+            /** Snoozed Until */
+            snoozed_until: string | null;
+        };
+        /** DeleteRequest */
+        DeleteRequest: {
+            /**
+             * Confirmation
+             * @constant
+             */
+            confirmation: "DELETE";
+            /**
+             * Password
+             * Format: password
+             */
+            password: string;
         };
         /** DeviceStatus */
         DeviceStatus: {
@@ -542,6 +687,27 @@ export interface components {
              * @constant
              */
             status: "ready";
+        };
+        /** RestorePreview */
+        RestorePreview: {
+            /** Current People */
+            current_people: number;
+            /** Current Timezone */
+            current_timezone: string;
+            /** Meetups */
+            meetups: number;
+            /** People */
+            people: number;
+            /** Preview Token */
+            preview_token: string;
+            /** Timezone */
+            timezone: string;
+        };
+        /** RestoreRequest */
+        RestoreRequest: {
+            backup: components["schemas"]["Backup"];
+            /** Preview Token */
+            preview_token: string;
         };
         /** UnavailableResponse */
         UnavailableResponse: {
@@ -891,6 +1057,121 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Person"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_api_privacy_backup_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Backup"];
+                };
+            };
+        };
+    };
+    delete_api_privacy_delete_all_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeleteRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    restore_api_privacy_restore_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RestoreRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_api_privacy_restore_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Backup"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestorePreview"];
                 };
             };
             /** @description Validation Error */
