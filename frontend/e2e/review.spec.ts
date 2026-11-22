@@ -81,6 +81,19 @@ for (const appearance of ['light', 'dark']) {
   });
 }
 
+test('destructive buttons switch colors together when appearance changes', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'no-preference' });
+  await page.goto('/design/components');
+  const appearance = page.getByLabel('Appearance', { exact: true });
+  const control = page.getByRole('button', { name: 'Destructive action', exact: true });
+  await expect(control).toHaveCSS('transition-property', 'none');
+  for (const value of ['dark', 'light']) {
+    await appearance.selectOption(value);
+    await expect(page.locator('html')).toHaveAttribute('data-appearance', value);
+    expect(await contrast(control)).toBeGreaterThanOrEqual(4.5);
+  }
+});
+
 test('modal keyboard traversal cannot reach background controls and Escape restores focus', async ({
   page,
 }) => {

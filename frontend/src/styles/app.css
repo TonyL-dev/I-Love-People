@@ -163,6 +163,8 @@ p {
 }
 .button--danger {
   color: var(--color-danger);
+  /* Keep text legible while a changed appearance replaces its surface color. */
+  transition: none;
 }
 .text-link,
 .back-link {
