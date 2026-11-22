@@ -115,3 +115,5 @@ The hosted iPhone device had one successful receipt at 21:05 UTC. At the post-op
 The settings drawer offers portable JSON backup, review-first restore into an empty library, and delete-all with a current password and typed confirmation. Alembic 0008 keeps recovery writes atomic and caller-scoped. The isolated owner database and stable Production rollout follow [docs/OPERATIONS.md](docs/OPERATIONS.md). Record local, CI, protected Preview and private-release evidence separately in [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md).
 
 Application `931b522` passed both Linux jobs and the deployed two-account API and Chrome backup drill on the protected Preview. Alembic 0008 and role isolation are verified there. Disposable users and temporary Preview access were removed. The physical VoiceOver check, Production setup and live usage review remain open.
+
+The `91a315f` follow-up keeps destructive controls legible during appearance changes. Both Linux jobs and all 40 browser tests passed. The current protected Preview passed readiness, CSP and the live contrast check.

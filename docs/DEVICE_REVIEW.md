@@ -80,7 +80,7 @@ Phase 3 acceptance, November 19: the user approves the revised UI, including the
 
 ## Phase 5 backup and accessibility review
 
-Use the [protected Phase 5 Preview](https://i-love-people-b28h7198z-smooshy.vercel.app) for this review.
+Use the [protected Phase 5 Preview](https://i-love-people-p1ey31ju3-smooshy.vercel.app) for this review.
 
 On iPhone Safari and the installed Home Screen app, use a disposable account and synthetic records. With VoiceOver active, open Menu, find **Backups and data**, and check that names, fields, status updates and errors are read in order. Download a backup and find it in Files. Choose it again to hear the conflict with the existing library, then cancel. Use an empty disposable account for restore. Confirm the counts and timezone are read, restore succeeds, and the person and meetup note appear.
 
