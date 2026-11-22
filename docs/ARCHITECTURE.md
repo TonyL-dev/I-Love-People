@@ -1,6 +1,6 @@
 # Proposed architecture
 
-Updated November 19, 2026. This describes the target architecture and Phase 0/1/2/3 source. Phases 1 and 2 are accepted on the protected Preview. Current verification status is in IMPLEMENTATION_STATUS.md. Imported architecture history is retained in reference/ARCHITECTURE.md.
+Updated November 22, 2026. This describes the architecture through Phase 5 portable recovery and the target private release. Verification is tracked in [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md). Imported architecture history is retained in reference/ARCHITECTURE.md.
 
 ## Implemented foundation
 

@@ -1,6 +1,6 @@
 # Decisions
 
-Updated November 19, 2026. The architecture entries define the selected direction. The foundation decisions below are implemented locally; hosted/provider behavior is still subject to phase acceptance.
+Updated November 22, 2026. These decisions define the project architecture and how it evolved. Current verification and release gates are in [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md).
 
 | Decision | Rationale and consequence |
 | --- | --- |

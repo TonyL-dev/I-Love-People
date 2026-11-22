@@ -9,12 +9,25 @@ Updated November 22, 2026. Phases 0 through 4 are accepted. The Phase 4 protecte
 | 2 People and meetups | Accepted on the protected Preview; iPhone/desktop pass reported |
 | 3 Due list | Accepted on the protected Preview; UI approval and final-origin recovery pass |
 | 4 PWA and Web Push | Accepted on the protected Preview. Hosted schedule, desktop and iPhone evidence recorded |
-| 5 Personal release | Recovery source implemented, verification and private release in progress |
+| 5 Personal release | Recovery verified on the protected Preview. VoiceOver and Production release gates remain open. |
 | 6 Enhancements | Backlog |
 
 ## Phase 5 implementation — November 22, 2026
 
 Settings now offers JSON export, validated restore with preview and conflict handling, and application-data deletion with same-account password reauthentication. Alembic 0008 adds caller-scoped recovery routines and transactional locking. The [operating runbook](OPERATIONS.md) covers backups, inactive-project/database recovery, serialized trusted migration, staged promotion, rollback and the November 22 published-quota review. Production dashboard usage, owner recovery and device/VoiceOver acceptance require live evidence.
+
+| Verification | Observed result |
+| --- | --- |
+| Local source and audits | 93 Python and 7 frontend tests, static checks, contract generation and build passed. pnpm and Python production-dependency audits reported no known vulnerabilities. |
+| Local database and Auth | Repeat upgrade, readiness and prior ownership/RLS regressions passed. The new drill verified export, preserved archived/paused state and meetup notes in a fresh account, rejected stale and concurrent conflicts, confirmed password proof, checked device and receipt deletion, and removed the disposable accounts. The advisory lock rejected an overlapping migration, and a test downgrade to 0007 and re-upgrade to 0008 passed. |
+| Local Chrome | The existing browser suite and the new backup UI regression passed across the browser runs. The new review checked overflow at 320, 390, 768 and 1440 CSS px, axe in both appearances at 320 and 1440 px, and 200% text reflow. Phone and desktop screenshots were inspected. Actual local Auth login/CRUD, nudge changes and captured-email recovery passed separately. |
+| GitHub Linux CI | Both jobs passed for `931b522` in [run 45073829273](https://github.com/TonyL-dev/I-Love-People/actions/runs/45073829273), covering 39 browser tests and the real local database/Auth/browser drills. [Draft PR #4](https://github.com/TonyL-dev/I-Love-People/pull/4) holds the review branch. |
+| Protected Preview | [Application `931b522`](https://i-love-people-b28h7198z-smooshy.vercel.app), deployment `dpl_3BsksFZhnceHFc1S2tBV1syF5QPy`. Alembic 0008, repeat upgrade, and restricted challenge-table and function privileges verified. Hosted HTTP, CSP, readiness, two-account recovery, conflict handling, password confirmation, revocation, and ownership checks passed. |
+| Hosted Chrome | Actual sign-in, create/read meetup, JSON download, existing-library conflict, fresh-account upload/restore, restored note, confirmed deletion, and reload sign-in passed without page errors. Verified disposable account and row cleanup and revoked temporary Preview access. |
+
+The hosted advisor still reports disabled leaked-password protection. It also notes RLS tables without policies. The private challenge and push tables deny direct access to the client roles. The quota review estimates $0 for the planned personal workload. Production usage totals and billing remain unverified.
+
+Private-release acceptance still requires the physical iPhone and VoiceOver review, an isolated owner database and stable Production origin, real owner-email recovery, the trusted production migration and post-promotion hosted smoke, and measured dashboard usage. Local services were stopped after verification.
 
 ## Phase 1 evidence (historical) — November 18, 2026
 

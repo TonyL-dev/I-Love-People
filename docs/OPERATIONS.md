@@ -37,9 +37,11 @@ The November 22, 2026 quota review projects $0 recurring hosting for a single pe
 
 | Service | Reviewed capacity and usage to record |
 | --- | --- |
-| Vercel Hobby | Personal, non-commercial plan. Record team function invocations, active CPU and data transfer from **Usage**, plus the invoice or plan charge. [Vercel Hobby](https://vercel.com/docs/plans/hobby) |
+| Vercel Hobby | Personal, non-commercial plan with 1 million function invocations, 4 active CPU hours and 100 GB fast data transfer included. Record these team metrics and the plan charge. [Vercel Hobby](https://vercel.com/docs/plans/hobby) |
 | Supabase Free | Two active projects, 500 MB database per project, 50,000 MAU and 5 GB uncached egress. Record active project count, database size, MAU and egress in the organization usage dashboard. [Supabase pricing](https://supabase.com/pricing) |
 | Cloudflare Workers Free | 100,000 requests per day and five cron triggers per account as of this review. Record scheduler invocations, errors and CPU against the Free limits. [Workers limits](https://developers.cloudflare.com/workers/platform/limits/) |
 | GitHub Actions | Repository source is public and uses standard hosted runners. The deployed app data is private. Review runner and artifact usage and retain only synthetic test artifacts. [GitHub included usage](https://docs.github.com/en/billing/reference/product-usage-included) |
 
 Before promotion and monthly thereafter, record the review date, measured provider totals for the billing period, the plans, expected next-period use and actual charges. If usage approaches a free limit, reduce the schedule or pause the optional sender before enabling any paid plan. The quota estimate above establishes the target. Production dashboard totals and the first live release review are pending.
+
+On November 22, the Supabase connector showed one active project and the Preview database measured 12.2 MB before the Phase 5 migration. The Vercel billing endpoint returned `costs_not_found` for the reviewed date range. That response leaves the actual charge total unverified.

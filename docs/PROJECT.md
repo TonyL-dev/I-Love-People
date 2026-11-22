@@ -1,6 +1,6 @@
 # I Love People project plan
 
-Updated November 19, 2026. This document defines the implementation roadmap. Phase 0 is accepted. Phases 1, 2 and 3 are accepted on the protected Preview. Phase 3 acceptance is recorded November 19, 2026 for application 97e40ea after UI approval and final-origin recovery verification. VoiceOver remains unverified before release. See [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for evidence and outstanding gates.
+Updated November 22, 2026. This document defines the implementation roadmap. Phases 0 through 4 are accepted. Phase 5 recovery and release controls are implemented, with device and private Production gates tracked in [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md).
 
 ## Goal and scope
 

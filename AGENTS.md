@@ -1,8 +1,8 @@
 # Repository instructions for I Love People
 
-Updated November 19, 2026. Read docs/PROJECT.md, docs/IMPLEMENTATION_STATUS.md, docs/ARCHITECTURE.md, docs/DECISIONS.md, and docs/PROJECT_GUIDELINES.md before changes.
+Updated November 22, 2026. Read docs/PROJECT.md, docs/IMPLEMENTATION_STATUS.md, docs/ARCHITECTURE.md, docs/DECISIONS.md, and docs/PROJECT_GUIDELINES.md before changes.
 
-This project is a private responsive website with a $0 monthly hosting target. The active roadmap is in docs/PROJECT.md. Implement phases in order when requested. Phase 0 foundation acceptance is met; local checks, GitHub Linux CI, hosted HTTP/database smoke, and local loopback binding pass. Safari review passed by user report. Phases 1, 2 and 3 are accepted on the protected Preview. Phase 3 acceptance is recorded November 19, 2026 for application 97e40ea; UI approval and final-origin recovery verification pass. VoiceOver remains an open pre-release check. Imported resume-project files are preserved in docs/reference as historical reference material. Their implementation claims and commands do not establish this project's state.
+This project is a private responsive website with a $0 monthly hosting target. The active roadmap is in docs/PROJECT.md. Implement phases in order when requested. Phases 0 through 4 are accepted. Phase 5 introduces portable recovery and release controls. Verify each release gate against docs/IMPLEMENTATION_STATUS.md. VoiceOver remains a pre-release check. Imported resume-project files in docs/reference preserve historical source material.
 
 Read docs/DESIGN_STANDARDS.md for UI, code, and documentation changes. Apply its typography, semantic tokens, spacing, accessibility, interaction states, and visual review gates from Phase 0. Use local Supabase and synthetic data for repeatable development checks before hosted verification.
 
@@ -113,3 +113,5 @@ The hosted iPhone device had one successful receipt at 21:05 UTC. At the post-op
 ## Phase 5 implementation — November 22, 2026
 
 The settings drawer offers portable JSON backup, review-first restore into an empty library, and delete-all with a current password and typed confirmation. Alembic 0008 keeps recovery writes atomic and caller-scoped. The isolated owner database and stable Production rollout follow [docs/OPERATIONS.md](docs/OPERATIONS.md). Record local, CI, protected Preview and private-release evidence separately in [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md).
+
+Application `931b522` passed both Linux jobs and the deployed two-account API and Chrome backup drill on the protected Preview. Alembic 0008 and role isolation are verified there. Disposable users and temporary Preview access were removed. The physical VoiceOver check, Production setup and live usage review remain open.

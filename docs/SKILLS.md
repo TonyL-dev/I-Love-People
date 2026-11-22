@@ -1,6 +1,6 @@
 # Workflow and skills notes
 
-Updated November 19, 2026. Imported notes are retained in reference/SKILLS.md.
+Updated November 22, 2026. Imported notes are retained in reference/SKILLS.md.
 
 Initial planning adapted documentation and reviewed official provider sources. Subsequent interface planning and Phase 0 work are recorded below; current evidence is in IMPLEMENTATION_STATUS.md.
 
@@ -125,3 +125,5 @@ November 22 closure used the existing Wrangler OAuth session, Cloudflare schedul
 ## Phase 5 implementation tools — November 22, 2026
 
 Supabase and Postgres guidance informed caller-scoped recovery, role grants, portable identifiers and transactional locking. React and full-flow verification guidance informed the existing drawer's file, conflict, password, error and status controls. Vercel deployment guidance informed the protected migration and staged release sequence. Browser, database, GitHub CI, hosted smoke and device evidence are tracked separately.
+
+Verified the exact CI-passed Preview with short-lived Vercel access, a real Chrome download/upload, and disposable Supabase accounts. Both production dependency audits passed. Verified removal of disposable rows and revoked temporary access. Used no new runtime dependencies.
