@@ -94,7 +94,7 @@ test('backup review, conflict, download and password confirmation work on a phon
   const backup = { version: 1, timezone: 'America/Toronto', people: [], meetups: [] };
   let currentPeople = 1;
   let deletionAttempts = 0;
-  await page.route('**/api/privacy/**', (route) => {
+  await page.route('**/api/privacy/**', async (route) => {
     expect(route.request().headers().authorization).toBe('Bearer synthetic-access');
     const url = route.request().url();
     if (url.endsWith('/backup')) return route.fulfill({ json: backup });
@@ -124,6 +124,7 @@ test('backup review, conflict, download and password confirmation work on a phon
         backup,
         preview_token: 'a'.repeat(64),
       });
+      await new Promise((resolve) => setTimeout(resolve, 150));
     }
     return route.fulfill({ status: 204 });
   });

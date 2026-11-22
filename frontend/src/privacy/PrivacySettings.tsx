@@ -168,7 +168,7 @@ export function PrivacySettings({
       {review && (
         <div className="stack stack--small">
           <h3>Review backup</h3>
-          <p role="status">
+          <p role={busy || status ? undefined : 'status'}>
             {backupCounts(review.preview)}. Backup timezone{' '}
             <strong>{review.preview.timezone}</strong>.
             {review.preview.timezone !== review.preview.current_timezone &&

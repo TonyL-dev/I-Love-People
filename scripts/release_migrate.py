@@ -31,6 +31,7 @@ def main() -> int:
             or not (direct or pooler)
             or url.port not in (None, 5432)
             or url.database != "postgres"
+            or set(url.query) - {"sslmode", "sslrootcert"}
             or url.query.get("sslmode") not in ("require", "verify-ca", "verify-full")
         ):
             raise ValueError("Database connection does not match the expected release project")
