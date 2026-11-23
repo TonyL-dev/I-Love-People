@@ -1,6 +1,6 @@
 # Implementation status
 
-Updated November 22, 2026. Phases 0 through 4 are accepted. The Phase 5 iPhone VoiceOver review passed by user report. Production verification remains open.
+Updated November 22, 2026. Phases 0 through 4 are accepted. Phase 5 is live at the protected Production URL. Stable-origin owner recovery and signed-in confirmation remain open.
 
 | Phase | State |
 | --- | --- |
@@ -9,7 +9,7 @@ Updated November 22, 2026. Phases 0 through 4 are accepted. The Phase 5 iPhone V
 | 2 People and meetups | Accepted on the protected Preview; iPhone/desktop pass reported |
 | 3 Due list | Accepted on the protected Preview; UI approval and final-origin recovery pass |
 | 4 PWA and Web Push | Accepted on the protected Preview. Hosted schedule, desktop and iPhone evidence recorded |
-| 5 Personal release | Recovery verified on the protected Preview. iPhone VoiceOver passed by user report. Production release gates remain open. |
+| 5 Personal release | Promoted to protected Production. Preview recovery, iPhone VoiceOver, staged meetup smoke and stable HTTP smoke passed. Owner recovery and signed-in stable-origin smoke remain open. |
 | 6 Enhancements | Backlog |
 
 ## Phase 5 implementation — November 22, 2026
@@ -29,7 +29,7 @@ Settings now offers JSON export, validated restore with preview and conflict han
 
 The hosted advisor still reports disabled leaked-password protection. It also notes RLS tables without policies. The private challenge and push tables deny direct access to the client roles. The quota review estimates $0 for the planned personal workload. Production usage totals and billing remain unverified.
 
-Private-release acceptance still requires an isolated owner database and stable Production origin, real owner-email recovery, the trusted production migration and post-promotion hosted smoke, and measured dashboard usage. Local services were stopped after verification.
+Private-release acceptance still requires real owner-email recovery and the signed-in smoke on the stable Production origin. See the rollout evidence below. Local services were stopped after verification.
 
 ### Production rollout preflight — November 22, 2026
 
@@ -56,6 +56,14 @@ GitHub confirms the required reviewer and exact `main` branch rule on the `produ
 The user approved the gated workflow, and [migration run 45089722419](https://github.com/TonyL-dev/I-Love-People/actions/runs/45089722419) passed. A separate read-only Production query verified Alembic revision `0008_portable_backups`, seven tables with forced RLS, and zero people and meetups. Supabase reports the existing types of advisories for private RLS tables without client policies and disabled leaked-password protection.
 
 Vercel built [the protected Production release candidate](https://i-love-people-afxdyh07g-smooshy.vercel.app) from staging commit `802f8cf` as deployment `dpl_9eugLkh2HrsruVpCbsmMqcX7xqYM`. Verified the exact Production Auth origin and CSP, SPA and reset routes, built JavaScript and CSS, health, database readiness, no-store responses, an application-level unauthenticated 401, and an unknown API route returning 404. Temporary deployment access was revoked. The stable alias still points to rollback deployment `dpl_J1CyonHCA4e9u2Yj5skHUvLjRMKk`. Signed-in meetup CRUD with a disposable Production account and its cleanup precede promotion.
+
+### Stable Production promoted — November 22, 2026
+
+The user reports that a disposable Production account could sign in, add a sample person, log and reopen a meetup, edit it and delete it on the staged candidate. The user then removed the disposable account. Independent Production database checks confirmed one confirmed Auth account and zero people and meetups.
+
+Vercel promoted the same `802f8cf` deployment `dpl_9eugLkh2HrsruVpCbsmMqcX7xqYM` to [the stable Production URL](https://i-love-people.vercel.app/). The alias resolved to that exact deployment. The stable URL passed SPA and reset routes, built JS/CSS, exact Production CSP and Auth origin, health, readiness, no-store and unknown API 404 checks. An anonymous request returned a 302 to Vercel sign-in. Rollback deployment `dpl_J1CyonHCA4e9u2Yj5skHUvLjRMKk` is recorded.
+
+The Production database measured 11,908,787 bytes. Current Supabase Free and Vercel Hobby usage measurements are recorded in [OPERATIONS.md](OPERATIONS.md#monthly-cost-review). Owner-email delivery, exact recovery link destination, replacement-password sign-in and the signed-in stable-origin smoke remain pending.
 
 ## Phase 1 evidence (historical) — November 18, 2026
 
