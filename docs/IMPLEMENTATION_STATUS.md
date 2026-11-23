@@ -43,6 +43,14 @@ After user approval at the quoted $0/month, Supabase created `i-love-people-prod
 
 The new project's Auth settings endpoint reports email sign-in enabled, anonymous sign-ins disabled, and public signup enabled. Disable signup and configure the exact stable recovery URLs before promotion. Production database credentials, protected GitHub environment setup, Alembic, owner-email recovery, promotion and hosted smoke remain pending.
 
+### Protected main and hosted readiness — November 22, 2026
+
+The user reports saving Production settings. Supabase confirms disabled signup, disabled anonymous authentication, enabled email authentication, and one confirmed account. Vercel reports the sensitive Production database variable, and the staged deployment delivers the isolated Production Auth origin and returns `200 {"status":"ready"}`. The exact reset redirect and owner inbox flow remain to be exercised.
+
+The previously CI-passed review commit `d67997a` was fast-forwarded to protected `main`, and [exact-source main checks](https://github.com/TonyL-dev/I-Love-People/actions/runs/45089395834) passed. Vercel staged `dpl_C67YHXRFHWqfsCV9RMC2FwZBWN1f` while the stable alias still pointed to rollback deployment `dpl_J1CyonHCA4e9u2Yj5skHUvLjRMKk`. The automatic staged build uses the Preview CSP and serves as a connectivity check. Published staging commit `802f8cf` differs from `main` only by the CSP Auth origin.
+
+GitHub confirms the required reviewer and exact `main` branch rule on the `production` environment. The signed-in dashboard showed the expected migration secret name and the matching project reference. [Migration run 45089722419](https://github.com/TonyL-dev/I-Love-People/actions/runs/45089722419) was dispatched on `d67997a` and is waiting for reviewer approval. Final staged smoke and promotion follow successful migration.
+
 ## Phase 1 evidence (historical) — November 18, 2026
 
 Login, logout, forgotten/reset-password, expired-session and recovery-error flows are implemented. Access tokens stay in tab memory; reload requires sign-in. Account preferences persist in an owner-scoped timezone profile. People and meetup persistence remain unimplemented.
