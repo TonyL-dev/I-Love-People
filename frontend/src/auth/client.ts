@@ -18,7 +18,13 @@ export class AccountError extends Error {
   }
 }
 
-export async function jsonRequest(url: string, init?: RequestInit): Promise<unknown> {
+type ErrorMessage = (response: Response) => Promise<string | undefined>;
+
+export async function jsonRequest(
+  url: string,
+  init?: RequestInit,
+  messageForError?: ErrorMessage,
+): Promise<unknown> {
   const controller = new AbortController();
   const abort = () => controller.abort();
   const timer = window.setTimeout(abort, 10_000);
@@ -35,11 +41,13 @@ export async function jsonRequest(url: string, init?: RequestInit): Promise<unkn
       redirect: 'error',
     });
     if (!response.ok) {
+      const specificMessage = await messageForError?.(response);
       throw new AccountError(
         response.status,
-        response.status === 429
-          ? 'Too many attempts. Wait a little before trying again.'
-          : 'The request could not be completed. Try again.',
+        specificMessage ??
+          (response.status === 429
+            ? 'Too many attempts. Wait a little before trying again.'
+            : 'The request could not be completed. Try again.'),
       );
     }
     if (response.status === 204) return null;
@@ -51,6 +59,18 @@ export async function jsonRequest(url: string, init?: RequestInit): Promise<unkn
     window.clearTimeout(timer);
     init?.signal?.removeEventListener('abort', abort);
   }
+}
+
+async function passwordUpdateError(response: Response): Promise<string | undefined> {
+  if (response.status !== 422) return;
+  const body: unknown = await response.json().catch(() => null);
+  if (
+    body &&
+    typeof body === 'object' &&
+    'error_code' in body &&
+    body.error_code === 'same_password'
+  )
+    return 'Choose a password different from your current one.';
 }
 
 function record(value: unknown): Record<string, unknown> {
@@ -77,31 +97,36 @@ export class AccountClient {
     path: string,
     method: string,
     body?: unknown,
-    token?: string,
-    signal?: AbortSignal,
+    {
+      token,
+      signal,
+      messageForError,
+    }: {
+      token?: string;
+      signal?: AbortSignal | undefined;
+      messageForError?: ErrorMessage;
+    } = {},
   ) {
-    return jsonRequest(this.config.url + '/auth/v1' + path, {
-      method,
-      signal: signal ?? null,
-      headers: {
-        apikey: this.config.publishable_key,
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: 'Bearer ' + token } : {}),
+    return jsonRequest(
+      this.config.url + '/auth/v1' + path,
+      {
+        method,
+        signal: signal ?? null,
+        headers: {
+          apikey: this.config.publishable_key,
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: 'Bearer ' + token } : {}),
+        },
+        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
       },
-      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-    });
+      messageForError,
+    );
   }
   async signIn(email: string, password: string, signal?: AbortSignal): Promise<Session> {
     let value: Record<string, unknown>;
     try {
       value = record(
-        await this.provider(
-          '/token?grant_type=password',
-          'POST',
-          { email, password },
-          undefined,
-          signal,
-        ),
+        await this.provider('/token?grant_type=password', 'POST', { email, password }, { signal }),
       );
     } catch (error) {
       if (error instanceof AccountError && [400, 401].includes(error.status)) {
@@ -124,10 +149,18 @@ export class AccountClient {
     await this.provider('/recover?redirect_to=' + redirect, 'POST', { email });
   }
   async resetPassword(session: Session, password: string): Promise<void> {
-    await this.provider('/user', 'PUT', { password }, session.accessToken);
+    await this.provider(
+      '/user',
+      'PUT',
+      { password },
+      {
+        token: session.accessToken,
+        messageForError: passwordUpdateError,
+      },
+    );
   }
   async signOut(session: Session): Promise<void> {
-    await this.provider('/logout?scope=global', 'POST', undefined, session.accessToken);
+    await this.provider('/logout?scope=global', 'POST', undefined, { token: session.accessToken });
   }
   async profile(session: Session, timezone?: string, signal?: AbortSignal): Promise<Profile> {
     const value = record(

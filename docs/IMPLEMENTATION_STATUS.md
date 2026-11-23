@@ -65,6 +65,10 @@ Vercel promoted the same `802f8cf` deployment `dpl_9eugLkh2HrsruVpCbsmMqcX7xqYM`
 
 The Production database measured 11,908,787 bytes. Current Supabase Free and Vercel Hobby usage measurements are recorded in [OPERATIONS.md](OPERATIONS.md#monthly-cost-review). Owner-email delivery, exact recovery link destination, replacement-password sign-in and the signed-in stable-origin smoke remain pending.
 
+### Password reset feedback follow-up
+
+During the Production recovery check, the user reported a generic message after trying to reuse the current password. The reset client now maps the managed Auth `same_password` response to an instruction to choose a different password while keeping the reset form available. The real local Auth browser drill covers rejected reuse followed by a successful retry. Final hosted confirmation and the owner retry are tracked below.
+
 ## Phase 1 evidence (historical) — November 18, 2026
 
 Login, logout, forgotten/reset-password, expired-session and recovery-error flows are implemented. Access tokens stay in tab memory; reload requires sign-in. Account preferences persist in an owner-scoped timezone profile. People and meetup persistence remain unimplemented.

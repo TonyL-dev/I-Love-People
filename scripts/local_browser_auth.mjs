@@ -232,6 +232,14 @@ try {
   await page.goto(destination);
   await page.getByRole('button', { name: 'Update password' }).waitFor();
   assert.equal(new URL(page.url()).hash, '');
+  stage = 'same-password-reset';
+  await page.getByLabel('New password', { exact: true }).fill(fixture.password);
+  await page.getByLabel('Confirm password', { exact: true }).fill(fixture.password);
+  await page.getByRole('button', { name: 'Update password' }).click();
+  await expect(page.getByRole('alert')).toHaveText(
+    'Choose a password different from your current one.',
+  );
+  stage = 'replacement-password-reset';
   await page.getByLabel('New password', { exact: true }).fill(fixture.replacement);
   await page.getByLabel('Confirm password', { exact: true }).fill(fixture.replacement);
   await page.getByRole('button', { name: 'Update password' }).click();
