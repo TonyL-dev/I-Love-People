@@ -1,6 +1,6 @@
 # I Love People project plan
 
-Updated November 22, 2026. This document defines the implementation roadmap. Phases 0 through 4 are accepted. Phase 5 recovery and release controls are implemented, and the iPhone VoiceOver review passed by user report. Private Production gates are tracked in [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md).
+Updated November 22, 2026. This document defines the implementation roadmap. Phases 0 through 5 are accepted. The private release is live on protected Production. Release evidence is in [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md).
 
 ## Goal and scope
 
@@ -98,7 +98,7 @@ Sources are [WebKit web push](https://webkit.org/blog/13878/), [Cloudflare Cron 
 
 Acceptance requires an actual export/restore drill, passing ownership/security regression checks, hosted login and meetup smoke, and a recorded monthly cost review within free quotas. Track local checks, hosted CI, and hosted smoke separately.
 
-Phase 5 source implements portable recovery and password-confirmed application-data deletion. Release steps and the November 22 quota review are in [OPERATIONS.md](OPERATIONS.md). See [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for verified results and open private-release gates.
+Phase 5 was accepted November 22, 2026 after the owner confirmed stable Production recovery and meetup checks. The [operating runbook](OPERATIONS.md) records measured usage within free quotas, and [implementation status](IMPLEMENTATION_STATUS.md) records verification and rollout evidence.
 
 ## Phase 6 — Selected improvements
 

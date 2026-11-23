@@ -1,6 +1,6 @@
 # Implementation status
 
-Updated November 22, 2026. Phases 0 through 4 are accepted. Phase 5 is live at the protected Production URL. Stable-origin owner recovery and signed-in confirmation remain open.
+Updated November 22, 2026. Phases 0 through 5 are accepted. The private release is live at the protected Production URL.
 
 | Phase | State |
 | --- | --- |
@@ -9,7 +9,7 @@ Updated November 22, 2026. Phases 0 through 4 are accepted. Phase 5 is live at t
 | 2 People and meetups | Accepted on the protected Preview; iPhone/desktop pass reported |
 | 3 Due list | Accepted on the protected Preview; UI approval and final-origin recovery pass |
 | 4 PWA and Web Push | Accepted on the protected Preview. Hosted schedule, desktop and iPhone evidence recorded |
-| 5 Personal release | Promoted to protected Production. Preview recovery, iPhone VoiceOver, staged meetup smoke and stable HTTP smoke passed. Owner recovery and signed-in stable-origin smoke remain open. |
+| 5 Personal release | Accepted in protected Production. Owner recovery and stable meetup checks passed by user report. Hosted HTTP, ownership checks, migration, VoiceOver and free-quota review are recorded below. |
 | 6 Enhancements | Backlog |
 
 ## Phase 5 implementation — November 22, 2026
@@ -27,9 +27,7 @@ Settings now offers JSON export, validated restore with preview and conflict han
 | Contrast follow-up | `91a315f` switches destructive button colors together during appearance changes. Four targeted Chrome checks passed locally, and [both exact-source Linux jobs](https://github.com/TonyL-dev/I-Love-People/actions/runs/45074208998) passed with all 40 browser tests. Readiness, CSP and live light/dark button colors passed on the [current protected Preview](https://i-love-people-p1ey31ju3-smooshy.vercel.app), deployment `dpl_A1nrt8LnbYRLz9MDoRd52xdquHKU`. Temporary access was revoked. The earlier hosted recovery drill covered the same backup and deletion code. |
 | iPhone and VoiceOver | User-reported pass on iPhone 16 Pro, iOS 27. Backup download to Files, restore conflict and cancellation, empty-account restore, and password-confirmed deletion on a disposable account passed. The user also verified reading order, text, keyboard presentation, menu focus, and both appearances. [Device evidence](DEVICE_REVIEW.md#phase-5-device-result--november-22-2026) |
 
-The hosted advisor still reports disabled leaked-password protection. It also notes RLS tables without policies. The private challenge and push tables deny direct access to the client roles. The quota review estimates $0 for the planned personal workload. Production usage totals and billing remain unverified.
-
-Private-release acceptance still requires real owner-email recovery and the signed-in smoke on the stable Production origin. See the rollout evidence below. Local services were stopped after verification.
+The hosted advisor reports disabled leaked-password protection and tables with RLS but without policies. The private challenge and push tables deny direct access to the client roles. Production dashboard usage is within the free quotas at promotion. An invoice or charge total remains unverified. Local services were stopped after verification.
 
 ### Production rollout preflight — November 22, 2026
 
@@ -74,6 +72,12 @@ Local source checks, database checks, and real Chrome/Supabase rejection and ret
 Vercel promoted deployment `dpl_3eVKdtxV7XamHkhTXJ8kTHf4C6z6` to the [stable Production URL](https://i-love-people.vercel.app/). The stable alias, reset page, updated JavaScript, Production Auth origin/CSP, health, readiness, no-store and unauthenticated Vercel sign-in redirect passed. The previous rollout deployment `dpl_9eugLkh2HrsruVpCbsmMqcX7xqYM` is the current rollback target. Owner replacement-password sign-in and the signed-in stable meetup smoke remain pending.
 
 The owner subsequently reported that password recovery works after the fix. Replacement-password sign-in followed by the sample meetup journey on the stable Production URL still needs explicit confirmation.
+
+### Phase 5 accepted — November 22, 2026
+
+The owner confirmed successful password reset and sign-in with the replacement password, then confirmed adding, reopening, editing and deleting a sample meetup on the stable Production site. This is owner-reported acceptance evidence. An independent alias check confirmed [the protected Production URL](https://i-love-people.vercel.app/) still serves deployment `dpl_3eVKdtxV7XamHkhTXJ8kTHf4C6z6`.
+
+Together with the actual protected Preview export/restore drill, ownership and security checks, reported iPhone VoiceOver pass, gated Production migration, stable HTTP smoke and [measured free-quota usage](OPERATIONS.md#monthly-cost-review), this closes Phase 5. The private release includes in-app reminders. Production Web Push remains an optional rollout.
 
 ## Phase 1 evidence (historical) — November 18, 2026
 

@@ -2,7 +2,7 @@
 
 Updated November 22, 2026. Read docs/PROJECT.md, docs/IMPLEMENTATION_STATUS.md, docs/ARCHITECTURE.md, docs/DECISIONS.md, and docs/PROJECT_GUIDELINES.md before changes.
 
-This project is a private responsive website with a $0 monthly hosting target. The active roadmap is in docs/PROJECT.md. Implement phases in order when requested. Phases 0 through 4 are accepted. Phase 5 introduces portable recovery and release controls. The user reports passing the Phase 5 iPhone VoiceOver review. Verify the remaining Production release gates against docs/IMPLEMENTATION_STATUS.md. Imported resume-project files in docs/reference preserve historical source material.
+This project is a private responsive website with a $0 monthly hosting target. The active roadmap is in docs/PROJECT.md. Implement phases in order when requested. Phases 0 through 5 are accepted. The private release is live on protected Production. See docs/IMPLEMENTATION_STATUS.md for release evidence. Imported resume-project files in docs/reference preserve historical source material.
 
 Read docs/DESIGN_STANDARDS.md for UI, code, and documentation changes. Apply its typography, semantic tokens, spacing, accessibility, interaction states, and visual review gates from Phase 0. Use local Supabase and synthetic data for repeatable development checks before hosted verification.
 
@@ -135,3 +135,5 @@ During Production recovery, the user reported generic feedback when reusing the 
 The reset fix passed actual local Auth recovery, both Linux jobs and a staged Chrome regression. Vercel promoted the verified build, and its stable protected HTTP checks passed. The owner can retry a real password change and complete the signed-in stable smoke.
 
 The owner reports that the updated password reset works. Confirm the signed-in meetup smoke on the stable Production URL before closing Phase 5.
+
+Phase 5 was accepted November 22, 2026. The owner confirmed successful replacement-password sign-in and the sample meetup journey on the protected stable Production URL. The active deployment is `dpl_3eVKdtxV7XamHkhTXJ8kTHf4C6z6`. [Release evidence](docs/IMPLEMENTATION_STATUS.md#phase-5-accepted--november-22-2026) records the rollout and cost review.

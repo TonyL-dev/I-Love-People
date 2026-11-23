@@ -94,3 +94,5 @@ In [Production URL Configuration](https://supabase.com/dashboard/project/bygwwaz
 Use the [operating runbook](OPERATIONS.md#production-migration-and-promotion) for the Production database credential and migration gate.
 
 During recovery, submitting the current password leaves the reset form available and shows “Choose a password different from your current one.” Enter a different password in both fields and try again. If the recovery session expired, request a fresh link from the stable site.
+
+On November 22, 2026, the owner reported successful Production password reset and replacement-password sign-in. The owner then confirmed the signed-in sample meetup journey on the stable origin. [Production acceptance](IMPLEMENTATION_STATUS.md#phase-5-accepted--november-22-2026)
