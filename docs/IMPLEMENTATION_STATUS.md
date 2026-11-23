@@ -51,6 +51,12 @@ The previously CI-passed review commit `d67997a` was fast-forwarded to protected
 
 GitHub confirms the required reviewer and exact `main` branch rule on the `production` environment. The signed-in dashboard showed the expected migration secret name and the matching project reference. [Migration run 45089722419](https://github.com/TonyL-dev/I-Love-People/actions/runs/45089722419) was dispatched on `d67997a` and is waiting for reviewer approval. Final staged smoke and promotion follow successful migration.
 
+### Production migration and release candidate — November 22, 2026
+
+The user approved the gated workflow, and [migration run 45089722419](https://github.com/TonyL-dev/I-Love-People/actions/runs/45089722419) passed. A separate read-only Production query verified Alembic revision `0008_portable_backups`, seven tables with forced RLS, and zero people and meetups. Supabase reports the existing types of advisories for private RLS tables without client policies and disabled leaked-password protection.
+
+Vercel built [the protected Production release candidate](https://i-love-people-afxdyh07g-smooshy.vercel.app) from staging commit `802f8cf` as deployment `dpl_9eugLkh2HrsruVpCbsmMqcX7xqYM`. Verified the exact Production Auth origin and CSP, SPA and reset routes, built JavaScript and CSS, health, database readiness, no-store responses, an application-level unauthenticated 401, and an unknown API route returning 404. Temporary deployment access was revoked. The stable alias still points to rollback deployment `dpl_J1CyonHCA4e9u2Yj5skHUvLjRMKk`. Signed-in meetup CRUD with a disposable Production account and its cleanup precede promotion.
+
 ## Phase 1 evidence (historical) — November 18, 2026
 
 Login, logout, forgotten/reset-password, expired-session and recovery-error flows are implemented. Access tokens stay in tab memory; reload requires sign-in. Account preferences persist in an owner-scoped timezone profile. People and meetup persistence remain unimplemented.
