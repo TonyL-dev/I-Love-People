@@ -1,6 +1,6 @@
 # I Love People project plan
 
-Updated November 19, 2026. This document defines the implementation roadmap. Phase 0 is accepted. Phases 1, 2 and 3 are accepted on the protected Preview. Phase 3 acceptance is recorded November 19, 2026 for application 97e40ea after UI approval and final-origin recovery verification. VoiceOver remains unverified before release. See [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for evidence and outstanding gates.
+Updated November 22, 2026. This document defines the implementation roadmap. Phases 0 through 5 are accepted. The private release is live on protected Production. Release evidence is in [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md).
 
 ## Goal and scope
 
@@ -77,7 +77,7 @@ Acceptance requires deterministic date/timezone tests and a real browser journey
 
 ## Phase 4 — Home Screen installation and external nudges
 
-Current progress: implementation exists on the Phase 4 review branch. Local verification and remaining hosted/device gates are tracked in [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md). The protected scheduler and device procedure is in [PUSH_SETUP.md](PUSH_SETUP.md).
+Current progress: accepted November 22, 2026 for application `64bd569` and scheduler `78fd411` on the protected Preview. The trial schedule was disabled after desktop, iPhone and revocation verification. Evidence is tracked in [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md). The protected scheduler and device procedure is in [PUSH_SETUP.md](PUSH_SETUP.md).
 
 - Add a web manifest, install guidance, and a service worker caching only public app assets. Keep auth, API responses, personal records, and push subscriptions out of offline caches. Show a useful offline state and retain unsaved form text only in memory.
 - Add explicit notification opt-in, permission-denied guidance, per-device push subscriptions, unsubscribe, and generic notification wording that keeps names and rankings private.
@@ -97,6 +97,8 @@ Sources are [WebKit web push](https://webkit.org/blog/13878/), [Cloudflare Cron 
 - Deploy migrations in a serialized trusted job before compatible application promotion. Maintain backward compatibility during rollout and check health plus login/CRUD on the real hosted release.
 
 Acceptance requires an actual export/restore drill, passing ownership/security regression checks, hosted login and meetup smoke, and a recorded monthly cost review within free quotas. Track local checks, hosted CI, and hosted smoke separately.
+
+Phase 5 was accepted November 22, 2026 after the owner confirmed stable Production recovery and meetup checks. The [operating runbook](OPERATIONS.md) records measured usage within free quotas, and [implementation status](IMPLEMENTATION_STATUS.md) records verification and rollout evidence.
 
 ## Phase 6 — Selected improvements
 

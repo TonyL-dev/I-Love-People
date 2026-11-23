@@ -1,8 +1,8 @@
 # Repository instructions for I Love People
 
-Updated November 19, 2026. Read docs/PROJECT.md, docs/IMPLEMENTATION_STATUS.md, docs/ARCHITECTURE.md, docs/DECISIONS.md, and docs/PROJECT_GUIDELINES.md before changes.
+Updated November 22, 2026. Read docs/PROJECT.md, docs/IMPLEMENTATION_STATUS.md, docs/ARCHITECTURE.md, docs/DECISIONS.md, and docs/PROJECT_GUIDELINES.md before changes.
 
-This project is a private responsive website with a $0 monthly hosting target. The active roadmap is in docs/PROJECT.md. Implement phases in order when requested. Phase 0 foundation acceptance is met; local checks, GitHub Linux CI, hosted HTTP/database smoke, and local loopback binding pass. Safari review passed by user report. Phases 1, 2 and 3 are accepted on the protected Preview. Phase 3 acceptance is recorded November 19, 2026 for application 97e40ea; UI approval and final-origin recovery verification pass. VoiceOver remains an open pre-release check. Imported resume-project files are preserved in docs/reference as historical reference material. Their implementation claims and commands do not establish this project's state.
+This project is a private responsive website with a $0 monthly hosting target. The active roadmap is in docs/PROJECT.md. Implement phases in order when requested. Phases 0 through 5 are accepted. The private release is live on protected Production. See docs/IMPLEMENTATION_STATUS.md for release evidence. Imported resume-project files in docs/reference preserve historical source material.
 
 Read docs/DESIGN_STANDARDS.md for UI, code, and documentation changes. Apply its typography, semantic tokens, spacing, accessibility, interaction states, and visual review gates from Phase 0. Use local Supabase and synthetic data for repeatable development checks before hosted verification.
 
@@ -97,3 +97,43 @@ Together with [both passing Linux CI jobs](https://github.com/TonyL-dev/I-Love-P
 ## Phase 4 implementation - November 19, 2026
 
 Home Screen installation, a public-asset service worker, in-memory offline drafts, per-device opt-in and quiet hours, and a bounded Web Push sender are implemented on `codex/phase-4-external-nudges`. Alembic 0007 adds private device and delivery records. Devices can turn off notifications directly or during sign-out. The Cloudflare Worker is a scheduler prototype. Hosted scheduler and closed-app iPhone acceptance are pending. Use [docs/PUSH_SETUP.md](docs/PUSH_SETUP.md) for the verification procedure.
+
+## Phase 4 protected Preview trial — November 21, 2026
+
+The CI-passed application `64bd569` is deployed to the [protected Phase 4 Preview](https://i-love-people-8fi33jomc-smooshy.vercel.app). Alembic 0007 and role isolation are verified on the synthetic Preview database. The private Cloudflare Worker is attached to a five-minute schedule. The scheduler source fix `78fd411` uses manual redirect handling to match the actual Workers runtime. Device acceptance is tracked in docs/IMPLEMENTATION_STATUS.md. Follow docs/PUSH_SETUP.md for the synthetic phone account and trial cleanup.
+
+Hosted scheduling, live closed-page Chrome notification delivery, daily deduplication and browser opt-out passed. The canary and desktop accounts were removed and the synthetic iPhone test remains open.
+
+## Phase 4 accepted — November 22, 2026
+
+Application `64bd569` and scheduler `78fd411` are accepted for the protected Preview demonstrated on November 21–22. The user reports that a scheduled reminder arrived while the iPhone Home Screen app was closed, that tapping it opened the app at sign-in, and that notification permission was then turned off. Sign-in after a closed-app launch follows the existing in-memory session design.
+
+The hosted iPhone device had one successful receipt at 21:05 UTC. At the post-opt-out check its endpoint and encryption keys were cleared, and an authenticated hosted job returned zero checked devices and zero sent. Together with Linux CI, hosted scheduling, Chrome closed-page delivery and Chrome opt-out, this satisfies Phase 4 acceptance. The Cloudflare trial schedule was removed, both Worker secret bindings were cleared, and Vercel rejected its revoked automation credential. The synthetic account and temporary local credentials were removed. The hosted database contained zero trial accounts, push devices and delivery receipts after cleanup. VoiceOver remains a private-release check.
+
+## Phase 5 implementation — November 22, 2026
+
+The settings drawer offers portable JSON backup, review-first restore into an empty library, and delete-all with a current password and typed confirmation. Alembic 0008 keeps recovery writes atomic and caller-scoped. The isolated owner database and stable Production rollout follow [docs/OPERATIONS.md](docs/OPERATIONS.md). Record local, CI, protected Preview and private-release evidence separately in [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md).
+
+Application `931b522` passed both Linux jobs and the deployed two-account API and Chrome backup drill on the protected Preview. Alembic 0008 and role isolation are verified there. Disposable users and temporary Preview access were removed. The physical VoiceOver check, Production setup and live usage review remain open.
+
+The `91a315f` follow-up keeps destructive controls legible during appearance changes. Both Linux jobs and all 40 browser tests passed. The current protected Preview passed readiness, CSP and the live contrast check.
+
+The user reports the Phase 5 backup, conflict, restore and disposable-account deletion flows passed with VoiceOver on iPhone 16 Pro, iOS 27. [docs/DEVICE_REVIEW.md](docs/DEVICE_REVIEW.md) records the device evidence. Production rollout, owner-email recovery and measured usage remain open.
+
+Private rollout preflight verified Vercel sign-in on the stable Production URL after enabling All Deployments protection. Keep Production credentials separate from Preview and complete the gated migration and smoke checks before promotion. [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md) records the current rollout state.
+
+The user approved and Supabase created the separate $0/month Production project in Canada Central. Database availability and empty application state were verified, and Production-only Vercel public Auth settings were added. Complete the [Production Auth steps](docs/AUTH_SETUP.md#phase-5-private-production-setup) and [release workflow gates](docs/OPERATIONS.md#production-migration-and-promotion) before promotion.
+
+Protected `main` now points to reviewed and CI-passed release source `d67997a`. The staged Vercel deployment verifies the Production Auth origin and database connectivity. Public signup and anonymous sign-ins are disabled. GitHub reports a required reviewer and an exact `main` environment branch rule. Migration run `45089722419` is waiting for reviewer approval. The final staged smoke follows successful Alembic migration and precedes promotion.
+
+The user approved the migration and run `45089722419` passed. Production is at Alembic `0008_portable_backups`. The protected staging commit `802f8cf` passed readiness, exact Production CSP, asset and unauthenticated API checks. Verify the signed-in disposable-account staged smoke and cleanup before promotion.
+
+The user reports passing the staged disposable-account meetup smoke and removing the account. Production query results confirmed one confirmed account and zero people and meetups. Vercel promoted the tested `802f8cf` deployment to the protected stable Production URL. Stable HTTP smoke and the dashboard quota review passed. Owner-email recovery and signed-in smoke on the stable origin remain open.
+
+During Production recovery, the user reported generic feedback when reusing the current password. The reset client maps Supabase Auth's `same_password` code to a clear inline message and allows retry on the same form. Verify the local managed Auth regression and the protected release before asking the owner to retry.
+
+The reset fix passed actual local Auth recovery, both Linux jobs and a staged Chrome regression. Vercel promoted the verified build, and its stable protected HTTP checks passed. The owner can retry a real password change and complete the signed-in stable smoke.
+
+The owner reports that the updated password reset works. Confirm the signed-in meetup smoke on the stable Production URL before closing Phase 5.
+
+Phase 5 was accepted November 22, 2026. The owner confirmed successful replacement-password sign-in and the sample meetup journey on the protected stable Production URL. The active deployment is `dpl_3eVKdtxV7XamHkhTXJ8kTHf4C6z6`. [Release evidence](docs/IMPLEMENTATION_STATUS.md#phase-5-accepted--november-22-2026) records the rollout and cost review.

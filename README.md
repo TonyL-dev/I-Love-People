@@ -2,7 +2,7 @@
 
 A private, responsive place to remember when you last met someone and make time for next time.
 
-Phase 0 is accepted. Phase 1 login, recovery, memory-only sessions, and an owned timezone preference are implemented and verified locally with managed Supabase Auth. Phase 1 is accepted: hosted CI, protected Preview API/browser/recovery checks and user-reported owner email/iPhone journeys pass; see [setup steps](docs/AUTH_SETUP.md). Phase 2 people and meetup history are accepted on the protected Preview; Phase 3 remains planned. The `/design` reference remains explicitly synthetic.
+Phases 0 through 4 are accepted on the protected Preview. Phase 5 adds portable backups, reviewed restore and password-confirmed data deletion under **Menu → Backups and data**. See the [implementation status](docs/IMPLEMENTATION_STATUS.md) for current evidence and the [operating runbook](docs/OPERATIONS.md) for the private release and recovery procedures. The `/design` reference uses synthetic data.
 
 ## Start locally on Windows
 

@@ -7,6 +7,7 @@ import { Dialog } from '../ui/Dialog';
 import { Notice } from '../ui/Notice';
 import { AppearanceField, type Appearance } from '../ui/Appearance';
 import { NotificationSettings } from '../push/NotificationSettings';
+import { PrivacySettings } from '../privacy/PrivacySettings';
 import { disableDevice, supportsPush } from '../push/client';
 import {
   AccountClient,
@@ -322,6 +323,7 @@ function PrivateAccount({
   const [logoutBusy, setLogoutBusy] = useState(false);
   const [logoutError, setLogoutError] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [dataVersion, setDataVersion] = useState(0);
   useEffect(() => {
     const abort = new AbortController();
     void client.profile(session, undefined, abort.signal).then(
@@ -420,7 +422,7 @@ function PrivateAccount({
           <Menu aria-hidden="true" size={20} /> Menu
         </Button>
       </div>
-      {profile && <PeoplePage session={session} timezone={profile.timezone} />}
+      {profile && <PeoplePage key={dataVersion} session={session} timezone={profile.timezone} />}
       {!profile && !error && <p role="status">Loading your account…</p>}
       {!menuOpen && accountError}
       {menuOpen && (
@@ -470,10 +472,21 @@ function PrivateAccount({
             {notice && <p role="status">{notice}</p>}
             {profile && !confirmLogout && (
               <NotificationSettings
+                key={dataVersion}
                 session={session}
                 timezone={profile.timezone}
                 busy={pushBusy || logoutBusy}
                 setBusy={setPushBusy}
+              />
+            )}
+            {profile && !confirmLogout && (
+              <PrivacySettings
+                session={session}
+                onChanged={() => {
+                  setDataVersion((value) => value + 1);
+                  setAttempt((value) => value + 1);
+                  setNotice('');
+                }}
               />
             )}
             <div className="surface stack">

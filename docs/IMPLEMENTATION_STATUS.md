@@ -1,16 +1,83 @@
 # Implementation status
 
-Updated November 19, 2026. Phases 0 through 3 are accepted. Phase 4 is implemented locally. Hosted scheduling, live-device delivery, revocation and VoiceOver evidence remain open.
+Updated November 22, 2026. Phases 0 through 5 are accepted. The private release is live at the protected Production URL.
 
 | Phase | State |
 | --- | --- |
-| 0 Foundation | Accepted; real Safari pass reported, VoiceOver remains a release check |
+| 0 Foundation | Accepted, with a real Safari pass reported |
 | 1 Login and privacy | Accepted on the protected Preview; Production unchanged |
 | 2 People and meetups | Accepted on the protected Preview; iPhone/desktop pass reported |
 | 3 Due list | Accepted on the protected Preview; UI approval and final-origin recovery pass |
-| 4 PWA and Web Push | Implemented locally, hosted scheduler and live-device acceptance pending |
-| 5 Personal release | Planned |
+| 4 PWA and Web Push | Accepted on the protected Preview. Hosted schedule, desktop and iPhone evidence recorded |
+| 5 Personal release | Accepted in protected Production. Owner recovery and stable meetup checks passed by user report. Hosted HTTP, ownership checks, migration, VoiceOver and free-quota review are recorded below. |
 | 6 Enhancements | Backlog |
+
+## Phase 5 implementation — November 22, 2026
+
+Settings now offers JSON export, validated restore with preview and conflict handling, and application-data deletion with same-account password reauthentication. Alembic 0008 adds caller-scoped recovery routines and transactional locking. The [operating runbook](OPERATIONS.md) covers backups, inactive-project/database recovery, serialized trusted migration, staged promotion, rollback and the November 22 published-quota review.
+
+| Verification | Observed result |
+| --- | --- |
+| Local source and audits | 93 Python and 7 frontend tests, static checks, contract generation and build passed. pnpm and Python production-dependency audits reported no known vulnerabilities. |
+| Local database and Auth | Repeat upgrade, readiness and prior ownership/RLS regressions passed. The new drill verified export, preserved archived/paused state and meetup notes in a fresh account, rejected stale and concurrent conflicts, confirmed password proof, checked device and receipt deletion, and removed the disposable accounts. The advisory lock rejected an overlapping migration, and a test downgrade to 0007 and re-upgrade to 0008 passed. |
+| Local Chrome | The existing browser suite and the new backup UI regression passed across the browser runs. The new review checked overflow at 320, 390, 768 and 1440 CSS px, axe in both appearances at 320 and 1440 px, and 200% text reflow. Phone and desktop screenshots were inspected. Actual local Auth login/CRUD, nudge changes and captured-email recovery passed separately. |
+| GitHub Linux CI | Both jobs passed for `931b522` in [run 45073829273](https://github.com/TonyL-dev/I-Love-People/actions/runs/45073829273), including real local database/Auth/browser drills. The 320 px dark component scan reported transient destructive-button contrast on its first attempt and passed on retry. [Draft PR #4](https://github.com/TonyL-dev/I-Love-People/pull/4) holds the review branch. |
+| Protected Preview | [Application `931b522`](https://i-love-people-b28h7198z-smooshy.vercel.app), deployment `dpl_3BsksFZhnceHFc1S2tBV1syF5QPy`. Alembic 0008, repeat upgrade, and restricted challenge-table and function privileges verified. Hosted HTTP, CSP, readiness, two-account recovery, conflict handling, password confirmation, revocation, and ownership checks passed. |
+| Hosted Chrome | Actual sign-in, create/read meetup, JSON download, existing-library conflict, fresh-account upload/restore, restored note, confirmed deletion, and reload sign-in passed without page errors. Verified disposable account and row cleanup and revoked temporary Preview access. |
+| Contrast follow-up | `91a315f` switches destructive button colors together during appearance changes. Four targeted Chrome checks passed locally, and [both exact-source Linux jobs](https://github.com/TonyL-dev/I-Love-People/actions/runs/45074208998) passed with all 40 browser tests. Readiness, CSP and live light/dark button colors passed on the [current protected Preview](https://i-love-people-p1ey31ju3-smooshy.vercel.app), deployment `dpl_A1nrt8LnbYRLz9MDoRd52xdquHKU`. Temporary access was revoked. The earlier hosted recovery drill covered the same backup and deletion code. |
+| iPhone and VoiceOver | User-reported pass on iPhone 16 Pro, iOS 27. Backup download to Files, restore conflict and cancellation, empty-account restore, and password-confirmed deletion on a disposable account passed. The user also verified reading order, text, keyboard presentation, menu focus, and both appearances. [Device evidence](DEVICE_REVIEW.md#phase-5-device-result--november-22-2026) |
+
+The hosted advisor reports disabled leaked-password protection and tables with RLS but without policies. The private challenge and push tables deny direct access to the client roles. Production dashboard usage is within the free quotas at promotion. An invoice or charge total remains unverified. Local services were stopped after verification.
+
+### Production rollout preflight — November 22, 2026
+
+Vercel now reports **All Deployments** protection for `i-love-people`. An unauthenticated request to the stable Production URL returned a Vercel sign-in redirect. The project update also requested manual domain assignment and disabled Production Feedback. The existing rollback deployment is `dpl_J1CyonHCA4e9u2Yj5skHUvLjRMKk` from Phase 0. Vercel reports zero Production environment variables.
+
+Supabase shows one active project in the Smooshy Free organization and quoted $0 per month for the separate Production project. GitHub reports that `main` is unprotected and the `production` environment is absent. Draft review branches contain the release source. Database provisioning, protected release workflow setup and promotion are pending.
+
+### Production database provisioned — November 22, 2026
+
+After user approval at the quoted $0/month, Supabase created `i-love-people-production` (`bygwwazskivywtqhpsce`) in Smooshy, Canada Central. The project is `ACTIVE_HEALTHY`. A read-only query confirmed connectivity, zero Auth users, zero public application tables and no Alembic history. The project database measured 11,122,355 bytes. Vercel has Production-only settings for the Supabase URL, publishable key and environment.
+
+The new project's Auth settings endpoint reports email sign-in enabled, anonymous sign-ins disabled, and public signup enabled. Disable signup and configure the exact stable recovery URLs before promotion. Production database credentials, protected GitHub environment setup, Alembic, owner-email recovery, promotion and hosted smoke remain pending.
+
+### Protected main and hosted readiness — November 22, 2026
+
+The user reports saving Production settings. Supabase confirms disabled signup, disabled anonymous authentication, enabled email authentication, and one confirmed account. Vercel reports the sensitive Production database variable, and the staged deployment delivers the isolated Production Auth origin and returns `200 {"status":"ready"}`. The exact reset redirect and owner inbox flow remain to be exercised.
+
+The previously CI-passed review commit `d67997a` was fast-forwarded to protected `main`, and [exact-source main checks](https://github.com/TonyL-dev/I-Love-People/actions/runs/45089395834) passed. Vercel staged `dpl_C67YHXRFHWqfsCV9RMC2FwZBWN1f` while the stable alias still pointed to rollback deployment `dpl_J1CyonHCA4e9u2Yj5skHUvLjRMKk`. The automatic staged build uses the Preview CSP and serves as a connectivity check. Published staging commit `802f8cf` differs from `main` only by the CSP Auth origin.
+
+GitHub confirms the required reviewer and exact `main` branch rule on the `production` environment. The signed-in dashboard showed the expected migration secret name and the matching project reference. [Migration run 45089722419](https://github.com/TonyL-dev/I-Love-People/actions/runs/45089722419) was dispatched on `d67997a` and is waiting for reviewer approval. Final staged smoke and promotion follow successful migration.
+
+### Production migration and release candidate — November 22, 2026
+
+The user approved the gated workflow, and [migration run 45089722419](https://github.com/TonyL-dev/I-Love-People/actions/runs/45089722419) passed. A separate read-only Production query verified Alembic revision `0008_portable_backups`, seven tables with forced RLS, and zero people and meetups. Supabase reports the existing types of advisories for private RLS tables without client policies and disabled leaked-password protection.
+
+Vercel built [the protected Production release candidate](https://i-love-people-afxdyh07g-smooshy.vercel.app) from staging commit `802f8cf` as deployment `dpl_9eugLkh2HrsruVpCbsmMqcX7xqYM`. Verified the exact Production Auth origin and CSP, SPA and reset routes, built JavaScript and CSS, health, database readiness, no-store responses, an application-level unauthenticated 401, and an unknown API route returning 404. Temporary deployment access was revoked. The stable alias still points to rollback deployment `dpl_J1CyonHCA4e9u2Yj5skHUvLjRMKk`. Signed-in meetup CRUD with a disposable Production account and its cleanup precede promotion.
+
+### Stable Production promoted — November 22, 2026
+
+The user reports that a disposable Production account could sign in, add a sample person, log and reopen a meetup, edit it and delete it on the staged candidate. The user then removed the disposable account. Independent Production database checks confirmed one confirmed Auth account and zero people and meetups.
+
+Vercel promoted the same `802f8cf` deployment `dpl_9eugLkh2HrsruVpCbsmMqcX7xqYM` to [the stable Production URL](https://i-love-people.vercel.app/). The alias resolved to that exact deployment. The stable URL passed SPA and reset routes, built JS/CSS, exact Production CSP and Auth origin, health, readiness, no-store and unknown API 404 checks. An anonymous request returned a 302 to Vercel sign-in. Rollback deployment `dpl_J1CyonHCA4e9u2Yj5skHUvLjRMKk` is recorded.
+
+The Production database measured 11,908,787 bytes. Current Supabase Free and Vercel Hobby usage measurements are recorded in [OPERATIONS.md](OPERATIONS.md#monthly-cost-review). Owner-email delivery, exact recovery link destination, replacement-password sign-in and the signed-in stable-origin smoke remain pending.
+
+### Password reset feedback follow-up
+
+During the Production recovery check, the user reported a generic message after trying to reuse the current password. The reset client now maps the managed Auth `same_password` response to an instruction to choose a different password while keeping the reset form available. The real local Auth browser drill covers rejected reuse followed by a successful retry. Final hosted confirmation and the owner retry are tracked below.
+
+Local source checks, database checks, and real Chrome/Supabase rejection and retry passed. [Both Linux CI jobs](https://github.com/TonyL-dev/I-Love-People/actions/runs/45092203478) passed on protected `main` commit `6f3439c`. Protected staging commit `01ea36e` adds only the Production CSP substitution. Its hosted Chrome test used controlled Auth responses to verify that the deployed bundle announces the rejection and accepts a retry in the same form. Temporary staging access was revoked.
+
+Vercel promoted deployment `dpl_3eVKdtxV7XamHkhTXJ8kTHf4C6z6` to the [stable Production URL](https://i-love-people.vercel.app/). The stable alias, reset page, updated JavaScript, Production Auth origin/CSP, health, readiness, no-store and unauthenticated Vercel sign-in redirect passed. The previous rollout deployment `dpl_9eugLkh2HrsruVpCbsmMqcX7xqYM` is the current rollback target. Owner replacement-password sign-in and the signed-in stable meetup smoke remain pending.
+
+The owner subsequently reported that password recovery works after the fix. Replacement-password sign-in followed by the sample meetup journey on the stable Production URL still needs explicit confirmation.
+
+### Phase 5 accepted — November 22, 2026
+
+The owner confirmed successful password reset and sign-in with the replacement password, then confirmed adding, reopening, editing and deleting a sample meetup on the stable Production site. This is owner-reported acceptance evidence. An independent alias check confirmed [the protected Production URL](https://i-love-people.vercel.app/) still serves deployment `dpl_3eVKdtxV7XamHkhTXJ8kTHf4C6z6`.
+
+Together with the actual protected Preview export/restore drill, ownership and security checks, reported iPhone VoiceOver pass, gated Production migration, stable HTTP smoke and [measured free-quota usage](OPERATIONS.md#monthly-cost-review), this closes Phase 5. The private release includes in-app reminders. Production Web Push remains an optional rollout.
 
 ## Phase 1 evidence (historical) — November 18, 2026
 
@@ -344,3 +411,19 @@ Phase 4 acceptance is open. Hosted cron execution, real desktop/browser-provider
 Source verification passed with 93 Python tests, seven frontend tests, OpenAPI drift and the production build. The 38-test Chrome suite passed, with focused reruns for the drawer, notification controls and production worker after visual adjustments. The local managed Auth/browser journey also passed. A light 390 px and dark 1440 px screenshot review exposed a clipped mobile heading when jumping to the section. The drawer now scrolls its content below the header.
 
 The local scheduler handler made the expected protected POST with a stub HTTP response. A live Chrome subscription probe received a permission denial in an isolated context and timed out in a fresh persistent profile, so there is no live desktop delivery evidence. A deployed scheduler and real iPhone are still needed for acceptance. Local Supabase was stopped after testing.
+
+## Phase 4 protected Preview rollout — November 21, 2026
+
+Both Linux jobs passed in [run 44940028494](https://github.com/TonyL-dev/I-Love-People/actions/runs/44940028494) for `64bd569`. Deployment `dpl_8ABHxMJCrffbrkJz7Pc8QHxpBFci` is READY at the [protected Phase 4 Preview](https://i-love-people-8fi33jomc-smooshy.vercel.app). Alembic 0007 applied twice and forced RLS and explicit client-role revocation are verified. Protected HTTP/SPA/API smoke, manifest/icon/worker headers, job bearer denial, two-user push API isolation and Data API denial passed. Actual Chrome sign-in, public-only Cache Storage and hosted device enrollment passed. Three Web Push settings are sensitive and scoped to the Phase 4 Preview branch.
+
+Cloudflare initialized the required account subdomain. The trial worker has no public route and holds both credentials in secret bindings. The initial scheduled version threw before it could fetch because Cloudflare Workers rejects `redirect: 'error'`. Scheduler commit `78fd411` uses manual redirects with explicit failed-status handling. See [PUSH_SETUP.md](PUSH_SETUP.md) for phone verification and cleanup.
+
+The corrected scheduler passed [run 44948160392](https://github.com/TonyL-dev/I-Love-People/actions/runs/44948160392) at `78fd411`. At the 20:50 UTC tick, Cloudflare Analytics recorded one successful invocation and one outbound subrequest. Vercel Python dispatched two encrypted pushes. The intentionally invalid endpoint produced a single revoked receipt and cleared its credentials. Chrome's real push provider accepted one delivery, and the browser displayed the generic reminder with the app page closed. The invalid-endpoint test account was removed and absence verified. The phone fixture is already due. Its disposable credentials are in the ignored local trial file. Real iPhone delivery and iOS permission revocation remain open.
+
+The 21:00 UTC schedule reevaluated the desktop device and preserved one receipt with one attempt. Hosted Chrome's in-app opt-out removed its actual browser subscription. The temporary desktop fixture and credential file were removed. The private five-minute schedule remains active for the disposable iPhone test, after which the trial bypass and account can be cleaned up.
+
+## Phase 4 iPhone acceptance and trial closure — November 22, 2026
+
+The user reports the scheduled reminder arrived with the Home Screen app closed and tapping it opened the app at sign-in. The user then turned off notification permission. Those are user-observed device results. The real hosted receipt records one send at 21:05 UTC, and an independent post-opt-out check found the endpoint and encryption keys cleared. A fresh authenticated job returned zero checked devices and zero sends. The single sent receipt remained the only receipt before cleanup. Chrome and scheduled-run acceptance are recorded above.
+
+The Cloudflare trial has zero schedules and zero secret bindings. The Worker retains disabled public and preview URLs. The Vercel automation credential was revoked and an HTTP check confirmed that both stale-credential and anonymous requests hit Deployment Protection. The disposable phone account and local credentials were removed. A hosted check found zero trial accounts, device rows and delivery rows. Phase 4 is accepted on the protected Preview. VoiceOver remains open for private release.

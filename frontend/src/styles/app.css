@@ -163,6 +163,8 @@ p {
 }
 .button--danger {
   color: var(--color-danger);
+  /* Keep text legible while a changed appearance replaces its surface color. */
+  transition: none;
 }
 .text-link,
 .back-link {
@@ -204,6 +206,10 @@ input::placeholder,
 textarea::placeholder {
   color: var(--color-text-secondary);
   opacity: 1;
+}
+input[type='file'] {
+  min-width: 0;
+  max-width: 100%;
 }
 select:disabled {
   opacity: 0.6;

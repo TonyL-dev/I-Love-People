@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from ilp.auth.router import router as account_router
 from ilp.health.router import router
 from ilp.people.router import router as people_router
+from ilp.privacy.router import router as privacy_router
 from ilp.push.router import router as push_router
 
 
@@ -23,11 +24,19 @@ def create_app() -> FastAPI:
     application.include_router(account_router)
     application.include_router(people_router)
     application.include_router(push_router)
+    application.include_router(privacy_router)
 
     @application.exception_handler(RequestValidationError)
     async def invalid_request(request: Request, error: RequestValidationError) -> Response:
         if request.url.path.startswith("/api/push/"):
             return JSONResponse({"detail": "Invalid notification settings"}, status_code=422)
+        if request.url.path.startswith("/api/privacy/"):
+            return JSONResponse(
+                {"detail": "The password, confirmation or backup format is invalid."},
+                status_code=422,
+            )
+        if request.url.path.startswith(("/api/people", "/api/meetups")):
+            return JSONResponse({"detail": "Invalid person or meetup data."}, status_code=422)
         return await request_validation_exception_handler(request, error)
 
     @application.middleware("http")

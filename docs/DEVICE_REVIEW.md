@@ -77,3 +77,17 @@ Latest UI approval, November 19: the user reports everything looks good after th
 
 
 Phase 3 acceptance, November 19: the user approves the revised UI, including the on-demand preferences/account menu and toast checkmark alignment. No new device/OS or VoiceOver result was supplied. Final-origin recovery also passes independently after the user confirms saving Auth URLs, closing Phase 3 alongside existing CI/hosted evidence. VoiceOver remains explicitly untested before private release; acceptance does not establish a new agent-observed real-device session.
+
+## Phase 5 backup and accessibility review
+
+Use the [protected Phase 5 Preview](https://i-love-people-p1ey31ju3-smooshy.vercel.app) for this review.
+
+On iPhone Safari and the installed Home Screen app, use a disposable account and synthetic records. With VoiceOver active, open Menu, find **Backups and data**, and check that names, fields, status updates and errors are read in order. Download a backup and find it in Files. Choose it again to hear the conflict with the existing library, then cancel. Use an empty disposable account for restore. Confirm the counts and timezone are read, restore succeeds, and the person and meetup note appear.
+
+Open **Delete all data**, confirm you can read its scope and cancel without changes, then verify that the password and typed confirmation have distinct labels. Complete deletion only with a disposable account. Check large text, keyboard presentation, focus when opening/closing Menu, and the light/dark appearance. Record the device, OS, deployment and actual results before private release.
+
+### Phase 5 device result — November 22, 2026
+
+The user reports a pass with VoiceOver active on an iPhone 16 Pro running iOS 27. Names, fields, status updates and errors were read in order. The downloaded backup appeared in Files. The user heard and canceled the existing-library conflict, then restored into an empty disposable account. VoiceOver read the counts and timezone, and the person and meetup notes appeared after restore.
+
+The user canceled delete-all first, then completed it on a disposable account using the password and typed confirmation. Text, keyboard presentation, focus when opening and closing Menu, and light and dark appearance worked. The report gives one iPhone result and leaves the Safari and Home Screen surfaces unspecified.

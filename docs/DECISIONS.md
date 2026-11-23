@@ -1,6 +1,6 @@
 # Decisions
 
-Updated November 19, 2026. The architecture entries define the selected direction. The foundation decisions below are implemented locally; hosted/provider behavior is still subject to phase acceptance.
+Updated November 22, 2026. These decisions define the project architecture and how it evolved. Current verification and release gates are in [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md).
 
 | Decision | Rationale and consequence |
 | --- | --- |
@@ -149,3 +149,19 @@ Phase 3 acceptance, November 19: combine existing application 97e40ea CI/hosted 
 Prototype a Cloudflare Workers Free Cron Trigger sending one HTTPS request to the existing Python API every five minutes. The cadence allows different account timezones and device quiet hours, with at most one successful daily receipt per subscription. At 288 scheduled invocations per day and one fetch per invocation the request volume is small. Cloudflare documents a 10 ms CPU cap per free Cron Trigger. Outbound waiting is separate from CPU. Vercel documents a 300-second Hobby function ceiling with Fluid Compute. The worker imposes a 50-second request deadline, and the Python job limits devices, provider network timeouts, database statements and retry count. The worker sends no payload beyond job authorization. [Cloudflare limits](https://developers.cloudflare.com/workers/platform/limits/) · [Vercel function limits](https://vercel.com/docs/functions/limitations)
 
 The scheduler route remains a candidate until a hosted trigger demonstrates the Worker runtime, protected invocation, Python dependencies, provider delivery, and actual usage within free quotas. Use distinct secrets for VAPID and the scheduler bearer. A timed-out push can be ambiguous because the provider may already have accepted the notification. The lease bounds concurrent retries, and the per-device receipt and stable notification tag reduce repeated delivery. The device can still miss delivery when its permission, network, browser or push provider is unavailable.
+
+### Worker runtime compatibility — November 21, 2026
+
+Cloudflare's hosted Cron Trigger initially invoked the worker with zero outbound subrequests. A local Wrangler scheduled invocation identified an unsupported redirect option before any network I/O. The worker now uses manual redirects and treats redirects as failed HTTP responses, which keeps the credentials on the configured Preview origin. The application Preview commit is independent of this Worker-only fix.
+
+A successful hosted Cloudflare invocation at 20:50 UTC on November 21 made one subrequest and dispatched to the protected Vercel job. The same invocation verified encrypted live browser delivery and revoked-endpoint cleanup. The trial schedule makes 288 invocations per day with one subrequest each. The hosted results support the Workers route for the protected trial. The iPhone acceptance and end-of-trial cleanup are tracked separately.
+
+The Phase 4 trial accepted the Cloudflare Workers to Vercel Python route on November 22 after the user received a scheduled Web Push in a closed iPhone Home Screen app and turned off permission. The protected Preview trial ended with an empty Cloudflare schedule and revoked trial access. Later release scheduling requires its own Preview-to-Production configuration and operating check.
+
+## Phase 5 recovery decisions — November 22, 2026
+
+Restore requires an empty library. This avoids guessing which duplicate names refer to the same person or overwriting edits. Preview shows the existing library conflict and timezone change, and changing the destination or reviewed file invalidates confirmation. An intentional replacement starts with a verified backup of the current library and a separate password-confirmed deletion.
+
+Backup version 1 carries portable business data. Auth sessions, provider identifiers, delivery history, device credentials and local appearance remain environment-specific. Restored IDs and revisions are rebuilt. The app builds the export snapshot and commits restore or deletion atomically. Generated contracts define the request and response boundary.
+
+Use a protected, serialized migration job followed by staging and explicit promotion of the same tested deployment. Preserve Preview isolation and keep database recovery distinct from Vercel code rollback.

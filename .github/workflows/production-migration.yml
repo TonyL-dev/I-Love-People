@@ -1,0 +1,34 @@
+name: Production migration
+on:
+  workflow_dispatch:
+permissions:
+  actions: read
+  contents: read
+concurrency:
+  group: ilp-production-schema
+  cancel-in-progress: false
+jobs:
+  migrate:
+    if: github.ref == 'refs/heads/main' && github.ref_protected
+    environment: production
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Verify checks passed for this main commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/actions/workflows/checks.yml/runs?head_sha=$GITHUB_SHA&branch=main&event=push&status=success" \
+            --jq '.workflow_runs | length' | awk '$1 > 0 {found=1} END {exit !found}'
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.13.9'
+      - run: uv sync --locked
+      - name: Apply and verify Alembic revision
+        env:
+          ILP_DATABASE_URL: ${{ secrets.ILP_MIGRATION_DATABASE_URL }}
+          ILP_EXPECTED_SUPABASE_REF: ${{ vars.ILP_PRODUCTION_SUPABASE_REF }}
+        run: uv run --locked python scripts/release_migrate.py

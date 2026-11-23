@@ -20,6 +20,207 @@
         "title": "AccountProfile",
         "type": "object"
       },
+      "Backup": {
+        "additionalProperties": false,
+        "properties": {
+          "meetups": {
+            "items": {
+              "$ref": "#/components/schemas/BackupMeetup"
+            },
+            "maxItems": 20000,
+            "title": "Meetups",
+            "type": "array"
+          },
+          "people": {
+            "items": {
+              "$ref": "#/components/schemas/BackupPerson"
+            },
+            "maxItems": 20000,
+            "title": "People",
+            "type": "array"
+          },
+          "timezone": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Timezone",
+            "type": "string"
+          },
+          "version": {
+            "const": 1,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "timezone",
+          "people",
+          "meetups"
+        ],
+        "title": "Backup",
+        "type": "object"
+      },
+      "BackupMeetup": {
+        "additionalProperties": false,
+        "properties": {
+          "completed_on": {
+            "format": "date",
+            "title": "Completed On",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "note": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Note",
+            "type": "string"
+          },
+          "person_id": {
+            "format": "uuid",
+            "title": "Person Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "completed_on",
+          "id",
+          "person_id"
+        ],
+        "title": "BackupMeetup",
+        "type": "object"
+      },
+      "BackupPerson": {
+        "additionalProperties": false,
+        "properties": {
+          "archived": {
+            "default": false,
+            "title": "Archived",
+            "type": "boolean"
+          },
+          "cadence_count": {
+            "anyOf": [
+              {
+                "maximum": 365.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cadence Count"
+          },
+          "cadence_unit": {
+            "anyOf": [
+              {
+                "enum": [
+                  "days",
+                  "weeks",
+                  "months"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cadence Unit"
+          },
+          "dismissed_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dismissed On"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "paused": {
+            "title": "Paused",
+            "type": "boolean"
+          },
+          "priority": {
+            "anyOf": [
+              {
+                "enum": [
+                  "closest",
+                  "close",
+                  "occasional",
+                  "distant"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority"
+          },
+          "snoozed_until": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snoozed Until"
+          }
+        },
+        "required": [
+          "name",
+          "id",
+          "paused",
+          "snoozed_until",
+          "dismissed_on"
+        ],
+        "title": "BackupPerson",
+        "type": "object"
+      },
+      "DeleteRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "confirmation": {
+            "const": "DELETE",
+            "title": "Confirmation",
+            "type": "string"
+          },
+          "password": {
+            "format": "password",
+            "maxLength": 1024,
+            "minLength": 1,
+            "title": "Password",
+            "type": "string",
+            "writeOnly": true
+          }
+        },
+        "required": [
+          "confirmation",
+          "password"
+        ],
+        "title": "DeleteRequest",
+        "type": "object"
+      },
       "DeviceStatus": {
         "properties": {
           "quiet_end": {
@@ -705,6 +906,63 @@
         "title": "ReadinessResponse",
         "type": "object"
       },
+      "RestorePreview": {
+        "properties": {
+          "current_people": {
+            "title": "Current People",
+            "type": "integer"
+          },
+          "current_timezone": {
+            "title": "Current Timezone",
+            "type": "string"
+          },
+          "meetups": {
+            "title": "Meetups",
+            "type": "integer"
+          },
+          "people": {
+            "title": "People",
+            "type": "integer"
+          },
+          "preview_token": {
+            "title": "Preview Token",
+            "type": "string"
+          },
+          "timezone": {
+            "title": "Timezone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "people",
+          "meetups",
+          "current_people",
+          "current_timezone",
+          "timezone",
+          "preview_token"
+        ],
+        "title": "RestorePreview",
+        "type": "object"
+      },
+      "RestoreRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "backup": {
+            "$ref": "#/components/schemas/Backup"
+          },
+          "preview_token": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Preview Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "backup",
+          "preview_token"
+        ],
+        "title": "RestoreRequest",
+        "type": "object"
+      },
       "UnavailableResponse": {
         "properties": {
           "detail": {
@@ -1278,6 +1536,156 @@
         "summary": "Edit Nudge",
         "tags": [
           "people"
+        ]
+      }
+    },
+    "/api/privacy/backup": {
+      "get": {
+        "operationId": "export_api_privacy_backup_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Backup"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Export",
+        "tags": [
+          "privacy"
+        ]
+      }
+    },
+    "/api/privacy/delete-all": {
+      "post": {
+        "operationId": "delete_api_privacy_delete_all_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete",
+        "tags": [
+          "privacy"
+        ]
+      }
+    },
+    "/api/privacy/restore": {
+      "post": {
+        "operationId": "restore_api_privacy_restore_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RestoreRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Restore",
+        "tags": [
+          "privacy"
+        ]
+      }
+    },
+    "/api/privacy/restore/preview": {
+      "post": {
+        "operationId": "preview_api_privacy_restore_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Backup"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestorePreview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Preview",
+        "tags": [
+          "privacy"
         ]
       }
     },

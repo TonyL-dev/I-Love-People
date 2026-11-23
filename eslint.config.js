@@ -10,6 +10,7 @@ export default tseslint.config(
       'node_modules/**',
       '.tools/**',
       '.venv/**',
+      'scheduler/.wrangler/**',
       'frontend/src/api/schema.d.ts',
       'artifacts/**',
       'test-results/**',
