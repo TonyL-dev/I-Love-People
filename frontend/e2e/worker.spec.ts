@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 const origin = 'http://127.0.0.1:4174';
 
-test('production worker caches only public bundles and requests a generic notification', async ({
+test('production worker caches only public bundles and displays optional names', async ({
   page,
   context,
 }) => {
@@ -23,36 +23,52 @@ test('production worker caches only public bundles and requests a generic notifi
     .find((candidate) => candidate.url() === origin + '/service-worker.js');
   expect(worker).toBeDefined();
   // Exercise the installed worker without depending on a native notification daemon in CI.
-  const notification = await worker!.evaluate(async () => {
+  const notifications = await worker!.evaluate(async () => {
     const registration = (self as unknown as { registration: ServiceWorkerRegistration })
       .registration;
     const original = registration.showNotification;
-    let notification:
-      { title: string; body: string | undefined; tag: string | undefined } | undefined;
+    const notifications: { title: string; body: string | undefined; tag: string | undefined }[] =
+      [];
     let work: Promise<unknown> | undefined;
     registration.showNotification = async (title, options) => {
-      notification = { title, body: options?.body, tag: options?.tag };
+      notifications.push({ title, body: options?.body, tag: options?.tag });
     };
     try {
-      self.dispatchEvent(
-        Object.assign(new Event('push'), {
-          data: { json: () => ({ name: 'Synthetic Maya', url: 'https://example.test/' }) },
-          waitUntil: (result: Promise<unknown>) => {
-            work = result;
-          },
-        }),
-      );
-      await work;
-      return notification;
+      for (const payload of [
+        { name: 'Synthetic Maya', url: 'https://example.test/' },
+        { type: 'catch-up', name: 'Synthetic  Maïa' },
+        null,
+      ]) {
+        self.dispatchEvent(
+          Object.assign(new Event('push'), {
+            data: {
+              json: () => {
+                if (payload === null) throw new SyntaxError('Synthetic malformed payload');
+                return payload;
+              },
+            },
+            waitUntil: (result: Promise<unknown>) => {
+              work = result;
+            },
+          }),
+        );
+        await work;
+      }
+      return notifications;
     } finally {
       registration.showNotification = original;
     }
   });
-  expect(notification).toEqual({
+  const generic = {
     title: 'I Love People',
     body: 'A little time to reconnect. Open I Love People when you have a moment.',
     tag: 'ilp-catch-up',
-  });
+  };
+  expect(notifications).toEqual([
+    generic,
+    { ...generic, body: 'A little time to reconnect with Synthetic Maïa.' },
+    generic,
+  ]);
 
   const manifest = await page.request.get(origin + '/manifest.webmanifest');
   expect(await manifest.json()).toMatchObject({ display: 'standalone', start_url: '/' });

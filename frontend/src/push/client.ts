@@ -5,7 +5,11 @@ export type DeviceStatus = components['schemas']['DeviceStatus'];
 type PushConfig = components['schemas']['PushConfig'];
 type Enrollment = components['schemas']['Enrollment'];
 
-export const defaultQuietHours: DeviceStatus = { quiet_start: 21 * 60, quiet_end: 9 * 60 };
+export const defaultDeviceSettings: DeviceStatus = {
+  quiet_start: 21 * 60,
+  quiet_end: 9 * 60,
+  show_name: false,
+};
 
 export function pushConfig(session: Session, signal: AbortSignal) {
   return pushRequest<PushConfig>(session, 'config', 'GET', undefined, signal);
@@ -23,11 +27,15 @@ export function pushStatus(session: Session, subscription: PushSubscription, sig
   );
 }
 
-export function saveDevice(session: Session, subscription: PushSubscription, hours: DeviceStatus) {
+export function saveDevice(
+  session: Session,
+  subscription: PushSubscription,
+  settings: DeviceStatus,
+) {
   const keys = subscription.toJSON().keys;
   if (!keys?.p256dh || !keys.auth) throw new Error('This browser returned incomplete settings.');
   const device: Enrollment = {
-    ...hours,
+    ...settings,
     endpoint: subscription.endpoint,
     p256dh: keys.p256dh,
     auth: keys.auth,

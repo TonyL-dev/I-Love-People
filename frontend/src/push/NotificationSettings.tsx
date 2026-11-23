@@ -3,7 +3,7 @@ import type { Session } from '../auth/client';
 import { Button } from '../ui/Button';
 import {
   applicationKey,
-  defaultQuietHours,
+  defaultDeviceSettings,
   disableDevice,
   pushConfig,
   pushStatus,
@@ -27,8 +27,12 @@ function minutes(value: string) {
   return hour * 60 + minute;
 }
 
-function displayHours(hours: DeviceStatus) {
-  return { start: formatTime(hours.quiet_start), end: formatTime(hours.quiet_end) };
+function displaySettings(settings: DeviceStatus) {
+  return {
+    start: formatTime(settings.quiet_start),
+    end: formatTime(settings.quiet_end),
+    showName: settings.show_name ?? false,
+  };
 }
 
 export function NotificationSettings({
@@ -43,7 +47,7 @@ export function NotificationSettings({
   busy: boolean;
 }) {
   const [device, setDevice] = useState<Device | null>(null);
-  const [hours, setHours] = useState(() => displayHours(defaultQuietHours));
+  const [settings, setSettings] = useState(() => displaySettings(defaultDeviceSettings));
   const [permission, setPermission] = useState(() =>
     'Notification' in window ? Notification.permission : 'default',
   );
@@ -73,7 +77,7 @@ export function NotificationSettings({
         publicKey: config?.public_key ?? null,
         enrolled: !!status,
       });
-      setHours(displayHours(status ?? defaultQuietHours));
+      setSettings(displaySettings(status ?? defaultDeviceSettings));
     }
     void load().catch(() => {
       if (!abort.signal.aborted) setError('Notification settings could not be loaded.');
@@ -111,8 +115,8 @@ export function NotificationSettings({
           applicationServerKey: key,
         }));
       setDevice({ ...device, subscription });
-      const saved = await saveDevice(session, subscription, defaultQuietHours);
-      setHours(displayHours(saved));
+      const saved = await saveDevice(session, subscription, defaultDeviceSettings);
+      setSettings(displaySettings(saved));
       setDevice({ ...device, subscription, enrolled: true });
       setNotice('Notifications are enabled on this device.');
     } catch {
@@ -124,10 +128,10 @@ export function NotificationSettings({
     }
   }
 
-  async function saveHours(event: FormEvent) {
+  async function saveSettings(event: FormEvent) {
     event.preventDefault();
     if (!device?.subscription || busy) return;
-    if (hours.start === hours.end) {
+    if (settings.start === settings.end) {
       setError('Choose different start and end times.');
       return;
     }
@@ -136,13 +140,14 @@ export function NotificationSettings({
     setNotice('');
     try {
       const saved = await saveDevice(session, device.subscription, {
-        quiet_start: minutes(hours.start),
-        quiet_end: minutes(hours.end),
+        quiet_start: minutes(settings.start),
+        quiet_end: minutes(settings.end),
+        show_name: settings.showName,
       });
-      setHours(displayHours(saved));
-      setNotice('Quiet hours saved.');
+      setSettings(displaySettings(saved));
+      setNotice('Notification settings saved.');
     } catch {
-      setError('Quiet hours could not be saved. Try again.');
+      setError('Notification settings could not be saved. Try again.');
     } finally {
       setBusy(false);
     }
@@ -173,9 +178,7 @@ export function NotificationSettings({
           in. On desktop, use your browser’s install option if available.
         </p>
       )}
-      <p className="secondary">
-        A reminder may appear while the app is closed. It won’t include names, priorities, or notes.
-      </p>
+      <p className="secondary">A reminder may appear while the app is closed.</p>
       {!supported ? (
         <p>
           {appleMobile
@@ -216,7 +219,7 @@ export function NotificationSettings({
         </>
       ) : null}
       {device?.enrolled && permission === 'granted' && device.publicKey && (
-        <form className="stack" onSubmit={(event) => void saveHours(event)}>
+        <form className="stack" onSubmit={(event) => void saveSettings(event)}>
           <p className="supporting secondary">
             Quiet hours follow your account timezone ({timezone}).
           </p>
@@ -224,22 +227,37 @@ export function NotificationSettings({
             Quiet hours start
             <input
               type="time"
-              value={hours.start}
+              value={settings.start}
               required
-              onChange={(event) => setHours({ ...hours, start: event.target.value })}
+              disabled={busy}
+              onChange={(event) => setSettings({ ...settings, start: event.target.value })}
             />
           </label>
           <label>
             Quiet hours end
             <input
               type="time"
-              value={hours.end}
+              value={settings.end}
               required
-              onChange={(event) => setHours({ ...hours, end: event.target.value })}
+              disabled={busy}
+              onChange={(event) => setSettings({ ...settings, end: event.target.value })}
             />
           </label>
+          <label className="checkbox-row">
+            <input
+              type="checkbox"
+              checked={settings.showName}
+              disabled={busy}
+              aria-describedby="notification-name-help"
+              onChange={(event) => setSettings({ ...settings, showName: event.target.checked })}
+            />
+            Show a name in reminders
+          </label>
+          <p id="notification-name-help" className="supporting secondary">
+            The name may appear on your lock screen.
+          </p>
           <Button className="self-start" type="submit" busy={busy}>
-            Save quiet hours
+            Save notification settings
           </Button>
         </form>
       )}

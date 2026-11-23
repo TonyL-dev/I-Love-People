@@ -32,18 +32,18 @@ async def exercise_push(
     assert database_url
     repo = PushRepository(database_url.get_secret_value())
 
-    async def due_person() -> str:
+    async def due_person(headers: dict[str, str], name: str, priority: str) -> str:
         person = await api.post(
             "/api/people",
-            headers=own,
-            json={"name": "Synthetic push Maya", "cadence_count": 1, "cadence_unit": "months"},
+            headers=headers,
+            json={"name": name, "priority": priority, "cadence_count": 1, "cadence_unit": "months"},
         )
         person.raise_for_status()
         pid = str(person.json()["id"])
         (
             await api.post(
                 f"/api/people/{pid}/meetups",
-                headers=own,
+                headers=headers,
                 json={"completed_on": "2020-01-31", "request_id": str(uuid4())},
             )
         ).raise_for_status()
@@ -56,7 +56,7 @@ async def exercise_push(
                 {"id": sessions[0][0]},
             )
 
-    pid = await due_person()
+    pid = await due_person(own, "Synthetic push Maya", "closest")
     private_key = ec.generate_private_key(ec.SECP256R1())
     scalar = private_key.private_numbers().private_value.to_bytes(32, "big")
     public = private_key.public_key().public_bytes(Encoding.X962, PublicFormat.UncompressedPoint)
@@ -93,7 +93,11 @@ async def exercise_push(
             assert invalid.status_code == 422 and "synthetic-private" not in invalid.text
             saved = await api.put("/api/push/device", headers=own, json=device)
             assert saved.status_code == 200
-            assert set(saved.json()) == {"quiet_start", "quiet_end"}
+            assert saved.json() == {
+                "quiet_start": device["quiet_start"],
+                "quiet_end": device["quiet_end"],
+                "show_name": False,
+            }
             assert (
                 await api.put("/api/push/device", headers=foreign, json=device)
             ).status_code == 409
@@ -135,9 +139,51 @@ async def exercise_push(
                 assert one.status_code == two.status_code == 200
                 assert one.json()["sent"] + two.json()["sent"] == 1
                 send.assert_called_once()
+                assert send.call_args.args[2] is None
                 await reset_check()
                 assert (await job()).json()["sent"] == 0
                 send.assert_called_once()
+
+            await due_person(own, "Synthetic push Aaron", "distant")
+            await due_person(foreign, "A foreign synthetic person", "closest")
+            named = {**device, "endpoint": endpoint["endpoint"] + "-named", "show_name": True}
+            named_endpoint = {"endpoint": named["endpoint"]}
+            assert (await api.put("/api/push/device", headers=own, json=named)).json()["show_name"]
+            assert (
+                await api.post("/api/push/status", headers=foreign, json=named_endpoint)
+            ).json() is None
+            legacy = {key: value for key, value in named.items() if key != "show_name"}
+            assert (await api.put("/api/push/device", headers=own, json=legacy)).json()["show_name"]
+            with patch.object(WebPushTransport, "send", return_value="sent") as send:
+                assert (await job()).json()["sent"] == 1
+                send.assert_called_once()
+                assert send.call_args.args[2] == "Synthetic push Maya"
+            assert (
+                await api.post("/api/push/unsubscribe", headers=own, json=named_endpoint)
+            ).status_code == 204
+            assert (await api.put("/api/push/device", headers=own, json=legacy)).json()[
+                "show_name"
+            ] is False
+            assert (
+                await api.post("/api/push/unsubscribe", headers=own, json=named_endpoint)
+            ).status_code == 204
+
+            opt_out = {**named, "endpoint": endpoint["endpoint"] + "-opt-out"}
+            assert (await api.put("/api/push/device", headers=own, json=opt_out)).json()[
+                "show_name"
+            ] is True
+            assert (
+                await api.put("/api/push/device", headers=own, json={**opt_out, "show_name": False})
+            ).json()["show_name"] is False
+            with patch.object(WebPushTransport, "send", return_value="sent") as send:
+                assert (await job()).json()["sent"] == 1
+                send.assert_called_once()
+                assert send.call_args.args[2] is None
+            assert (
+                await api.post(
+                    "/api/push/unsubscribe", headers=own, json={"endpoint": opt_out["endpoint"]}
+                )
+            ).status_code == 204
 
             await api.post("/api/push/unsubscribe", headers=own, json=endpoint)
             assert (await api.post("/api/push/status", headers=own, json=endpoint)).json() is None

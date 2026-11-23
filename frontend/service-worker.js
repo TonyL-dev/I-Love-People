@@ -88,10 +88,24 @@ self.addEventListener('fetch', (event) => {
   }
 });
 
+function reminderBody(data) {
+  const generic = 'A little time to reconnect. Open I Love People when you have a moment.';
+  try {
+    const payload = data?.json();
+    if (payload?.type === 'catch-up' && typeof payload.name === 'string') {
+      const name = payload.name.replace(/\s+/g, ' ').trim();
+      if (name && [...name].length <= 120) return `A little time to reconnect with ${name}.`;
+    }
+  } catch {
+    // Older or malformed payloads still produce a generic reminder.
+  }
+  return generic;
+}
+
 self.addEventListener('push', (event) => {
   event.waitUntil(
     self.registration.showNotification('I Love People', {
-      body: 'A little time to reconnect. Open I Love People when you have a moment.',
+      body: reminderBody(event.data),
       icon: '/icons/app-192.png',
       tag: 'ilp-catch-up',
     }),
