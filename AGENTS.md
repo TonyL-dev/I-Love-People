@@ -121,3 +121,5 @@ The `91a315f` follow-up keeps destructive controls legible during appearance cha
 The user reports the Phase 5 backup, conflict, restore and disposable-account deletion flows passed with VoiceOver on iPhone 16 Pro, iOS 27. [docs/DEVICE_REVIEW.md](docs/DEVICE_REVIEW.md) records the device evidence. Production rollout, owner-email recovery and measured usage remain open.
 
 Private rollout preflight verified Vercel sign-in on the stable Production URL after enabling All Deployments protection. Keep Production credentials separate from Preview and complete the gated migration and smoke checks before promotion. [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md) records the current rollout state.
+
+The user approved and Supabase created the separate $0/month Production project in Canada Central. Database availability and empty application state were verified, and Production-only Vercel public Auth settings were added. Complete the [Production Auth steps](docs/AUTH_SETUP.md#phase-5-private-production-setup) and [release workflow gates](docs/OPERATIONS.md#production-migration-and-promotion) before promotion.

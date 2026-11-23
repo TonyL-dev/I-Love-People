@@ -37,6 +37,12 @@ Vercel now reports **All Deployments** protection for `i-love-people`. An unauth
 
 Supabase shows one active project in the Smooshy Free organization and quoted $0 per month for the separate Production project. GitHub reports that `main` is unprotected and the `production` environment is absent. Draft review branches contain the release source. Database provisioning, protected release workflow setup and promotion are pending.
 
+### Production database provisioned — November 22, 2026
+
+After user approval at the quoted $0/month, Supabase created `i-love-people-production` (`bygwwazskivywtqhpsce`) in Smooshy, Canada Central. The project is `ACTIVE_HEALTHY`. A read-only query confirmed connectivity, zero Auth users, zero public application tables and no Alembic history. The project database measured 11,122,355 bytes. Vercel has Production-only settings for the Supabase URL, publishable key and environment.
+
+The new project's Auth settings endpoint reports email sign-in enabled, anonymous sign-ins disabled, and public signup enabled. Disable signup and configure the exact stable recovery URLs before promotion. Production database credentials, protected GitHub environment setup, Alembic, owner-email recovery, promotion and hosted smoke remain pending.
+
 ## Phase 1 evidence (historical) — November 18, 2026
 
 Login, logout, forgotten/reset-password, expired-session and recovery-error flows are implemented. Access tokens stay in tab memory; reload requires sign-in. Account preferences persist in an owner-scoped timezone profile. People and meetup persistence remain unimplemented.

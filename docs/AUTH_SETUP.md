@@ -84,3 +84,11 @@ Final-origin probe, November 19: the requested pfoktasn6 reset URL is still abse
 
 
 Final Auth configuration verified, November 19: the user confirms the Site URL `https://i-love-people-pfoktasn6-smooshy.vercel.app` and exact redirect `https://i-love-people-pfoktasn6-smooshy.vercel.app/reset-password` are saved. Independent disposable hosted Chrome recovery follows that exact destination, changes the password, rejects the old password and used link, and accepts replacement-password login. Account deletion/absence and temporary protection-access revocation passed. No email was sent; owner-inbox evidence remains the Phase 1 report. This closes the final Phase 3 Auth gate.
+
+## Phase 5 private Production setup
+
+The isolated [Production Supabase project](https://supabase.com/dashboard/project/bygwwazskivywtqhpsce) is ready. Its initial Auth settings expose email/password sign-in and allow public signup. Disable **Allow new users to sign up** in [Sign In / Providers](https://supabase.com/dashboard/project/bygwwazskivywtqhpsce/auth/providers), keep anonymous sign-ins off, and leave email/password enabled.
+
+In [Production URL Configuration](https://supabase.com/dashboard/project/bygwwazskivywtqhpsce/auth/url-configuration), set the Site URL to `https://i-love-people.vercel.app` and add the exact allowed redirect `https://i-love-people.vercel.app/reset-password`. Use [Production Authentication Users](https://supabase.com/dashboard/project/bygwwazskivywtqhpsce/auth/users) to create the owner account with a password entered directly in the dashboard. Verify real inbox recovery on the Production URL during the rollout.
+
+Use the [operating runbook](OPERATIONS.md#production-migration-and-promotion) for the Production database credential and migration gate.

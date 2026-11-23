@@ -45,3 +45,5 @@ The November 22, 2026 quota review projects $0 recurring hosting for a single pe
 Before promotion and monthly thereafter, record the review date, measured provider totals for the billing period, the plans, expected next-period use and actual charges. If usage approaches a free limit, reduce the schedule or pause the optional sender before enabling any paid plan. The quota estimate above establishes the target. Production dashboard totals and the first live release review are pending.
 
 On November 22, the Supabase connector showed one active project and the Preview database measured 12.2 MB before the Phase 5 migration. The Vercel billing endpoint returned `costs_not_found` for the reviewed date range. That response leaves the actual charge total unverified.
+
+The user's Supabase dashboard screenshot during rollout showed 0.01 GB egress, 28 MB database size and 61 monthly active users against limits of 5 GB, 500 MB and 50,000 respectively. The user subsequently approved the quoted $0/month for the separate Production project, which is now active. Final Production usage and billing review remains open.
