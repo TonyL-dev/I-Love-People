@@ -3,7 +3,7 @@ from base64 import urlsafe_b64decode
 from urllib.parse import SplitResult, urlsplit
 
 from cryptography.hazmat.primitives.asymmetric import ec
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, field_validator, model_validator
 
 
 def decode_key(value: str, size: int) -> bytes:
@@ -53,6 +53,7 @@ class Endpoint(BaseModel):
 class DeviceStatus(BaseModel):
     quiet_start: int = Field(ge=0, le=1439)
     quiet_end: int = Field(ge=0, le=1439)
+    show_name: StrictBool = False
 
     @model_validator(mode="after")
     def different_times(self) -> "DeviceStatus":

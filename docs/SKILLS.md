@@ -127,3 +127,5 @@ November 22 closure used the existing Wrangler OAuth session, Cloudflare schedul
 Supabase and Postgres guidance informed caller-scoped recovery, role grants, portable identifiers and transactional locking. React and full-flow verification guidance informed the existing drawer's file, conflict, password, error and status controls. Vercel deployment guidance informed the protected migration and staged release sequence. Browser, database, GitHub CI, hosted smoke and device evidence are tracked separately.
 
 Verified the exact CI-passed Preview with short-lived Vercel access, a real Chrome download/upload, and disposable Supabase accounts. Both production dependency audits passed. Verified removal of disposable rows and revoked temporary access. Used no new runtime dependencies.
+
+For the reset feedback follow-up, used the documented Supabase Auth error code and the existing real local Chrome/Auth recovery drill. The disposable user tried the current password first, heard actionable feedback, and retried successfully with the same recovery session. Local Supabase stopped after verification.

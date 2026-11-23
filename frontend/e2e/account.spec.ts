@@ -700,14 +700,20 @@ test('notification preferences require opt-in and sign-out turns off this device
       Promise.resolve(registration as unknown as ServiceWorkerRegistration);
   });
   const calls: string[] = [];
+  let savedSettings = { quiet_start: 1260, quiet_end: 540, show_name: false };
   await page.route('**/api/push/**', (route) => {
     const action = route.request().url().split('/').at(-1);
     if (action === 'config') return route.fulfill({ json: { public_key: 'AQ' } });
-    if (action === 'status') return route.fulfill({ json: { quiet_start: 1260, quiet_end: 540 } });
+    if (action === 'status') return route.fulfill({ json: savedSettings });
     calls.push(action ?? '');
     if (action === 'unsubscribe') return route.fulfill({ status: 204 });
-    const data = route.request().postDataJSON() as { quiet_start: number; quiet_end: number };
-    return route.fulfill({ json: { quiet_start: data.quiet_start, quiet_end: data.quiet_end } });
+    const { quiet_start, quiet_end, show_name } = route.request().postDataJSON() as {
+      quiet_start: number;
+      quiet_end: number;
+      show_name: boolean;
+    };
+    savedSettings = { quiet_start, quiet_end, show_name };
+    return route.fulfill({ json: savedSettings });
   });
   await page.goto('/');
   await signIn(page);
@@ -718,16 +724,21 @@ test('notification preferences require opt-in and sign-out turns off this device
   expect(calls).toEqual([]);
   await enable.click();
   await expect(scope.getByText('Enabled on this device.', { exact: true })).toBeVisible();
+  const showNames = scope.getByRole('checkbox', { name: 'Show a name in reminders' });
+  await expect(showNames).not.toBeChecked();
+  await expect(showNames).toHaveAccessibleDescription('The name may appear on your lock screen.');
+  await showNames.check();
   await scope.getByLabel('Quiet hours start').fill('22:00');
-  await scope.getByRole('button', { name: 'Save quiet hours' }).click();
-  await expect(scope.getByText('Quiet hours saved.')).toBeVisible();
+  await scope.getByRole('button', { name: 'Save notification settings' }).click();
+  await expect(scope.getByText('Notification settings saved.')).toBeVisible();
+  expect(savedSettings).toEqual({ quiet_start: 1320, quiet_end: 540, show_name: true });
   for (const [width, colorScheme] of [
     [390, 'light'],
     [1440, 'dark'],
   ] as const) {
     await page.setViewportSize({ width, height: 900 });
     await page.emulateMedia({ colorScheme });
-    await scope.getByRole('heading').scrollIntoViewIfNeeded();
+    await showNames.scrollIntoViewIfNeeded();
     await expect
       .poll(() => drawer.evaluate((node) => node.scrollWidth <= node.clientWidth))
       .toBe(true);
@@ -735,11 +746,22 @@ test('notification preferences require opt-in and sign-out turns off this device
       path: test.info().outputPath(`notifications-${width}-${colorScheme}.png`),
     });
   }
+  await page.keyboard.press('Escape');
+  await openAccountMenu(page);
+  await expect(showNames).toBeChecked();
+  await showNames.uncheck();
+  await scope.getByRole('button', { name: 'Save notification settings' }).click();
+  await expect(scope.getByText('Notification settings saved.')).toBeVisible();
+  expect(savedSettings).toEqual({ quiet_start: 1320, quiet_end: 540, show_name: false });
+  await page.keyboard.press('Escape');
+  await openAccountMenu(page);
+  await expect(scope.getByText('Enabled on this device.', { exact: true })).toBeVisible();
+  await expect(showNames).not.toBeChecked();
   await drawer.getByRole('button', { name: 'Sign out', exact: true }).click();
   await expect(
     drawer.getByRole('checkbox', { name: 'Turn off notifications on this device' }),
   ).toBeChecked();
   await drawer.getByRole('button', { name: 'Confirm sign out' }).click();
   await expect(page.getByRole('button', { name: 'Sign in', exact: true })).toBeVisible();
-  expect(calls).toEqual(['device', 'device', 'unsubscribe']);
+  expect(calls).toEqual(['device', 'device', 'device', 'unsubscribe']);
 });

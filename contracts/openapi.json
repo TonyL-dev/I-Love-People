@@ -234,6 +234,11 @@
             "minimum": 0.0,
             "title": "Quiet Start",
             "type": "integer"
+          },
+          "show_name": {
+            "default": false,
+            "title": "Show Name",
+            "type": "boolean"
           }
         },
         "required": [
@@ -291,6 +296,11 @@
             "minimum": 0.0,
             "title": "Quiet Start",
             "type": "integer"
+          },
+          "show_name": {
+            "default": false,
+            "title": "Show Name",
+            "type": "boolean"
           }
         },
         "required": [

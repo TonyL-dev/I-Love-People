@@ -1,6 +1,7 @@
 from base64 import urlsafe_b64encode
 from dataclasses import dataclass, field
 from http.client import HTTPException, HTTPSConnection
+from json import dumps
 from time import time
 from typing import Literal, Protocol
 from urllib.parse import urlunsplit
@@ -25,7 +26,7 @@ class Subscription:
 
 
 class PushTransport(Protocol):
-    def send(self, subscription: Subscription, ttl: int) -> Outcome: ...
+    def send(self, subscription: Subscription, ttl: int, name: str | None = None) -> Outcome: ...
 
 
 class WebPushTransport:
@@ -54,7 +55,7 @@ class WebPushTransport:
         except ValueError:
             return None
 
-    def send(self, subscription: Subscription, ttl: int) -> Outcome:
+    def send(self, subscription: Subscription, ttl: int, name: str | None = None) -> Outcome:
         try:
             url = push_url(subscription.endpoint)
             headers = self._vapid.sign(
@@ -75,7 +76,10 @@ class WebPushTransport:
                     "keys": {"p256dh": subscription.p256dh, "auth": subscription.auth},
                 }
             )
-            body = pusher.encode(b'{"type":"catch-up"}')["body"]
+            payload = {"type": "catch-up"}
+            if name is not None:
+                payload["name"] = name
+            body = pusher.encode(dumps(payload, separators=(",", ":")).encode())["body"]
         except Exception:
             # Library errors can contain endpoint or key material.
             return "failed"

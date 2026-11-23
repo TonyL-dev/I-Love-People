@@ -1,13 +1,22 @@
+from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, timedelta
 from uuid import UUID
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from sqlalchemy import Connection
 
-from ilp.people.due import advance
+from ilp.people.due import advance, due_rank
 from ilp.push.models import JobResult
 from ilp.push.repository import Device, PushRepository
 from ilp.push.transport import Outcome, PushTransport
+
+
+@dataclass(frozen=True)
+class EligibleReminder:
+    device: Device
+    day: date
+    ttl: int
+    name: str | None = field(default=None, repr=False)
 
 
 def send_window(device: Device, now: datetime) -> tuple[date, int | None]:
@@ -46,26 +55,45 @@ class PushJob:
                     break
                 self.repository.defer(db, device_id, 5)
                 eligible = self.eligible(db, device_id)
-                lease = self.repository.claim(db, device_id, eligible[1]) if eligible else None
+                lease = self.repository.claim(db, device_id, eligible.day) if eligible else None
             result.checked += 1
             if eligible and lease:
-                outcome = self.deliver(device_id, eligible[1], lease)
+                outcome = self.deliver(device_id, eligible.day, lease)
                 if outcome:
                     setattr(result, outcome, getattr(result, outcome) + 1)
         self.repository.prune()
         return result
 
-    def eligible(self, db: Connection, device_id: UUID) -> tuple[Device, date, int] | None:
+    def eligible(self, db: Connection, device_id: UUID) -> EligibleReminder | None:
         device = self.repository.active_device(db, device_id)
         if not device:
             return None
         day, ttl = send_window(device, datetime.now(UTC))
-        if ttl is None or not any(
-            advance(completed_on, count, unit) <= day
-            for count, unit, completed_on in self.repository.schedules(db, device.owner_id, day)
-        ):
+        if ttl is None:
             return None
-        return device, day, ttl
+        schedules = self.repository.schedules(db, device, day)
+        dated = (
+            (
+                schedule,
+                advance(schedule.completed_on, schedule.cadence_count, schedule.cadence_unit),
+            )
+            for schedule in schedules
+        )
+        due_now = ((schedule, due) for schedule, due in dated if due <= day)
+        if not device.show_name:
+            return EligibleReminder(device, day, ttl) if next(due_now, None) else None
+        first = min(
+            (
+                (
+                    due_rank(schedule.priority, due, schedule.name, str(schedule.person_id)),
+                    schedule.name,
+                )
+                for schedule, due in due_now
+                if schedule.name is not None
+            ),
+            default=None,
+        )
+        return EligibleReminder(device, day, ttl, first[1]) if first else None
 
     def deliver(self, device_id: UUID, day: date, lease: UUID) -> Outcome | None:
         with self.repository.transaction() as db:
@@ -73,12 +101,15 @@ class PushJob:
             eligible = self.eligible(db, device_id)
             if not self.repository.owns_lease(db, device_id, day, lease):
                 return None
-            if not eligible or eligible[1] != day:
+            if not eligible or eligible.day != day:
                 self.repository.finish(db, device_id, day, lease, "retry")
                 return None
-            device, _, ttl = eligible
             outcome = self.repository.finish(
-                db, device_id, day, lease, self.transport.send(device.subscription, ttl)
+                db,
+                device_id,
+                day,
+                lease,
+                self.transport.send(eligible.device.subscription, eligible.ttl, eligible.name),
             )
             if outcome == "retry":
                 self.repository.defer(db, device_id, 30)

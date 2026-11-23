@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from json import loads
 from secrets import token_bytes
 from uuid import uuid4
 
@@ -45,8 +46,9 @@ def test_quiet_hours_wrap_and_ttl_respects_the_dst_jump() -> None:
 @pytest.mark.parametrize(
     "status, outcome", [(201, "sent"), (410, "revoked"), (429, "retry"), (307, "failed")]
 )
+@pytest.mark.parametrize("name", [None, "Synthetic Maïa"])
 def test_web_push_encrypts_and_signs_without_redirecting(
-    monkeypatch: pytest.MonkeyPatch, status: int, outcome: str
+    monkeypatch: pytest.MonkeyPatch, status: int, outcome: str, name: str | None
 ) -> None:
     receiver = ec.generate_private_key(ec.SECP256R1())
     point = receiver.public_key().public_bytes(Encoding.X962, PublicFormat.UncompressedPoint)
@@ -70,7 +72,10 @@ def test_web_push_encrypts_and_signs_without_redirecting(
             plain = http_ece.decrypt(
                 body, private_key=receiver, auth_secret=auth, version="aes128gcm"
             )
-            assert plain == b'{"type":"catch-up"}'
+            expected = {"type": "catch-up"}
+            if name is not None:
+                expected["name"] = name
+            assert loads(plain) == expected
 
         def getresponse(self) -> "MockHTTPS":
             return self
@@ -89,4 +94,4 @@ def test_web_push_encrypts_and_signs_without_redirecting(
             pass
 
     monkeypatch.setattr("ilp.push.transport.HTTPSConnection", MockHTTPS)
-    assert transport.send(Subscription(endpoint, encode(point), encode(auth)), 60) == outcome
+    assert transport.send(Subscription(endpoint, encode(point), encode(auth)), 60, name) == outcome

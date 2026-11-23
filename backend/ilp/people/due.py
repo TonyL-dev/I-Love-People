@@ -63,10 +63,12 @@ def derive(person: Person, today: date) -> Person:
 
 
 def due_order(person: Person) -> tuple[int, int, date, str, str]:
-    return (
-        TIMING[person.timing],
-        PRIORITY[person.priority],
-        person.due_on or date.max,
-        person.name.casefold(),
-        str(person.id),
+    return TIMING[person.timing], *due_rank(
+        person.priority, person.due_on, person.name, str(person.id)
     )
+
+
+def due_rank(
+    priority: str | None, due: date | None, name: str, person_id: str
+) -> tuple[int, date, str, str]:
+    return PRIORITY[priority], due or date.max, name.casefold(), person_id

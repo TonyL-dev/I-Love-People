@@ -415,6 +415,11 @@ export interface components {
             quiet_end: number;
             /** Quiet Start */
             quiet_start: number;
+            /**
+             * Show Name
+             * @default false
+             */
+            show_name: boolean;
         };
         /** Endpoint */
         Endpoint: {
@@ -433,6 +438,11 @@ export interface components {
             quiet_end: number;
             /** Quiet Start */
             quiet_start: number;
+            /**
+             * Show Name
+             * @default false
+             */
+            show_name: boolean;
         };
         /** HTTPValidationError */
         HTTPValidationError: {

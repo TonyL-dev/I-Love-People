@@ -22,6 +22,17 @@ class Device:
     quiet_start: int
     quiet_end: int
     subscription: Subscription = field(repr=False)
+    show_name: bool = False
+
+
+@dataclass(frozen=True)
+class Schedule:
+    cadence_count: int
+    cadence_unit: str
+    completed_on: date
+    person_id: UUID
+    name: str | None = field(repr=False)
+    priority: str | None
 
 
 class EnrollmentConflict(Exception):
@@ -49,7 +60,7 @@ class PushRepository:
             row = (
                 db.execute(
                     text("""
-                    SELECT quiet_start, quiet_end FROM ilp_private.push_devices
+                    SELECT quiet_start, quiet_end, show_name FROM ilp_private.push_devices
                     WHERE owner_id = :owner AND endpoint_hash = :digest AND endpoint IS NOT NULL
                 """),
                     {"owner": account.owner_id, "digest": sha256(endpoint.encode()).digest()},
@@ -62,6 +73,7 @@ class PushRepository:
     def enroll(self, account: Identity, update: Enrollment) -> DeviceStatus:
         owner = account.owner_id
         digest = sha256(update.endpoint.encode()).digest()
+        name_setting = update.show_name if "show_name" in update.model_fields_set else None
         with self.transaction() as db:
             # Serialize the per-owner device limit and enrollment.
             db.execute(
@@ -82,18 +94,25 @@ class PushRepository:
                     text("""
                     INSERT INTO ilp_private.push_devices
                         (owner_id, endpoint_hash, endpoint, p256dh, auth_secret,
-                         quiet_start, quiet_end)
-                    VALUES (:owner, :digest, :endpoint, :p256dh, :auth, :quiet_start, :quiet_end)
+                         quiet_start, quiet_end, show_name)
+                    VALUES (:owner, :digest, :endpoint, :p256dh, :auth, :quiet_start, :quiet_end,
+                            COALESCE(:show_name, false))
                     ON CONFLICT (endpoint_hash) DO UPDATE SET
                         endpoint = EXCLUDED.endpoint, p256dh = EXCLUDED.p256dh,
                         auth_secret = EXCLUDED.auth_secret,
                         next_check = CASE WHEN push_devices.endpoint IS NULL THEN now()
                             ELSE push_devices.next_check END,
-                        quiet_start = EXCLUDED.quiet_start, quiet_end = EXCLUDED.quiet_end
+                        quiet_start = EXCLUDED.quiet_start, quiet_end = EXCLUDED.quiet_end,
+                        show_name = COALESCE(:show_name, push_devices.show_name)
                     WHERE push_devices.owner_id = EXCLUDED.owner_id
-                    RETURNING quiet_start, quiet_end
+                    RETURNING quiet_start, quiet_end, show_name
                 """),
-                    {**update.model_dump(), "owner": owner, "digest": digest},
+                    {
+                        **update.model_dump(),
+                        "show_name": name_setting,
+                        "owner": owner,
+                        "digest": digest,
+                    },
                 )
                 .mappings()
                 .one_or_none()
@@ -108,7 +127,8 @@ class PushRepository:
             db.execute(
                 text("""
                     UPDATE ilp_private.push_devices
-                    SET endpoint = NULL, p256dh = NULL, auth_secret = NULL, next_check = now()
+                    SET endpoint = NULL, p256dh = NULL, auth_secret = NULL,
+                        show_name = false, next_check = now()
                     WHERE owner_id = :owner AND endpoint_hash = :digest AND endpoint IS NOT NULL
                 """),
                 {"owner": account.owner_id, "digest": sha256(endpoint.encode()).digest()},
@@ -136,7 +156,8 @@ class PushRepository:
         row = db.execute(
             text("""
                 SELECT d.id, d.owner_id, d.endpoint, d.p256dh, d.auth_secret,
-                       d.quiet_start, d.quiet_end, coalesce(p.timezone, 'UTC') AS timezone
+                       d.quiet_start, d.quiet_end, d.show_name,
+                       coalesce(p.timezone, 'UTC') AS timezone
                 FROM ilp_private.push_devices d
                 JOIN auth.users u ON u.id = d.owner_id
                 LEFT JOIN public.profiles p ON p.owner_id = d.owner_id
@@ -155,14 +176,15 @@ class PushRepository:
             row.quiet_start,
             row.quiet_end,
             Subscription(row.endpoint, row.p256dh, row.auth_secret),
+            row.show_name,
         )
 
-    def schedules(
-        self, db: Connection, owner: UUID, today: date
-    ) -> Iterator[tuple[int, str, date]]:
+    def schedules(self, db: Connection, device: Device, today: date) -> Iterator[Schedule]:
         rows = db.execute(
             text("""
-                SELECT p.cadence_count, p.cadence_unit, latest.completed_on
+                SELECT p.cadence_count, p.cadence_unit, latest.completed_on, p.id,
+                       CASE WHEN :show_name THEN p.name END,
+                       CASE WHEN :show_name THEN p.priority END
                 FROM public.people p
                 CROSS JOIN LATERAL (
                     SELECT completed_on FROM public.meetups m
@@ -174,9 +196,10 @@ class PushRepository:
                     AND p.dismissed_on IS DISTINCT FROM :today
                     AND (p.snoozed_until IS NULL OR p.snoozed_until <= :today)
             """),
-            {"owner": owner, "today": today},
+            {"owner": device.owner_id, "today": today, "show_name": device.show_name},
         )
-        yield from rows.tuples()
+        for row in rows.tuples():
+            yield Schedule(*row)
 
     def claim(self, db: Connection, device: UUID, day: date) -> UUID | None:
         return db.execute(
@@ -227,7 +250,7 @@ class PushRepository:
                 text("""
                     UPDATE ilp_private.push_devices
                     SET endpoint = NULL, p256dh = NULL, auth_secret = NULL,
-                        endpoint_hash = NULL, next_check = now()
+                        endpoint_hash = NULL, show_name = false, next_check = now()
                     WHERE id = :id
                 """),
                 {"id": device},
