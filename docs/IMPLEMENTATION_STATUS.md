@@ -73,6 +73,8 @@ Local source checks, database checks, and real Chrome/Supabase rejection and ret
 
 Vercel promoted deployment `dpl_3eVKdtxV7XamHkhTXJ8kTHf4C6z6` to the [stable Production URL](https://i-love-people.vercel.app/). The stable alias, reset page, updated JavaScript, Production Auth origin/CSP, health, readiness, no-store and unauthenticated Vercel sign-in redirect passed. The previous rollout deployment `dpl_9eugLkh2HrsruVpCbsmMqcX7xqYM` is the current rollback target. Owner replacement-password sign-in and the signed-in stable meetup smoke remain pending.
 
+The owner subsequently reported that password recovery works after the fix. Replacement-password sign-in followed by the sample meetup journey on the stable Production URL still needs explicit confirmation.
+
 ## Phase 1 evidence (historical) — November 18, 2026
 
 Login, logout, forgotten/reset-password, expired-session and recovery-error flows are implemented. Access tokens stay in tab memory; reload requires sign-in. Account preferences persist in an owner-scoped timezone profile. People and meetup persistence remain unimplemented.

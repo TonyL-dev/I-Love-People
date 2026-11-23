@@ -133,3 +133,5 @@ The user reports passing the staged disposable-account meetup smoke and removing
 During Production recovery, the user reported generic feedback when reusing the current password. The reset client maps Supabase Auth's `same_password` code to a clear inline message and allows retry on the same form. Verify the local managed Auth regression and the protected release before asking the owner to retry.
 
 The reset fix passed actual local Auth recovery, both Linux jobs and a staged Chrome regression. Vercel promoted the verified build, and its stable protected HTTP checks passed. The owner can retry a real password change and complete the signed-in stable smoke.
+
+The owner reports that the updated password reset works. Confirm the signed-in meetup smoke on the stable Production URL before closing Phase 5.
