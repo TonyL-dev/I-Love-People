@@ -92,3 +92,5 @@ The isolated [Production Supabase project](https://supabase.com/dashboard/projec
 In [Production URL Configuration](https://supabase.com/dashboard/project/bygwwazskivywtqhpsce/auth/url-configuration), set the Site URL to `https://i-love-people.vercel.app` and add the exact allowed redirect `https://i-love-people.vercel.app/reset-password`. Use [Production Authentication Users](https://supabase.com/dashboard/project/bygwwazskivywtqhpsce/auth/users) to create the owner account with a password entered directly in the dashboard. Verify real inbox recovery on the Production URL during the rollout.
 
 Use the [operating runbook](OPERATIONS.md#production-migration-and-promotion) for the Production database credential and migration gate.
+
+During recovery, submitting the current password leaves the reset form available and shows “Choose a password different from your current one.” Enter a different password in both fields and try again. If the recovery session expired, request a fresh link from the stable site.

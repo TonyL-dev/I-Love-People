@@ -69,6 +69,10 @@ The Production database measured 11,908,787 bytes. Current Supabase Free and Ver
 
 During the Production recovery check, the user reported a generic message after trying to reuse the current password. The reset client now maps the managed Auth `same_password` response to an instruction to choose a different password while keeping the reset form available. The real local Auth browser drill covers rejected reuse followed by a successful retry. Final hosted confirmation and the owner retry are tracked below.
 
+Local source checks, database checks, and real Chrome/Supabase rejection and retry passed. [Both Linux CI jobs](https://github.com/TonyL-dev/I-Love-People/actions/runs/45092203478) passed on protected `main` commit `6f3439c`. Protected staging commit `01ea36e` adds only the Production CSP substitution. Its hosted Chrome test used controlled Auth responses to verify that the deployed bundle announces the rejection and accepts a retry in the same form. Temporary staging access was revoked.
+
+Vercel promoted deployment `dpl_3eVKdtxV7XamHkhTXJ8kTHf4C6z6` to the [stable Production URL](https://i-love-people.vercel.app/). The stable alias, reset page, updated JavaScript, Production Auth origin/CSP, health, readiness, no-store and unauthenticated Vercel sign-in redirect passed. The previous rollout deployment `dpl_9eugLkh2HrsruVpCbsmMqcX7xqYM` is the current rollback target. Owner replacement-password sign-in and the signed-in stable meetup smoke remain pending.
+
 ## Phase 1 evidence (historical) — November 18, 2026
 
 Login, logout, forgotten/reset-password, expired-session and recovery-error flows are implemented. Access tokens stay in tab memory; reload requires sign-in. Account preferences persist in an owner-scoped timezone profile. People and meetup persistence remain unimplemented.

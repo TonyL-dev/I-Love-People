@@ -131,3 +131,5 @@ The user approved the migration and run `45089722419` passed. Production is at A
 The user reports passing the staged disposable-account meetup smoke and removing the account. Production query results confirmed one confirmed account and zero people and meetups. Vercel promoted the tested `802f8cf` deployment to the protected stable Production URL. Stable HTTP smoke and the dashboard quota review passed. Owner-email recovery and signed-in smoke on the stable origin remain open.
 
 During Production recovery, the user reported generic feedback when reusing the current password. The reset client maps Supabase Auth's `same_password` code to a clear inline message and allows retry on the same form. Verify the local managed Auth regression and the protected release before asking the owner to retry.
+
+The reset fix passed actual local Auth recovery, both Linux jobs and a staged Chrome regression. Vercel promoted the verified build, and its stable protected HTTP checks passed. The owner can retry a real password change and complete the signed-in stable smoke.
