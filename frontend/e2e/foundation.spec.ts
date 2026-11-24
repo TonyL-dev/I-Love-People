@@ -135,7 +135,7 @@ for (const appearance of ['light', 'dark']) {
       expect(results.violations).toEqual([]);
       expect(
         await page
-          .locator('dialog')
+          .getByRole('dialog', { name: 'A little time with Maya Chen' })
           .evaluate((element) => element.scrollWidth <= element.clientWidth),
       ).toBe(true);
       await page.screenshot({

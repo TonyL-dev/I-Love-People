@@ -172,6 +172,7 @@ test('the overlay blocks the drawer until every pending API request finishes', a
   );
   releaseSave?.();
   await saved;
+  await expect(page.locator('#account-menu .toast')).toContainText('Timezone saved.');
   await expect(overlay).toBeVisible();
   releaseRefresh?.();
   await expect(overlay).toBeHidden();
