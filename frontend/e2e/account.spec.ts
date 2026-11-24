@@ -326,16 +326,23 @@ async function expectToastAlignment(page: Page) {
     const icon = message.querySelector('svg')!.getBoundingClientRect();
     const text = message.querySelector('span')!.getBoundingClientRect();
     const button = message.parentElement!.querySelector('button')!;
+    const target = button.getBoundingClientRect();
     const dismiss = button.querySelector('svg')!.getBoundingClientRect();
+    const toast = message.parentElement!.getBoundingClientRect();
+    const lineHeight = parseFloat(getComputedStyle(message).lineHeight);
     return {
       iconRight: icon.right,
       textLeft: text.left,
-      buttonHeight: button.getBoundingClientRect().height,
-      buttonWidth: button.getBoundingClientRect().width,
+      buttonHeight: target.height,
+      buttonWidth: target.width,
       dismissDifference: Math.abs(dismiss.y + dismiss.height / 2 - icon.y - icon.height / 2),
-      centerDifference: Math.abs(
-        icon.y + icon.height / 2 - text.y - parseFloat(getComputedStyle(message).lineHeight) / 2,
-      ),
+      centerDifference: Math.abs(icon.y + icon.height / 2 - text.y - lineHeight / 2),
+      dismissOffsetX: Math.abs(dismiss.x + dismiss.width / 2 - target.x - target.width / 2),
+      dismissOffsetY: Math.abs(dismiss.y + dismiss.height / 2 - target.y - target.height / 2),
+      singleLineTargetOffset:
+        text.height <= lineHeight
+          ? Math.abs(target.y + target.height / 2 - toast.y - toast.height / 2)
+          : 0,
     };
   });
   expect(alignment.iconRight).toBeLessThan(alignment.textLeft);
@@ -343,6 +350,9 @@ async function expectToastAlignment(page: Page) {
   expect(alignment.dismissDifference).toBeLessThan(2);
   expect(alignment.buttonHeight).toBeGreaterThanOrEqual(44);
   expect(alignment.buttonWidth).toBeGreaterThanOrEqual(44);
+  expect(alignment.dismissOffsetX).toBeLessThan(1);
+  expect(alignment.dismissOffsetY).toBeLessThan(1);
+  expect(alignment.singleLineTargetOffset).toBeLessThan(1);
 }
 
 test('login, account preferences, reload and logout clear private UI and credential storage', async ({

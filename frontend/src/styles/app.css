@@ -820,6 +820,7 @@ html:has(.loading-overlay[open]) {
 }
 
 .toast {
+  --toast-dismiss-height: max(44px, var(--line-body));
   position: fixed;
   z-index: 20;
   bottom: max(var(--space-4), env(safe-area-inset-bottom));
@@ -841,21 +842,16 @@ html:has(.loading-overlay[open]) {
 }
 
 .toast .button {
-  position: relative;
   padding: 0;
   min-width: 44px;
-  min-height: max(44px, var(--line-body));
-}
-
-.toast .button > svg {
-  position: absolute;
-  top: calc((var(--line-body) - 20px) / 2);
+  min-height: var(--toast-dismiss-height);
 }
 
 .toast__message {
   display: grid;
   grid-template-columns: 24px minmax(0, 1fr);
   gap: min(var(--space-2), 8px);
+  padding-block-start: calc((var(--toast-dismiss-height) - var(--line-body)) / 2);
 }
 
 .toast__message > svg {
