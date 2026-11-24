@@ -16,6 +16,30 @@ function backupCounts({ people, meetups }: Preview) {
   return `${peopleCount(people)} and ${meetups} ${meetups === 1 ? 'meetup' : 'meetups'}`;
 }
 
+function hasDuplicateNames(backup: unknown) {
+  if (
+    !backup ||
+    typeof backup !== 'object' ||
+    !('people' in backup) ||
+    !Array.isArray(backup.people)
+  )
+    return false;
+  const names = new Set<string>();
+  for (const person of backup.people as unknown[]) {
+    if (
+      !person ||
+      typeof person !== 'object' ||
+      !('name' in person) ||
+      typeof person.name !== 'string'
+    )
+      continue;
+    const name = person.name.trim();
+    if (names.has(name)) return true;
+    names.add(name);
+  }
+  return false;
+}
+
 export function PrivacySettings({
   session,
   onChanged,
@@ -97,6 +121,18 @@ export function PrivacySettings({
       if (file.size > backupLimit) throw new AccountError(413, '');
       const contents = await file.text();
       if (!isCurrent()) return;
+      let backup: unknown;
+      try {
+        backup = JSON.parse(contents);
+      } catch {
+        throw new AccountError(422, '');
+      }
+      if (hasDuplicateNames(backup)) {
+        setError(
+          'This backup contains duplicate person names. Give each person a unique name before restoring.',
+        );
+        return;
+      }
       const preview = (await request('restore/preview', contents)) as Preview;
       if (isCurrent()) setReview({ file: contents, preview });
     }, 'Your backup could not be reviewed. Choose the file again.');

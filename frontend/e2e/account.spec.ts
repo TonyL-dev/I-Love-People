@@ -203,13 +203,14 @@ test('backup review, conflict, download and password confirmation work on a phon
   await mockAccount(page);
   const backup = { version: 1, timezone: 'America/Toronto', people: [], meetups: [] };
   let currentPeople = 1;
+  let previewRequests = 0;
   let deletionAttempts = 0;
   await page.route('**/api/privacy/**', async (route) => {
     expect(route.request().headers().authorization).toBe('Bearer synthetic-access');
     const url = route.request().url();
     if (url.endsWith('/backup')) return route.fulfill({ json: backup });
     if (url.endsWith('/preview')) {
-      if (route.request().postData() === 'invalid') return route.fulfill({ status: 422, json: {} });
+      previewRequests++;
       expect(route.request().postDataJSON()).toEqual(backup);
       return route.fulfill({
         json: {
@@ -261,6 +262,29 @@ test('backup review, conflict, download and password confirmation work on a phon
     });
   await upload('invalid');
   await expect(privacy.getByRole('alert')).toContainText('unsupported format');
+  const backupPerson = {
+    id: owner,
+    name: 'Synthetic Maya',
+    priority: null,
+    cadence_count: null,
+    cadence_unit: null,
+    archived: false,
+    paused: false,
+    snoozed_until: null,
+    dismissed_on: null,
+  };
+  await upload(
+    JSON.stringify({
+      ...backup,
+      people: [
+        backupPerson,
+        { ...backupPerson, id: '22222222-2222-4222-8222-222222222222', archived: true },
+      ],
+    }),
+  );
+  await expect(privacy.getByRole('alert')).toContainText('duplicate person names');
+  expect(previewRequests).toBe(0);
+  await expect(privacy.getByRole('button', { name: 'Restore backup' })).toHaveCount(0);
   await upload(JSON.stringify(backup));
   await expect(privacy.getByText('Restore requires an empty library.')).toBeVisible();
   await expect(privacy.getByRole('button', { name: 'Restore backup' })).toHaveCount(0);
@@ -584,6 +608,64 @@ const nudgePerson = {
   suppression: null,
   reason: 'Last meetup 2020-02-29; every 2 weeks; catch-up date 2020-03-14',
 };
+
+test('person names are checked against active and archived entries before a write', async ({
+  page,
+}) => {
+  await mockAccount(page);
+  const archived = {
+    ...nudgePerson,
+    id: '22222222-2222-4222-8222-222222222222',
+    name: 'Synthetic Jo',
+    archived: true,
+  };
+  const people = [nudgePerson, archived];
+  const writes: string[] = [];
+  await page.route('**/api/people', (route) => {
+    if (route.request().method() === 'GET') return route.fulfill({ json: people });
+    const { name } = route.request().postDataJSON() as { name: string };
+    writes.push(name);
+    const saved = { ...nudgePerson, name, id: '33333333-3333-4333-8333-333333333333' };
+    people.push(saved);
+    return route.fulfill({ json: saved });
+  });
+  await page.route('**/api/people/*/meetups', (route) => route.fulfill({ json: [] }));
+  await page.route(`**/api/people/${owner}`, (route) => {
+    const { name } = route.request().postDataJSON() as { name: string };
+    writes.push(name);
+    return route.fulfill({ json: nudgePerson });
+  });
+  await page.goto('/');
+  await signIn(page);
+  await page.getByRole('button', { name: 'Add person', exact: true }).click();
+  const form = page.getByRole('dialog', { name: /^(Add|Edit) person$/ });
+  const name = form.getByRole('textbox', { name: 'Name', exact: true });
+  const save = form.getByRole('button', { name: 'Save person' });
+  await name.fill('  Synthetic Maya  ');
+  await save.click();
+  await expect(name).toHaveAccessibleDescription(
+    'A person already has this name. Choose a different name.',
+  );
+  await name.fill('Synthetic Jo');
+  await save.click();
+  await expect(form.getByRole('alert')).toContainText('An archived person already has this name');
+  expect(writes).toEqual([]);
+
+  await name.fill('  synthetic maya  ');
+  await save.click();
+  await expect(form).toBeHidden();
+  expect(writes).toEqual(['synthetic maya']);
+  await page.getByRole('button', { name: 'Synthetic Maya', exact: true }).click();
+  await page.getByRole('button', { name: 'Edit person', exact: true }).click();
+  await name.fill('Synthetic Jo');
+  await save.click();
+  await expect(form.getByRole('alert')).toContainText('An archived person already has this name');
+  expect(writes).toEqual(['synthetic maya']);
+  await name.fill('Synthetic Maya');
+  await save.click();
+  await expect(form).toBeHidden();
+  expect(writes).toEqual(['synthetic maya', 'Synthetic Maya']);
+});
 
 test('library navigation, person focus and back preserve mobile context', async ({ page }) => {
   test.setTimeout(90_000);

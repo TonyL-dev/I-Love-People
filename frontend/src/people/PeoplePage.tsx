@@ -31,13 +31,15 @@ function today(timezone: string) {
 
 function PersonEditor({
   person,
+  people,
   session,
   done,
   close,
 }: {
   person: Person | null;
+  people: Person[];
   session: Session;
-  done: (message: string) => void;
+  done: (saved: Person) => void;
   close: () => void;
 }) {
   const [draft, setDraft] = useState<PersonInput>(
@@ -52,6 +54,7 @@ function PersonEditor({
       : blank,
   );
   const [busy, setBusy] = useState(false);
+  const [nameError, setNameError] = useState('');
   const [error, setError] = useState('');
   const suggestion = levels.find((l) => l[0] === draft.priority);
   return (
@@ -67,18 +70,28 @@ function PersonEditor({
         onSubmit={(e) => {
           e.preventDefault();
           if (busy) return;
-          setBusy(true);
           setError('');
-          void journal(
+          const name = draft.name.trim();
+          const duplicate = people.find(
+            (entry) => entry.id !== person?.id && entry.name.trim() === name,
+          );
+          if (duplicate) {
+            setNameError(
+              duplicate.archived
+                ? 'An archived person already has this name. Choose a different name.'
+                : 'A person already has this name. Choose a different name.',
+            );
+            return;
+          }
+          setNameError('');
+          setBusy(true);
+          void journal<Person>(
             session,
             person ? `people/${person.id}` : 'people',
             person ? 'PUT' : 'POST',
-            { ...draft, ...(person ? { revision: person.revision } : {}) },
+            { ...draft, name, ...(person ? { revision: person.revision } : {}) },
           )
-            .then(
-              () => done(person ? 'Person saved.' : 'Person added.'),
-              (e) => setError(failureMessage(e)),
-            )
+            .then(done, (e) => setError(failureMessage(e)))
             .finally(() => setBusy(false));
         }}
       >
@@ -87,10 +100,20 @@ function PersonEditor({
           <input
             required
             maxLength={120}
+            aria-invalid={nameError ? true : undefined}
+            aria-describedby={nameError ? 'person-name-error' : undefined}
             value={draft.name}
-            onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+            onChange={(e) => {
+              setDraft({ ...draft, name: e.target.value });
+              setNameError('');
+            }}
           />
         </label>
+        {nameError && (
+          <p id="person-name-error" role="alert" className="error-text">
+            {nameError}
+          </p>
+        )}
         <label htmlFor="person-priority">
           Private priority
           <select
@@ -405,6 +428,7 @@ export function PeoplePage({
       <div className="actions">
         <Button
           variant="primary"
+          disabled={!people}
           onClick={() => {
             setView('people');
             setSelected(null);
@@ -611,8 +635,22 @@ export function PeoplePage({
           )}
         </section>
       )}
-      {editor === 'person' && (
-        <PersonEditor person={editingPerson} session={session} done={done} close={closeEditor} />
+      {editor === 'person' && people && (
+        <PersonEditor
+          person={editingPerson}
+          people={people}
+          session={session}
+          done={(saved) => {
+            setPeople((current) => {
+              if (!current) return current;
+              return current.some((entry) => entry.id === saved.id)
+                ? current.map((entry) => (entry.id === saved.id ? saved : entry))
+                : [...current, saved];
+            });
+            done(editingPerson ? 'Person saved.' : 'Person added.');
+          }}
+          close={closeEditor}
+        />
       )}
       {editor === 'meetup' && person && (
         <MeetupEditor
