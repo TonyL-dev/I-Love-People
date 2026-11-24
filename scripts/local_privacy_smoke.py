@@ -9,7 +9,7 @@ import httpx
 from backup_smoke import exercise_backup
 from ilp.infrastructure.settings import get_settings
 from ilp.main import create_app
-from local_auth_smoke import AUTH_URL, cleanup_synthetic_data
+from local_auth_smoke import AUTH_URL, MAIL_URL, cleanup_synthetic_data, register
 from local_services import status
 from people_smoke import exercise_people
 from push_smoke import exercise_push
@@ -26,6 +26,7 @@ async def exercise(
     admin_headers: dict[str, str] | None = None,
     check_password_policy: bool = False,
     check_push: bool = False,
+    local_signup: bool = False,
 ) -> None:
     public = {"apikey": public_key}
     admin = admin_headers or {**public, "Authorization": "Bearer " + admin_key}
@@ -35,14 +36,19 @@ async def exercise(
             email = f"ilp-privacy-{uuid.uuid4().hex[:12]}@example.test"
             emails.add(email)
             password = secrets.token_urlsafe(32) + "aA1"
-            created = auth.post(
-                "/admin/users",
-                headers=admin,
-                json={"email": email, "password": password, "email_confirm": True},
-            )
-            created.raise_for_status()
-            owner = str(created.json()["id"])
-            ids.append(owner)
+            if local_signup:
+                assert auth_url == AUTH_URL
+                with httpx.Client(base_url=MAIL_URL, timeout=10, trust_env=False) as mail:
+                    owner = register(auth, mail, email, password, public, ids)
+            else:
+                created = auth.post(
+                    "/admin/users",
+                    headers=admin,
+                    json={"email": email, "password": password, "email_confirm": True},
+                )
+                created.raise_for_status()
+                owner = str(created.json()["id"])
+                ids.append(owner)
             signed = auth.post(
                 "/token?grant_type=password",
                 headers=public,
@@ -190,7 +196,14 @@ def main() -> int:
             "Authorization": "Bearer " + local["SERVICE_ROLE_KEY"],
         }
         asyncio.run(
-            exercise(local["ANON_KEY"], local["SERVICE_ROLE_KEY"], ids, emails, check_push=True)
+            exercise(
+                local["ANON_KEY"],
+                local["SERVICE_ROLE_KEY"],
+                ids,
+                emails,
+                check_push=True,
+                local_signup=True,
+            )
         )
         print(
             "Two-user API ownership/RLS, anonymous denial, logout-token rejection "

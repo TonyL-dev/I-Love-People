@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import type { Session } from '../auth/client';
 import { Button } from '../ui/Button';
+import { Loading } from '../ui/Loading';
 import {
   applicationKey,
   defaultDeviceSettings,
@@ -40,11 +41,13 @@ export function NotificationSettings({
   timezone,
   setBusy,
   busy,
+  notify,
 }: {
   session: Session;
   timezone: string;
   setBusy: (busy: boolean) => void;
   busy: boolean;
+  notify: (message: string) => void;
 }) {
   const [device, setDevice] = useState<Device | null>(null);
   const [settings, setSettings] = useState(() => displaySettings(defaultDeviceSettings));
@@ -52,7 +55,6 @@ export function NotificationSettings({
     'Notification' in window ? Notification.permission : 'default',
   );
   const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
   const [reload, setReload] = useState(0);
   const standalone =
     window.matchMedia('(display-mode: standalone)').matches ||
@@ -97,7 +99,6 @@ export function NotificationSettings({
     if (!device?.registration?.active || !device.publicKey || busy) return;
     setBusy(true);
     setError('');
-    setNotice('');
     try {
       const key = applicationKey(device.publicKey);
       if (device.subscription?.options.applicationServerKey) {
@@ -118,7 +119,7 @@ export function NotificationSettings({
       const saved = await saveDevice(session, subscription, defaultDeviceSettings);
       setSettings(displaySettings(saved));
       setDevice({ ...device, subscription, enrolled: true });
-      setNotice('Notifications are enabled on this device.');
+      notify('Notifications are enabled on this device.');
     } catch {
       if (Notification.permission !== 'denied')
         setError('Notifications could not be enabled. Check your connection and browser settings.');
@@ -137,7 +138,6 @@ export function NotificationSettings({
     }
     setBusy(true);
     setError('');
-    setNotice('');
     try {
       const saved = await saveDevice(session, device.subscription, {
         quiet_start: minutes(settings.start),
@@ -145,7 +145,7 @@ export function NotificationSettings({
         show_name: settings.showName,
       });
       setSettings(displaySettings(saved));
-      setNotice('Notification settings saved.');
+      notify('Notification settings saved.');
     } catch {
       setError('Notification settings could not be saved. Try again.');
     } finally {
@@ -157,11 +157,10 @@ export function NotificationSettings({
     if (!device || busy) return;
     setBusy(true);
     setError('');
-    setNotice('');
     try {
       await disableDevice(session);
       setDevice({ ...device, subscription: null, enrolled: false });
-      setNotice('Notifications are off on this device.');
+      notify('Notifications are off on this device.');
     } catch {
       setError('Notifications could not be turned off. Check your connection and try again.');
     } finally {
@@ -191,7 +190,7 @@ export function NotificationSettings({
           again.
         </p>
       ) : !device && !error ? (
-        <p role="status">Checking notification settings…</p>
+        <Loading label="Checking notification settings" />
       ) : device?.registration && !device.publicKey ? (
         <p>External reminders are currently unavailable. You can still use Catch up in the app.</p>
       ) : device?.enrolled ? (
@@ -266,7 +265,6 @@ export function NotificationSettings({
           Turn off on this device
         </Button>
       )}
-      {notice && <p role="status">{notice}</p>}
       {error && (
         <p role="alert" className="error-text">
           {error}

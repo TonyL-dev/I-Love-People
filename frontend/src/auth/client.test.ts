@@ -28,6 +28,7 @@ describe('memory-only account sessions', () => {
       url: 'https://auth.example',
       publishable_key: 'sb_publishable_test',
       minimum_password_length: 12,
+      signup_enabled: false,
     }).signIn('synthetic@example.test', 'SyntheticPassword123');
     sessionStore.signIn(session);
     expect(JSON.stringify(sessionStore.getSnapshot())).not.toContain('must-not-retain');
@@ -80,6 +81,7 @@ describe('memory-only account sessions', () => {
       url: 'https://auth.example',
       publishable_key: 'sb_publishable_test',
       minimum_password_length: 12,
+      signup_enabled: false,
     });
     await expect(
       client.signIn('synthetic@example.test', 'SyntheticPassword123'),

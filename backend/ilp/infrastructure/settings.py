@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     database_url: SecretStr | None = None
     supabase_url: str | None = None
     supabase_publishable_key: str | None = None
+    signup_enabled: bool = False
     jwt_audience: str = "authenticated"
     jwt_algorithms: tuple[str, ...] = ("ES256", "RS256")
     push_private_key: SecretStr | None = None

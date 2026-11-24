@@ -73,6 +73,11 @@ async function passwordUpdateError(response: Response): Promise<string | undefin
     return 'Choose a password different from your current one.';
 }
 
+async function providerErrorCode(response: Response): Promise<unknown> {
+  const body: unknown = await response.json().catch(() => null);
+  return body && typeof body === 'object' && 'error_code' in body ? body.error_code : undefined;
+}
+
 function record(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     throw new AccountError(0, 'The service returned an unexpected response.');
@@ -143,6 +148,52 @@ export class AccountClient {
       email,
       recovery: false,
     };
+  }
+  async signUp(email: string, password: string, signal: AbortSignal): Promise<void> {
+    if (!this.config.signup_enabled) throw new AccountError(403, 'Registration is closed.');
+    let duplicate = false;
+    try {
+      await this.provider(
+        '/signup',
+        'POST',
+        { email, password },
+        {
+          signal,
+          messageForError: async (response) => {
+            const code = await providerErrorCode(response);
+            duplicate = code === 'user_already_exists' || code === 'email_exists';
+            if (code === 'weak_password') return 'Choose a stronger password and try again.';
+            if (code === 'signup_disabled') return 'Registration is closed.';
+            if (code === 'over_email_send_rate_limit' || code === 'over_request_rate_limit')
+              return 'Too many attempts. Wait a little before trying again.';
+          },
+        },
+      );
+    } catch (error) {
+      if (!duplicate) throw error;
+    }
+    // Confirmation settings control whether the provider returns a session. Never use it here.
+  }
+  async confirmEmail(tokenHash: string): Promise<void> {
+    const value = record(
+      await this.provider(
+        '/verify',
+        'POST',
+        { token_hash: tokenHash, type: 'email' },
+        {
+          messageForError: async (response) =>
+            [400, 401, 403, 422].includes(response.status)
+              ? 'This confirmation link is invalid, expired, or already used.'
+              : undefined,
+        },
+      ),
+    );
+    if (typeof value.access_token !== 'string')
+      throw new AccountError(0, 'Email confirmation could not be verified. Try signing in.');
+    // End only the session created by confirmation. Existing signed-in devices are independent.
+    await this.provider('/logout?scope=local', 'POST', undefined, {
+      token: value.access_token,
+    }).catch(() => undefined);
   }
   async recover(email: string): Promise<void> {
     const redirect = encodeURIComponent(window.location.origin + '/reset-password');
@@ -249,4 +300,12 @@ export const sessionStore = {
 
 export function initializeRecovery() {
   publish(recoveryFromLocation());
+}
+
+export function confirmationFromLocation() {
+  if (window.location.pathname !== '/confirm-email') return null;
+  const values = new URLSearchParams(window.location.hash.slice(1));
+  const token = values.get('token_hash');
+  window.history.replaceState(null, '', '/confirm-email');
+  return token;
 }

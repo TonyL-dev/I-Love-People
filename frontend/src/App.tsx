@@ -44,11 +44,12 @@ function subscribeToConnection(update: () => void) {
   };
 }
 
-export function App() {
+export function App({ initialConfirmation }: { initialConfirmation: string | null }) {
   const path = usePath();
   const online = useSyncExternalStore(subscribeToConnection, () => navigator.onLine);
   const isDesign = path === '/design' || path.startsWith('/design/');
   const [appearance, setAppearance] = useState<Appearance>(initialAppearance);
+  const [confirmationToken, setConfirmationToken] = useState(initialConfirmation);
   const [sampleState, setSampleState] = useState<SampleState>('ready');
   const [query, setQuery] = useState('');
   const [logging, setLogging] = useState<SamplePerson | null>(null);
@@ -81,8 +82,21 @@ export function App() {
 
   function renderPage() {
     if (!isDesign)
-      return ['/', '/login', '/forgot-password', '/reset-password'].includes(path) ? (
-        <AccountPage path={path} appearance={appearance} setAppearance={setAppearance} />
+      return [
+        '/',
+        '/login',
+        '/forgot-password',
+        '/reset-password',
+        '/create-account',
+        '/confirm-email',
+      ].includes(path) ? (
+        <AccountPage
+          path={path}
+          appearance={appearance}
+          setAppearance={setAppearance}
+          confirmationToken={confirmationToken}
+          discardConfirmation={() => setConfirmationToken(null)}
+        />
       ) : (
         <EmptyState
           title="That page isn’t here."

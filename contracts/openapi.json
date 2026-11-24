@@ -872,6 +872,11 @@
             "title": "Publishable Key",
             "type": "string"
           },
+          "signup_enabled": {
+            "default": false,
+            "title": "Signup Enabled",
+            "type": "boolean"
+          },
           "url": {
             "title": "Url",
             "type": "string"

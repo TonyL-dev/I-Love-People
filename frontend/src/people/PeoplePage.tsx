@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Check } from 'lucide-react';
 import type { Session } from '../auth/client';
 import { Button } from '../ui/Button';
 import { Dialog } from '../ui/Dialog';
-import { Toast } from '../ui/Toast';
+import { Loading } from '../ui/Loading';
 import { journal, failureMessage, type Person, type PersonInput, type Meetup } from './client';
 import { DueList, NudgeControls } from './NudgeViews';
 
@@ -254,7 +254,15 @@ function MeetupEditor({
   );
 }
 
-export function PeoplePage({ session, timezone }: { session: Session; timezone: string }) {
+export function PeoplePage({
+  session,
+  timezone,
+  notify,
+}: {
+  session: Session;
+  timezone: string;
+  notify: (message: string) => void;
+}) {
   const [people, setPeople] = useState<Person[] | null>(null);
   const [history, setHistory] = useState<Meetup[] | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
@@ -273,14 +281,11 @@ export function PeoplePage({ session, timezone }: { session: Session; timezone: 
     body?: unknown;
     success: string;
   } | null>(null);
-  const [toast, setToast] = useState<{ id: number; message: string } | null>(null);
-  const toastSequence = useRef(0);
   const profileHeading = useRef<HTMLHeadingElement>(null);
   const profileSection = useRef<HTMLElement>(null);
   const pageHeading = useRef<HTMLHeadingElement>(null);
   const navigation = useRef<HTMLElement>(null);
   const opener = useRef<HTMLButtonElement | null>(null);
-  const dismissToast = useCallback(() => setToast(null), []);
   const [busy, setBusy] = useState(false);
   const person = people?.find((p) => p.id === selected);
   const viewTitle = { catchup: 'Catch up', people: 'People', review: 'Weekly review' }[view];
@@ -312,9 +317,6 @@ export function PeoplePage({ session, timezone }: { session: Session; timezone: 
       target?.focus({ preventScroll: true });
       target?.scrollIntoView({ block: 'center' });
     });
-  }
-  function notify(message: string) {
-    setToast({ id: ++toastSequence.current, message });
   }
   function closeEditor() {
     setEditor(null);
@@ -438,7 +440,7 @@ export function PeoplePage({ session, timezone }: { session: Session; timezone: 
           {error}
         </p>
       )}
-      {!people && !error && <p>Loading people...</p>}
+      {!people && !error && <Loading label="Loading people" />}
       {people && !people.length && (
         <p>No people yet. Add someone, then log a meetup whenever you like.</p>
       )}
@@ -577,7 +579,7 @@ export function PeoplePage({ session, timezone }: { session: Session; timezone: 
           />
           <h3>Meetup history</h3>
           {!history ? (
-            <p>Loading history...</p>
+            <Loading label="Loading meetup history" />
           ) : !history.length ? (
             <p>No meetup logged. The last-seen date is unknown.</p>
           ) : (
@@ -659,7 +661,6 @@ export function PeoplePage({ session, timezone }: { session: Session; timezone: 
           </div>
         </Dialog>
       )}
-      {toast && <Toast key={toast.id} message={toast.message} dismiss={dismissToast} />}
     </section>
   );
 }

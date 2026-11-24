@@ -3,7 +3,7 @@ import AxeBuilder from '@axe-core/playwright';
 
 const owner = '11111111-1111-4111-8111-111111111111';
 
-async function mockAccount(page: Page, expires = 3600, protectedPreview = false) {
+async function mockAccount(page: Page, expires = 3600, protectedPreview = false, signup = false) {
   let timezone = 'UTC';
   await page.route('**/api/people', (route) => route.fulfill({ json: [] }));
   if (protectedPreview) {
@@ -22,6 +22,7 @@ async function mockAccount(page: Page, expires = 3600, protectedPreview = false)
         url: 'https://auth.example',
         publishable_key: 'sb_publishable_synthetic',
         minimum_password_length: 12,
+        signup_enabled: signup,
       },
     });
   });
@@ -66,9 +67,57 @@ test('Preview protection cookies reach the same-origin API without reaching Auth
   await signIn(page);
   await expect(page.getByRole('heading', { name: 'Your private space.' })).toBeVisible();
   await openAccountMenu(page);
-  await page.getByLabel('Timezone', { exact: true }).fill('America/Toronto');
+  await page.getByLabel('Timezone', { exact: true }).selectOption('America/Toronto');
   await page.getByRole('button', { name: 'Save timezone' }).click();
   await expect(page.getByRole('status')).toContainText('Timezone saved');
+});
+
+test('signup shows a heart during slow requests and preserves input after rate limiting', async ({
+  page,
+}) => {
+  await mockAccount(page, 3600, false, true);
+  let result = 429;
+  const releases: Array<() => void> = [];
+  await page.route('https://auth.example/auth/v1/signup', async (route) => {
+    const headers = {
+      'access-control-allow-origin': '*',
+      'access-control-allow-headers': 'apikey,content-type',
+      'access-control-allow-methods': 'POST,OPTIONS',
+    };
+    if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers });
+    await new Promise<void>((resolve) => {
+      releases.push(resolve);
+    });
+    return route.fulfill({
+      status: result,
+      headers,
+      json: result === 429 ? { error_code: 'over_email_send_rate_limit' } : {},
+    });
+  });
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Create account' }).click();
+  await page.getByLabel('Email', { exact: true }).fill('new@example.test');
+  const password = page.getByLabel('Password', { exact: true });
+  await password.fill('SyntheticPassword123');
+  const submit = page.getByRole('button', { name: 'Create account' });
+  await submit.click();
+  await expect(submit).toHaveAttribute('aria-busy', 'true');
+  const heart = submit.locator('.loading-heart path');
+  await expect(heart).toHaveCSS('animation-name', 'trace-heart');
+  await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: 'dark' });
+  await expect(heart).toHaveCSS('animation-name', 'none');
+  await expect.poll(() => releases.length).toBe(1);
+  releases.shift()?.();
+  await expect(page.getByRole('alert')).toHaveText(
+    'Too many attempts. Wait a little before trying again.',
+  );
+  await expect(password).toHaveValue('SyntheticPassword123');
+  result = 200;
+  await submit.click();
+  await expect.poll(() => releases.length).toBe(1);
+  releases.shift()?.();
+  await expect(page.getByRole('status')).toContainText('a confirmation link is on its way');
+  await expect(password).toHaveCount(0);
 });
 
 async function signIn(page: Page) {
@@ -136,6 +185,11 @@ test('backup review, conflict, download and password confirmation work on a phon
   const downloaded = page.waitForEvent('download');
   await privacy.getByRole('button', { name: 'Download backup' }).click();
   expect((await downloaded).suggestedFilename()).toBe('i-love-people-backup.json');
+  await expect(drawer.locator('.toast').getByRole('status')).toHaveText(
+    'Backup ready. Check your downloads.',
+  );
+  await expectToastAlignment(page);
+  await drawer.getByRole('button', { name: 'Dismiss notification' }).click();
 
   const file = privacy.getByLabel('Choose a backup to restore');
   const upload = (contents: string) =>
@@ -155,7 +209,10 @@ test('backup review, conflict, download and password confirmation work on a phon
   await upload(JSON.stringify(backup));
   await expect(privacy.getByRole('heading', { name: 'Review backup' })).toBeVisible();
   await privacy.getByRole('button', { name: 'Restore backup' }).click();
-  await expect(privacy.getByRole('status')).toHaveText('Restored 0 people and 0 meetups.');
+  await expect(drawer.locator('.toast').getByRole('status')).toHaveText(
+    'Restored 0 people and 0 meetups.',
+  );
+  await drawer.getByRole('button', { name: 'Dismiss notification' }).click();
 
   await privacy.getByRole('button', { name: 'Delete all data' }).click();
   const password = privacy.getByLabel('Current password');
@@ -192,7 +249,9 @@ test('backup review, conflict, download and password confirmation work on a phon
   await password.fill('SyntheticPassword123');
   await page.screenshot({ path: 'artifacts/local/privacy-delete-320.png' });
   await deleteButton.press('Enter');
-  await expect(privacy.getByRole('status')).toHaveText('All application data deleted.');
+  await expect(drawer.locator('.toast').getByRole('status')).toHaveText(
+    'All application data deleted.',
+  );
 });
 
 async function setAccountAppearance(page: Page, value: string) {
@@ -205,9 +264,14 @@ async function expectToastAlignment(page: Page) {
   const alignment = await page.locator('.toast__message').evaluate((message) => {
     const icon = message.querySelector('svg')!.getBoundingClientRect();
     const text = message.querySelector('span')!.getBoundingClientRect();
+    const button = message.parentElement!.querySelector('button')!;
+    const dismiss = button.querySelector('svg')!.getBoundingClientRect();
     return {
       iconRight: icon.right,
       textLeft: text.left,
+      buttonHeight: button.getBoundingClientRect().height,
+      buttonWidth: button.getBoundingClientRect().width,
+      dismissDifference: Math.abs(dismiss.y + dismiss.height / 2 - icon.y - icon.height / 2),
       centerDifference: Math.abs(
         icon.y + icon.height / 2 - text.y - parseFloat(getComputedStyle(message).lineHeight) / 2,
       ),
@@ -215,6 +279,9 @@ async function expectToastAlignment(page: Page) {
   });
   expect(alignment.iconRight).toBeLessThan(alignment.textLeft);
   expect(alignment.centerDifference).toBeLessThan(2);
+  expect(alignment.dismissDifference).toBeLessThan(2);
+  expect(alignment.buttonHeight).toBeGreaterThanOrEqual(44);
+  expect(alignment.buttonWidth).toBeGreaterThanOrEqual(44);
 }
 
 test('login, account preferences, reload and logout clear private UI and credential storage', async ({
@@ -225,7 +292,10 @@ test('login, account preferences, reload and logout clear private UI and credent
   await signIn(page);
   await expect(page.getByRole('heading', { name: 'Your private space.' })).toBeVisible();
   await openAccountMenu(page);
-  await page.getByLabel('Timezone', { exact: true }).fill('America/Toronto');
+  await page.getByRole('searchbox', { name: 'Search timezones' }).fill('Toronto');
+  await page.getByRole('searchbox', { name: 'Search timezones' }).press('Enter');
+  await expect(page.getByLabel('Timezone', { exact: true })).toBeFocused();
+  await page.getByLabel('Timezone', { exact: true }).selectOption({ label: 'Toronto (America)' });
   await page.getByRole('button', { name: 'Save timezone' }).click();
   await expect(page.getByRole('status')).toContainText('Timezone saved');
   expect(
@@ -719,18 +789,29 @@ test('notification preferences require opt-in and sign-out turns off this device
   await signIn(page);
   const drawer = await openAccountMenu(page);
   const scope = drawer.getByRole('region', { name: 'Notifications on this device' });
+  const toast = drawer.locator('.toast');
+  const dismiss = toast.getByRole('button', { name: 'Dismiss notification' });
+  await drawer.getByLabel('Timezone', { exact: true }).selectOption('America/Toronto');
+  await drawer.getByRole('button', { name: 'Save timezone' }).click();
+  await expect(toast.getByRole('status')).toHaveText('Timezone saved.');
+  await dismiss.click();
   const enable = scope.getByRole('button', { name: 'Enable on this device' });
   await expect(enable).toBeEnabled();
   expect(calls).toEqual([]);
   await enable.click();
   await expect(scope.getByText('Enabled on this device.', { exact: true })).toBeVisible();
+  await expect(toast.getByRole('status')).toHaveText('Notifications are enabled on this device.');
+  await expect(
+    scope.getByText('Quiet hours follow your account timezone (America/Toronto).'),
+  ).toBeVisible();
+  await dismiss.click();
   const showNames = scope.getByRole('checkbox', { name: 'Show a name in reminders' });
   await expect(showNames).not.toBeChecked();
   await expect(showNames).toHaveAccessibleDescription('The name may appear on your lock screen.');
   await showNames.check();
   await scope.getByLabel('Quiet hours start').fill('22:00');
   await scope.getByRole('button', { name: 'Save notification settings' }).click();
-  await expect(scope.getByText('Notification settings saved.')).toBeVisible();
+  await expect(toast.getByRole('status')).toHaveText('Notification settings saved.');
   expect(savedSettings).toEqual({ quiet_start: 1320, quiet_end: 540, show_name: true });
   for (const [width, colorScheme] of [
     [390, 'light'],
@@ -739,6 +820,7 @@ test('notification preferences require opt-in and sign-out turns off this device
     await page.setViewportSize({ width, height: 900 });
     await page.emulateMedia({ colorScheme });
     await showNames.scrollIntoViewIfNeeded();
+    await expectToastAlignment(page);
     await expect
       .poll(() => drawer.evaluate((node) => node.scrollWidth <= node.clientWidth))
       .toBe(true);
@@ -746,12 +828,14 @@ test('notification preferences require opt-in and sign-out turns off this device
       path: test.info().outputPath(`notifications-${width}-${colorScheme}.png`),
     });
   }
+  await dismiss.click();
   await page.keyboard.press('Escape');
   await openAccountMenu(page);
   await expect(showNames).toBeChecked();
   await showNames.uncheck();
   await scope.getByRole('button', { name: 'Save notification settings' }).click();
-  await expect(scope.getByText('Notification settings saved.')).toBeVisible();
+  await expect(toast.getByRole('status')).toHaveText('Notification settings saved.');
+  await dismiss.click();
   expect(savedSettings).toEqual({ quiet_start: 1320, quiet_end: 540, show_name: false });
   await page.keyboard.press('Escape');
   await openAccountMenu(page);

@@ -44,6 +44,7 @@ def main() -> int:
                 ),
                 "ILP_SUPABASE_URL": "http://127.0.0.1:54321",
                 "ILP_SUPABASE_PUBLISHABLE_KEY": local["ANON_KEY"],
+                "ILP_SIGNUP_ENABLED": "true",
             }
         )
         for arguments, url in [
@@ -87,6 +88,7 @@ def main() -> int:
             if (
                 config["url"] != "http://127.0.0.1:54321"
                 or config["publishable_key"] != local["ANON_KEY"]
+                or config["signup_enabled"] is not True
             ):
                 raise RuntimeError("Existing API is not this local synthetic environment")
             email = f"ilp-browser-{uuid.uuid4().hex[:12]}@example.test"
@@ -99,13 +101,6 @@ def main() -> int:
                 "apikey": local["ANON_KEY"],
                 "Authorization": "Bearer " + local["SERVICE_ROLE_KEY"],
             }
-            created = client.post(
-                AUTH_URL + "/admin/users",
-                headers=admin,
-                json={"email": email, "password": password, "email_confirm": True},
-            )
-            created.raise_for_status()
-            ids.append(created.json()["id"])
         completed = subprocess.run(
             [node(), "scripts/local_browser_auth.mjs"],
             cwd=ROOT,
@@ -126,6 +121,8 @@ def main() -> int:
         allowed = {
             "navigation",
             "browser-start",
+            "managed-signup",
+            "captured-confirmation-email",
             "managed-login",
             "owned-preference",
             "people-and-meetup-persistence",
@@ -133,6 +130,8 @@ def main() -> int:
             "reload-and-logout",
             "captured-recovery-email",
             "managed-password-reset",
+            "same-password-reset",
+            "replacement-password-reset",
             "replacement-password",
             "passed",
         }
@@ -155,16 +154,24 @@ def main() -> int:
         print(
             "Live browser due/snooze/dismiss/pause/new-meetup cycle, weekly review, "
             "people/meetup persistence, responsive accessibility, "
-            "login, preference, reload/logout "
+            "signup, captured confirmation mail, preference, reload/logout "
             "and captured-email password reset passed."
         )
     except Exception as error:
         print(f"Live browser check failed at {stage} ({type(error).__name__}); details withheld.")
         result = 1
     finally:
-        if ids and not cleanup_synthetic_data(ids, emails, admin):
-            print("Live browser synthetic cleanup was incomplete.")
-            result = 1
+        if emails:
+            try:
+                with httpx.Client(timeout=10, trust_env=False) as client:
+                    users = client.get(AUTH_URL + "/admin/users?per_page=1000", headers=admin)
+                    users.raise_for_status()
+                    ids = [user["id"] for user in users.json()["users"] if user["email"] in emails]
+                if not cleanup_synthetic_data(ids, emails, admin):
+                    raise RuntimeError("Cleanup could not be verified")
+            except Exception:
+                print("Live browser synthetic cleanup was incomplete.")
+                result = 1
         for process in children:
             process.terminate()
             try:

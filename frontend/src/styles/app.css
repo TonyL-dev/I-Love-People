@@ -737,6 +737,44 @@ input[type='checkbox'] {
   scroll-margin-top: calc(var(--library-nav-height, 80px) + var(--space-4));
 }
 
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.loading-status {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--color-action);
+}
+
+.loading-heart {
+  flex: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .loading-heart path {
+    stroke-dasharray: 100;
+    animation: trace-heart 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes trace-heart {
+  from {
+    stroke-dashoffset: 100;
+  }
+  75%,
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
 .toast {
   position: fixed;
   z-index: 20;
@@ -759,8 +797,15 @@ input[type='checkbox'] {
 }
 
 .toast .button {
-  padding: var(--space-2);
+  position: relative;
+  padding: 0;
   min-width: 44px;
+  min-height: max(44px, var(--line-body));
+}
+
+.toast .button > svg {
+  position: absolute;
+  top: calc((var(--line-body) - 20px) / 2);
 }
 
 .toast__message {
@@ -778,9 +823,6 @@ input[type='checkbox'] {
     grid-template-columns: minmax(0, 1fr) auto;
     gap: min(var(--space-2), 8px);
     padding: min(var(--space-3), 16px);
-  }
-  .toast .button {
-    padding: min(var(--space-2), 8px);
   }
 }
 

@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes } from 'react';
+import { Loading } from './Loading';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'quiet' | 'danger';
@@ -22,6 +23,7 @@ export function Button({
       disabled={disabled || busy}
       aria-busy={busy || undefined}
     >
+      {busy && <Loading />}
       {children}
     </button>
   );

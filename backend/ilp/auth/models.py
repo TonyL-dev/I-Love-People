@@ -7,6 +7,7 @@ class PublicAuthConfig(BaseModel):
     url: str
     publishable_key: str
     minimum_password_length: int = 12
+    signup_enabled: bool = False
 
 
 class Identity(BaseModel):

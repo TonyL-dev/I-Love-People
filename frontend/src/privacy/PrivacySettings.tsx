@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import type { components } from '../api/schema';
 import { AccountError, jsonRequest, sessionStore, type Session } from '../auth/client';
 import { Button } from '../ui/Button';
+import { Loading } from '../ui/Loading';
 
 const backupLimit = 4_000_000;
 type Backup = components['schemas']['Backup'];
@@ -19,9 +20,11 @@ function backupCounts({ people, meetups }: Preview) {
 export function PrivacySettings({
   session,
   onChanged,
+  notify,
 }: {
   session: Session;
   onChanged: () => void;
+  notify: (message: string) => void;
 }) {
   const [review, setReview] = useState<Review | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -29,7 +32,6 @@ export function PrivacySettings({
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [status, setStatus] = useState('');
 
   function isCurrent() {
     return sessionStore.getSnapshot().session === session;
@@ -50,7 +52,6 @@ export function PrivacySettings({
     if (busy) return;
     setBusy(true);
     setError('');
-    setStatus('');
     try {
       await action();
     } catch (failure) {
@@ -87,7 +88,7 @@ export function PrivacySettings({
       link.click();
       link.remove();
       window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
-      setStatus('Backup ready. Check your downloads.');
+      notify('Backup ready. Check your downloads.');
     }, 'Your backup could not be downloaded. Try again.');
   }
 
@@ -110,7 +111,7 @@ export function PrivacySettings({
       );
       if (!isCurrent()) return;
       setReview(null);
-      setStatus(`Restored ${backupCounts(review.preview)}.`);
+      notify(`Restored ${backupCounts(review.preview)}.`);
       onChanged();
     }, 'Restore could not be confirmed. Check your library before trying again.');
   }
@@ -131,7 +132,7 @@ export function PrivacySettings({
       if (!isCurrent()) return;
       cancelDelete();
       setReview(null);
-      setStatus('All application data deleted.');
+      notify('All application data deleted.');
       onChanged();
     }, 'Deletion could not be confirmed. Check your library before trying again.');
   }
@@ -168,7 +169,7 @@ export function PrivacySettings({
       {review && (
         <div className="stack stack--small">
           <h3>Review backup</h3>
-          <p role={busy || status ? undefined : 'status'}>
+          <p role="status">
             {backupCounts(review.preview)}. Backup timezone{' '}
             <strong>{review.preview.timezone}</strong>.
             {review.preview.timezone !== review.preview.current_timezone &&
@@ -247,8 +248,7 @@ export function PrivacySettings({
           Delete all data
         </Button>
       )}
-      {busy && <p role="status">Working…</p>}
-      {status && <p role="status">{status}</p>}
+      {busy && <Loading label="Working on your backup or data request" />}
       {error && (
         <p role="alert" className="error-text">
           {error}
