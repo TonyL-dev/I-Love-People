@@ -95,9 +95,9 @@ try {
   await page.goto(confirmation);
   assert.equal(new URL(page.url()).hash, '');
   await page.getByRole('button', { name: 'Confirm email' }).click();
-  await expect(page.getByRole('status')).toHaveText(
-    'Email confirmed. Sign in to open your library.',
-  );
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Email confirmed. Sign in to open your library.' }),
+  ).toBeVisible();
   await page.goto(confirmation);
   await page.getByRole('button', { name: 'Confirm email' }).click();
   await expect(page.getByRole('alert')).toContainText('invalid, expired, or already used');
@@ -258,7 +258,7 @@ try {
   assert.equal(new URL(destination).pathname, '/reset-password');
   stage = 'managed-password-reset';
   await page.goto(destination);
-  await page.getByRole('button', { name: 'Update password' }).waitFor();
+  await expect(page.getByRole('button', { name: 'Update password' })).toBeEnabled();
   assert.equal(new URL(page.url()).hash, '');
   stage = 'same-password-reset';
   await page.getByLabel('New password', { exact: true }).fill(fixture.password);

@@ -400,6 +400,7 @@ function ResetPassword({ client, session }: { client: AccountClient; session: Se
             id="new-password"
             type="password"
             autoComplete="new-password"
+            disabled={!verified || busy}
             required
             minLength={12}
             maxLength={128}
@@ -414,6 +415,7 @@ function ResetPassword({ client, session }: { client: AccountClient; session: Se
             id="confirm-password"
             type="password"
             autoComplete="new-password"
+            disabled={!verified || busy}
             required
             minLength={12}
             maxLength={128}

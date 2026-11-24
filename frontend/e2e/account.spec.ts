@@ -69,7 +69,7 @@ test('Preview protection cookies reach the same-origin API without reaching Auth
   await openAccountMenu(page);
   await page.getByLabel('Timezone', { exact: true }).selectOption('America/Toronto');
   await page.getByRole('button', { name: 'Save timezone' }).click();
-  await expect(page.getByRole('status')).toContainText('Timezone saved');
+  await expect(page.locator('.toast').getByRole('status')).toHaveText('Timezone saved.');
 });
 
 test('signup blocks input with a centered heart and preserves input after rate limiting', async ({
@@ -132,7 +132,9 @@ test('signup blocks input with a centered heart and preserves input after rate l
   await submit.click();
   await expect.poll(() => releases.length).toBe(1);
   releases.shift()?.();
-  await expect(page.getByRole('status')).toContainText('a confirmation link is on its way');
+  await expect(
+    page.getByRole('status').filter({ hasText: 'a confirmation link is on its way' }),
+  ).toBeVisible();
   await expect(overlay).toBeHidden();
   await expect(password).toHaveCount(0);
 });
@@ -356,7 +358,7 @@ test('login, account preferences, reload and logout clear private UI and credent
   await expect(page.getByLabel('Timezone', { exact: true })).toBeFocused();
   await page.getByLabel('Timezone', { exact: true }).selectOption({ label: 'Toronto (America)' });
   await page.getByRole('button', { name: 'Save timezone' }).click();
-  await expect(page.getByRole('status')).toContainText('Timezone saved');
+  await expect(page.locator('.toast').getByRole('status')).toHaveText('Timezone saved.');
   expect(
     await page.evaluate(() =>
       JSON.stringify([Object.entries(localStorage), Object.entries(sessionStorage)]),
@@ -382,7 +384,9 @@ test('recovery uses generic confirmation, strips tokens and returns to fresh log
   await page.goto('/forgot-password');
   await page.getByLabel('Email', { exact: true }).fill('synthetic@example.test');
   await page.getByRole('button', { name: 'Send reset link' }).click();
-  await expect(page.getByRole('status')).toContainText('If this address belongs');
+  await expect(
+    page.getByRole('status').filter({ hasText: 'If this address belongs' }),
+  ).toBeVisible();
   await page.goto(
     '/reset-password#access_token=synthetic-recovery&refresh_token=must-not-persist&type=recovery&expires_in=3600',
   );
@@ -395,7 +399,7 @@ test('recovery uses generic confirmation, strips tokens and returns to fresh log
   await page.getByLabel('Confirm password', { exact: true }).fill('SyntheticReplacement123');
   await page.getByRole('button', { name: 'Update password' }).click();
   await expect(page.getByRole('heading', { name: 'Keep your people close.' })).toBeVisible();
-  await expect(page.getByRole('status')).toContainText('Password updated');
+  await expect(page.getByRole('status').filter({ hasText: 'Password updated' })).toBeVisible();
 });
 
 test('expired sessions remove the account view', async ({ page }) => {
@@ -406,7 +410,7 @@ test('expired sessions remove the account view', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Keep your people close.' })).toBeVisible({
     timeout: 5000,
   });
-  await expect(page.getByRole('status')).toContainText('session expired');
+  await expect(page.getByRole('status').filter({ hasText: 'session expired' })).toBeVisible();
 });
 
 for (const appearance of ['light', 'dark']) {
@@ -743,6 +747,7 @@ test('settings drawer stays out of the library and preserves context with keyboa
   await page.getByRole('button', { name: 'Synthetic Maya', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Your preferences', exact: true })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Account', exact: true })).toHaveCount(0);
+  const overlay = page.getByRole('dialog', { name: 'Loading' });
   for (const appearance of ['light', 'dark']) {
     for (const width of [320, 390, 768, 1440]) {
       await page.setViewportSize({ width, height: 900 });
@@ -758,6 +763,7 @@ test('settings drawer stays out of the library and preserves context with keyboa
       expect(await drawer.evaluate((e) => e.scrollWidth <= e.clientWidth)).toBe(true);
       expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
       await page.screenshot({ path: `artifacts/local/account-drawer-${appearance}-${width}.png` });
+      await expect(overlay).toBeHidden();
       await page.keyboard.press('Escape');
       await expect(drawer).toHaveCount(0);
       await expect(page.getByRole('button', { name: 'Menu', exact: true })).toBeFocused();
@@ -782,6 +788,7 @@ test('settings drawer stays out of the library and preserves context with keyboa
   await expect(drawer.getByRole('button', { name: 'Close', exact: true })).toBeInViewport();
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await page.screenshot({ path: 'artifacts/local/account-drawer-large-dark.png' });
+  await expect(overlay).toBeHidden();
   await page.mouse.click(5, 450);
   await expect(drawer).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Menu', exact: true })).toBeFocused();
