@@ -50,8 +50,8 @@ export function TimezoneField({
           }}
         />
       </label>
-      <label htmlFor="account-timezone">
-        Timezone
+      <div className="stack stack--small">
+        <label htmlFor="account-timezone">Timezone</label>
         <select
           id="account-timezone"
           value={value}
@@ -67,7 +67,7 @@ export function TimezoneField({
             </option>
           ))}
         </select>
-      </label>
+      </div>
       {matches.length === 0 && (
         <p role="status" className="supporting secondary">
           No matching timezones.

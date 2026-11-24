@@ -93,7 +93,12 @@ export async function loadAuthConfig(signal: AbortSignal): Promise<AuthConfig> {
     typeof value.minimum_password_length !== 'number'
   )
     throw new AccountError(0, 'Account setup is unavailable.');
-  return value as unknown as AuthConfig;
+  return {
+    url: value.url,
+    publishable_key: value.publishable_key,
+    minimum_password_length: value.minimum_password_length,
+    signup_enabled: value.signup_enabled === true,
+  };
 }
 
 export class AccountClient {

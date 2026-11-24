@@ -692,14 +692,14 @@ export function AccountPage({
   path,
   appearance,
   setAppearance,
-  confirmationToken,
+  confirmation,
   discardConfirmation,
 }: {
   path: string;
   appearance: Appearance;
   setAppearance: (value: Appearance) => void;
-  confirmationToken: string | null;
-  discardConfirmation: () => void;
+  confirmation: { token: string | null; attempt: number };
+  discardConfirmation: (attempt: number) => void;
 }) {
   const state = useSyncExternalStore(sessionStore.subscribe, sessionStore.getSnapshot);
   const [config, setConfig] = useState<AuthConfig | null>(null);
@@ -727,7 +727,12 @@ export function AccountPage({
   let content;
   if (path === '/confirm-email')
     content = (
-      <ConfirmEmail client={client} token={confirmationToken} discardToken={discardConfirmation} />
+      <ConfirmEmail
+        key={confirmation.attempt}
+        client={client}
+        token={confirmation.token}
+        discardToken={() => discardConfirmation(confirmation.attempt)}
+      />
     );
   else if (path === '/forgot-password') content = <RecoveryRequest client={client} />;
   else if (path === '/reset-password' || state.session?.recovery)
