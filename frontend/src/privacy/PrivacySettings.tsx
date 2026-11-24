@@ -2,7 +2,6 @@ import { useState, type FormEvent } from 'react';
 import type { components } from '../api/schema';
 import { AccountError, jsonRequest, sessionStore, type Session } from '../auth/client';
 import { Button } from '../ui/Button';
-import { Loading } from '../ui/Loading';
 
 const backupLimit = 4_000_000;
 type Backup = components['schemas']['Backup'];
@@ -248,7 +247,6 @@ export function PrivacySettings({
           Delete all data
         </Button>
       )}
-      {busy && <Loading label="Working on your backup or data request" />}
       {error && (
         <p role="alert" className="error-text">
           {error}

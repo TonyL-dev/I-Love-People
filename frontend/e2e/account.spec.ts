@@ -72,7 +72,7 @@ test('Preview protection cookies reach the same-origin API without reaching Auth
   await expect(page.getByRole('status')).toContainText('Timezone saved');
 });
 
-test('signup shows a heart during slow requests and preserves input after rate limiting', async ({
+test('signup blocks input with a centered heart and preserves input after rate limiting', async ({
   page,
 }) => {
   await mockAccount(page, 3600, false, true);
@@ -101,23 +101,81 @@ test('signup shows a heart during slow requests and preserves input after rate l
   await password.fill('SyntheticPassword123');
   const submit = page.getByRole('button', { name: 'Create account' });
   await submit.click();
-  await expect(submit).toHaveAttribute('aria-busy', 'true');
-  const heart = submit.locator('.loading-heart path');
-  await expect(heart).toHaveCSS('animation-name', 'trace-heart');
+  const overlay = page.getByRole('dialog', { name: 'Loading' });
+  await expect(overlay).toBeVisible();
+  const heart = overlay.locator('.loading-heart');
+  await expect(heart.locator('path')).toHaveCSS('animation-name', 'trace-heart');
+  const desktop = await heart.boundingBox();
+  expect(desktop?.width).toBeGreaterThan(400);
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: 'dark' });
-  await expect(heart).toHaveCSS('animation-name', 'none');
+  await expect(heart.locator('path')).toHaveCSS('animation-name', 'none');
+  const phone = (await heart.boundingBox())!;
+  expect(phone.width).toBeGreaterThan(270);
+  expect(phone.x + phone.width / 2).toBeCloseTo(195, 0);
+  expect(phone.y + phone.height / 2).toBeCloseTo(422, 0);
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Tab');
+  await page.mouse.click(40, 27);
+  await expect(overlay).toBeVisible();
+  await expect(page).toHaveURL(/\/create-account$/);
+  expect(await page.evaluate(() => document.activeElement?.closest('form') === null)).toBe(true);
+  await page.screenshot({ path: test.info().outputPath('loading-heart-dark-phone.png') });
   await expect.poll(() => releases.length).toBe(1);
   releases.shift()?.();
   await expect(page.getByRole('alert')).toHaveText(
     'Too many attempts. Wait a little before trying again.',
   );
+  await expect(overlay).toBeHidden();
   await expect(password).toHaveValue('SyntheticPassword123');
   result = 200;
   await submit.click();
   await expect.poll(() => releases.length).toBe(1);
   releases.shift()?.();
   await expect(page.getByRole('status')).toContainText('a confirmation link is on its way');
+  await expect(overlay).toBeHidden();
   await expect(password).toHaveCount(0);
+});
+
+test('the overlay blocks the drawer until every pending API request finishes', async ({ page }) => {
+  await mockAccount(page);
+  let releaseSave: (() => void) | undefined;
+  let releaseRefresh: (() => void) | undefined;
+  await page.route('**/api/profile', async (route) => {
+    if (route.request().method() !== 'PUT') return route.fallback();
+    await new Promise<void>((resolve) => {
+      releaseSave = resolve;
+    });
+    await route.fulfill({ json: { owner_id: owner, timezone: 'America/Toronto' } });
+  });
+  await page.goto('/');
+  await signIn(page);
+  const drawer = await openAccountMenu(page);
+  await page.route('**/api/people', async (route) => {
+    await new Promise<void>((resolve) => {
+      releaseRefresh = resolve;
+    });
+    await route.fulfill({ json: [] });
+  });
+  await drawer.getByLabel('Timezone', { exact: true }).selectOption('America/Toronto');
+  await drawer.getByRole('button', { name: 'Save timezone' }).click();
+  const overlay = page.getByRole('dialog', { name: 'Loading' });
+  await expect(overlay).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#account-menu')).toBeVisible();
+  expect(await overlay.evaluate((node) => node.matches(':modal'))).toBe(true);
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await expect.poll(() => typeof releaseRefresh).toBe('function');
+  await expect.poll(() => typeof releaseSave).toBe('function');
+  const saved = page.waitForResponse(
+    (response) => response.url().endsWith('/api/profile') && response.request().method() === 'PUT',
+  );
+  releaseSave?.();
+  await saved;
+  await expect(overlay).toBeVisible();
+  releaseRefresh?.();
+  await expect(overlay).toBeHidden();
+  await expect(drawer.locator('.toast')).toContainText('Timezone saved.');
 });
 
 async function signIn(page: Page) {

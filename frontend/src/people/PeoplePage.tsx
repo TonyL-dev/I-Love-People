@@ -3,7 +3,6 @@ import { ArrowLeft, Check } from 'lucide-react';
 import type { Session } from '../auth/client';
 import { Button } from '../ui/Button';
 import { Dialog } from '../ui/Dialog';
-import { Loading } from '../ui/Loading';
 import { journal, failureMessage, type Person, type PersonInput, type Meetup } from './client';
 import { DueList, NudgeControls } from './NudgeViews';
 
@@ -440,7 +439,6 @@ export function PeoplePage({
           {error}
         </p>
       )}
-      {!people && !error && <Loading label="Loading people" />}
       {people && !people.length && (
         <p>No people yet. Add someone, then log a meetup whenever you like.</p>
       )}
@@ -578,9 +576,7 @@ export function PeoplePage({
             }}
           />
           <h3>Meetup history</h3>
-          {!history ? (
-            <Loading label="Loading meetup history" />
-          ) : !history.length ? (
+          {!history ? null : !history.length ? (
             <p>No meetup logged. The last-seen date is unknown.</p>
           ) : (
             history.map((m) => (

@@ -61,13 +61,13 @@ Use layout gaps and shared padding tokens. Keep related content close and place 
 
 ## Screens and components
 
-- Login has the app name, a short purpose statement, labeled inputs, one primary sign-in action, and an accessible recovery link. Support password managers and paste.
+- Login has the app name, a short purpose statement, labeled inputs, one primary sign-in action, and an accessible recovery link. Support password managers and paste. The password visibility eye sits inside the end of the input and retains a 44 px target with an accessible Show or Hide password label.
 - The main screen leads with who is due. Rows show a person's name, last meetup, and next action. Keep secondary actions available through a clearly labeled menu.
 - Person detail presents name, meetup information, and “Log meetup” first. Group editable preferences and history into readable sections.
 - Use a single column on phones. Wider layouts may introduce a navigation rail and detail pane when each retains comfortable space. Preserve state when resizing.
 - Build shared buttons, fields, person rows, dialogs, menus, notices, and empty states. Define default, hover, pressed, keyboard focus, disabled, loading, success, and error behavior wherever applicable.
 - Use a consistent bundled, web-licensed outline icon family with a shared stroke weight. Give icon-only actions accessible names. Review asset licenses before adding them.
-- Loading reserves the final layout's space. Errors identify what failed and provide an actionable retry. Empty states explain the next useful action. Preserve form input after recoverable failures.
+- Browser API loading uses a large, centered heart over the current screen. The modal blocks pointer and keyboard input until the requests finish. Errors identify what failed and provide an actionable retry. Empty states explain the next useful action. Preserve form input after recoverable failures.
 - Dialogs have a title, intentional initial focus, keyboard dismissal, focus containment, and focus return. Confirm destructive operations with the affected person's name.
 - Animations normally last 120–200 ms with a shared easing token. Honor reduced motion. Keep meaning and feedback available when animation is disabled.
 

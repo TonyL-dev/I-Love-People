@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import { confirmationFromLocation, initializeRecovery } from './auth/client';
+import { Loading } from './ui/Loading';
 import './styles/tokens.css';
 import './styles/app.css';
 
@@ -19,5 +20,6 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
 createRoot(root).render(
   <StrictMode>
     <App initialConfirmation={confirmation} />
+    <Loading />
   </StrictMode>,
 );

@@ -1,7 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import type { Session } from '../auth/client';
 import { Button } from '../ui/Button';
-import { Loading } from '../ui/Loading';
 import {
   applicationKey,
   defaultDeviceSettings,
@@ -189,8 +188,6 @@ export function NotificationSettings({
           Notifications are blocked. Allow them in your device or browser settings to turn them on
           again.
         </p>
-      ) : !device && !error ? (
-        <Loading label="Checking notification settings" />
       ) : device?.registration && !device.publicKey ? (
         <p>External reminders are currently unavailable. You can still use Catch up in the app.</p>
       ) : device?.enrolled ? (

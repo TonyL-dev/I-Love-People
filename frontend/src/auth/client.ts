@@ -1,4 +1,5 @@
 import type { components } from '../api/schema';
+import { beginRequest } from '../api/pendingRequests';
 
 export type AuthConfig = components['schemas']['PublicAuthConfig'];
 export type Profile = components['schemas']['AccountProfile'];
@@ -30,6 +31,7 @@ export async function jsonRequest(
   const timer = window.setTimeout(abort, 10_000);
   init?.signal?.addEventListener('abort', abort, { once: true });
   if (init?.signal?.aborted) controller.abort();
+  const finish = beginRequest();
   try {
     const response = await fetch(url, {
       ...init,
@@ -58,6 +60,7 @@ export async function jsonRequest(
   } finally {
     window.clearTimeout(timer);
     init?.signal?.removeEventListener('abort', abort);
+    finish();
   }
 }
 

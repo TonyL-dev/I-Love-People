@@ -13,7 +13,6 @@ import { Link } from '../navigation';
 import { Button } from '../ui/Button';
 import { Dialog } from '../ui/Dialog';
 import { Notice } from '../ui/Notice';
-import { Loading } from '../ui/Loading';
 import { Toast } from '../ui/Toast';
 import { TimezoneField } from './TimezoneField';
 import { AppearanceField, type Appearance } from '../ui/Appearance';
@@ -135,42 +134,43 @@ function CredentialsForm({
               onChange={(e) => setEmail(e.target.value)}
             />
           </label>
-          <label htmlFor="password">
-            Password
-            <input
-              id="password"
-              name="password"
-              type={visible ? 'text' : 'password'}
-              autoComplete={signup ? 'new-password' : 'current-password'}
-              required
-              disabled={busy}
-              minLength={signup ? 12 : undefined}
-              maxLength={signup ? 128 : undefined}
-              aria-describedby={signup ? 'signup-password-rules' : undefined}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </label>
+          <div className="stack stack--small">
+            <label htmlFor="password">Password</label>
+            <div className="password-field">
+              <input
+                id="password"
+                name="password"
+                type={visible ? 'text' : 'password'}
+                autoComplete={signup ? 'new-password' : 'current-password'}
+                required
+                disabled={busy}
+                minLength={signup ? 12 : undefined}
+                maxLength={signup ? 128 : undefined}
+                aria-describedby={signup ? 'signup-password-rules' : undefined}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <Button
+                variant="quiet"
+                className="password-field__toggle"
+                aria-controls="password"
+                aria-label={visible ? 'Hide password' : 'Show password'}
+                disabled={busy}
+                onClick={() => setVisible(!visible)}
+              >
+                {visible ? (
+                  <EyeOff aria-hidden="true" size={20} />
+                ) : (
+                  <Eye aria-hidden="true" size={20} />
+                )}
+              </Button>
+            </div>
+          </div>
           {signup && (
             <p id="signup-password-rules" className="supporting secondary">
               {passwordRules}
             </p>
           )}
-          <Button
-            variant="quiet"
-            className="self-start"
-            aria-controls="password"
-            aria-pressed={visible}
-            disabled={busy}
-            onClick={() => setVisible(!visible)}
-          >
-            {visible ? (
-              <EyeOff aria-hidden="true" size={18} />
-            ) : (
-              <Eye aria-hidden="true" size={18} />
-            )}
-            {visible ? 'Hide password' : 'Show password'}
-          </Button>
           {error && (
             <p role="alert" className="error-text">
               {error}
@@ -388,7 +388,6 @@ function ResetPassword({ client, session }: { client: AccountClient; session: Se
     <section className="login stack">
       <h1>Choose a new password.</h1>
       <p id="password-rules">{passwordRules}</p>
-      {!verified && <Loading label="Verifying your reset link" />}
       <form
         className="stack"
         onSubmit={(event) => {
@@ -576,7 +575,6 @@ function PrivateAccount({
           notify={notify}
         />
       )}
-      {!profile && !error && !menuOpen && <Loading label="Loading your account" />}
       {!menuOpen && accountError}
       {!menuOpen && feedback}
       {menuOpen && (
@@ -592,7 +590,6 @@ function PrivateAccount({
         >
           <div className="stack stack--large">
             {accountError}
-            {!profile && !error && <Loading label="Loading your preferences" />}
             {profile && (
               <form
                 className="surface stack"
@@ -785,7 +782,6 @@ export function AccountPage({
           {state.notice}
         </p>
       )}
-      {loading && <Loading label="Checking account access" />}
       {content}
       {!loading && !client && (
         <Button
