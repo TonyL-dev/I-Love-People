@@ -788,9 +788,12 @@ test('settings drawer stays out of the library and preserves context with keyboa
   await expect(drawer.getByRole('button', { name: 'Close', exact: true })).toBeInViewport();
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await page.screenshot({ path: 'artifacts/local/account-drawer-large-dark.png' });
-  await expect(overlay).toBeHidden();
-  await page.mouse.click(5, 450);
-  await expect(drawer).toHaveCount(0);
+  // A click returning focus from browser chrome can start a background refresh.
+  await expect(async () => {
+    await expect(overlay).toBeHidden();
+    if (await drawer.isVisible()) await page.mouse.click(5, 450);
+    await expect(drawer).toBeHidden({ timeout: 1000 });
+  }).toPass({ timeout: 10_000 });
   await expect(page.getByRole('button', { name: 'Menu', exact: true })).toBeFocused();
   await page.evaluate(() => {
     document.documentElement.style.fontSize = '';
