@@ -96,3 +96,17 @@ Use the [operating runbook](OPERATIONS.md#production-migration-and-promotion) fo
 During recovery, submitting the current password leaves the reset form available and shows “Choose a password different from your current one.” Enter a different password in both fields and try again. If the recovery session expired, request a fresh link from the stable site.
 
 On November 22, 2026, the owner reported successful Production password reset and replacement-password sign-in. The owner then confirmed the signed-in sample meetup journey on the stable origin. [Production acceptance](IMPLEMENTATION_STATUS.md#phase-5-accepted--november-22-2026)
+
+## Phase 7 protected Preview signup
+
+Local Supabase enables signup with email confirmation. Use `scripts/tasks.py api-local` for the app flag, and open captured messages at `http://127.0.0.1:54324`. The local database and browser checks exercise signup and recovery with disposable addresses.
+
+Configure the isolated Preview Supabase project after choosing the protected Phase 7 deployment origin.
+
+1. Set the Auth **Site URL** to the exact protected Preview origin and allow that origin's exact `/reset-password` redirect. The confirmation template constructs its link from the Site URL.
+2. In **Email Templates**, set **Confirm signup** to the [repository template](../supabase/templates/confirmation.html), with subject “Confirm your I Love People email.” Keep the existing recovery template.
+3. Configure a sender that can deliver to outside-team test inboxes within the $0 target. Turn off link tracking, preserve provider rate limits, record the actual mail cap and per-address cooldown, and review abuse controls before broader access. The built-in SMTP sends only to project team members and is currently limited to two emails per hour. [Supabase SMTP documentation](https://supabase.com/docs/guides/auth/auth-smtp)
+4. Keep **Confirm email** enabled and anonymous sign-ins disabled, then enable **Allow new users to sign up** on the Preview Supabase project. Set `ILP_SIGNUP_ENABLED=true` for the Phase 7 Vercel Preview branch and deploy that setting. Make sure the Auth Site URL matches the resulting test origin.
+5. Use two disposable inboxes. Confirm the first account cannot sign in before verifying. Open the confirmation link, select **Confirm email**, and sign in with the new password to an empty library. Check a used or invalid link, a duplicate signup, rate-limit feedback, and recovery in a real inbox. Use both accounts for API and Data API isolation checks. Remove the test accounts after verification.
+
+Production registration is a separate rollout. Follow the release gates in [Phase 7](PROJECT.md#phase-7--self-service-signup-and-interface-refinements).

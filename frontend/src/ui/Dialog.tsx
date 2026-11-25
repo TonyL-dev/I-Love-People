@@ -6,6 +6,7 @@ interface DialogProps {
   title: string;
   onRequestClose: () => void;
   children: ReactNode;
+  overlay?: ReactNode;
   className?: string;
   initialFocus?: 'input' | 'close';
   id?: string;
@@ -17,6 +18,7 @@ export function Dialog({
   title,
   onRequestClose,
   children,
+  overlay,
   className = '',
   initialFocus = 'input',
   id,
@@ -67,6 +69,7 @@ export function Dialog({
         </Button>
       </div>
       {children}
+      {overlay}
     </dialog>
   );
 }

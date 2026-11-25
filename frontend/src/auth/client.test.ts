@@ -28,6 +28,7 @@ describe('memory-only account sessions', () => {
       url: 'https://auth.example',
       publishable_key: 'sb_publishable_test',
       minimum_password_length: 12,
+      signup_enabled: false,
     }).signIn('synthetic@example.test', 'SyntheticPassword123');
     sessionStore.signIn(session);
     expect(JSON.stringify(sessionStore.getSnapshot())).not.toContain('must-not-retain');
@@ -44,8 +45,11 @@ describe('memory-only account sessions', () => {
       email: 'synthetic@example.test',
       recovery: false,
     });
+    const cache = sessionStore.getSnapshot().cache!;
+    cache.setQueryData(['people'], [{ name: 'Synthetic person' }]);
     vi.advanceTimersByTime(1001);
     expect(sessionStore.getSnapshot().session).toBeNull();
+    expect(cache.getQueryCache().getAll()).toEqual([]);
     expect(sessionStore.getSnapshot().notice).toContain('expired');
   });
   it('strips recovery credentials from history and retains no refresh token', () => {
@@ -80,6 +84,7 @@ describe('memory-only account sessions', () => {
       url: 'https://auth.example',
       publishable_key: 'sb_publishable_test',
       minimum_password_length: 12,
+      signup_enabled: false,
     });
     await expect(
       client.signIn('synthetic@example.test', 'SyntheticPassword123'),

@@ -23,7 +23,7 @@ describe('health contract boundary', () => {
       service: 'i-love-people-api',
     });
     expect(request).toHaveBeenCalledWith('/api/health', {
-      signal,
+      signal: expect.any(AbortSignal),
       cache: 'no-store',
       credentials: 'same-origin',
     });

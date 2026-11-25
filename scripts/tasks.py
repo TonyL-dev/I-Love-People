@@ -135,6 +135,7 @@ def main() -> int:
                     )
                     os.environ["ILP_SUPABASE_URL"] = "http://127.0.0.1:54321"
                     os.environ["ILP_SUPABASE_PUBLISHABLE_KEY"] = local["ANON_KEY"]
+                    os.environ["ILP_SIGNUP_ENABLED"] = "true"
                 run(
                     sys.executable,
                     "-m",

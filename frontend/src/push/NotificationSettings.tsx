@@ -1,5 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import type { Session } from '../auth/client';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { deviceKey } from '../api/accountCache';
+import { sessionStore, type Session } from '../auth/client';
 import { Button } from '../ui/Button';
 import {
   applicationKey,
@@ -17,6 +19,7 @@ type Device = {
   subscription: PushSubscription | null;
   publicKey: string | null;
   enrolled: boolean;
+  settings: DeviceStatus;
 };
 
 const formatTime = (minutes: number) =>
@@ -40,20 +43,20 @@ export function NotificationSettings({
   timezone,
   setBusy,
   busy,
+  notify,
 }: {
   session: Session;
   timezone: string;
   setBusy: (busy: boolean) => void;
   busy: boolean;
+  notify: (message: string) => void;
 }) {
-  const [device, setDevice] = useState<Device | null>(null);
-  const [settings, setSettings] = useState(() => displaySettings(defaultDeviceSettings));
+  const cache = useQueryClient();
+  const [draft, setDraft] = useState<ReturnType<typeof displaySettings> | null>(null);
   const [permission, setPermission] = useState(() =>
     'Notification' in window ? Notification.permission : 'default',
   );
-  const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
-  const [reload, setReload] = useState(0);
+  const [actionError, setError] = useState('');
   const standalone =
     window.matchMedia('(display-mode: standalone)').matches ||
     (navigator as Navigator & { standalone?: boolean }).standalone === true;
@@ -62,42 +65,75 @@ export function NotificationSettings({
     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const supported = supportsPush() && (!appleMobile || standalone);
 
-  useEffect(() => {
-    if (!supported) return;
-    const abort = new AbortController();
-    async function load() {
+  const deviceQuery = useQuery({
+    queryKey: deviceKey,
+    enabled: supported,
+    staleTime: Infinity,
+    queryFn: async ({ signal }): Promise<Device> => {
       const registration = await navigator.serviceWorker.getRegistration('/');
-      const config = registration ? await pushConfig(session, abort.signal) : null;
       const subscription = (await registration?.pushManager?.getSubscription()) ?? null;
-      const status = subscription ? await pushStatus(session, subscription, abort.signal) : null;
-      if (abort.signal.aborted) return;
-      setDevice({
+      const [config, status] = await Promise.all([
+        registration ? pushConfig(session, signal) : null,
+        subscription ? pushStatus(session, subscription, signal) : null,
+      ]);
+      return {
         registration,
         subscription,
         publicKey: config?.public_key ?? null,
         enrolled: !!status,
-      });
-      setSettings(displaySettings(status ?? defaultDeviceSettings));
-    }
-    void load().catch(() => {
-      if (!abort.signal.aborted) setError('Notification settings could not be loaded.');
-    });
-    return () => abort.abort();
-  }, [supported, session, reload]);
+        settings: status ?? defaultDeviceSettings,
+      };
+    },
+  });
+  const device = deviceQuery.data;
+  const settings = draft ?? displaySettings(device?.settings ?? defaultDeviceSettings);
+  const error =
+    actionError || (deviceQuery.isError ? 'Notification settings could not be loaded.' : '');
 
   useEffect(() => {
+    let active = true;
+    async function checkSubscription() {
+      if (!supported || busy) return;
+      const cached = cache.getQueryData<Device>(deviceKey);
+      if (!cached) return;
+      try {
+        const registration = await navigator.serviceWorker.getRegistration('/');
+        const subscription = (await registration?.pushManager?.getSubscription()) ?? null;
+        if (
+          active &&
+          cache.getQueryData(deviceKey) === cached &&
+          (registration?.scope !== cached.registration?.scope ||
+            subscription?.endpoint !== cached.subscription?.endpoint)
+        ) {
+          void cache.invalidateQueries({ queryKey: deviceKey });
+        }
+      } catch {
+        // A local browser check can fail while the cached enrollment remains usable.
+      }
+    }
     const refresh = () => {
       if ('Notification' in window) setPermission(Notification.permission);
+      void checkSubscription();
     };
+    void checkSubscription();
     window.addEventListener('focus', refresh);
-    return () => window.removeEventListener('focus', refresh);
-  }, []);
+    return () => {
+      active = false;
+      window.removeEventListener('focus', refresh);
+    };
+  }, [busy, cache, supported]);
+
+  function updateDevice(value: Device) {
+    if (sessionStore.getSnapshot().session === session) {
+      cache.setQueryData(deviceKey, value);
+      setDraft(null);
+    }
+  }
 
   async function enable() {
     if (!device?.registration?.active || !device.publicKey || busy) return;
     setBusy(true);
     setError('');
-    setNotice('');
     try {
       const key = applicationKey(device.publicKey);
       if (device.subscription?.options.applicationServerKey) {
@@ -114,11 +150,11 @@ export function NotificationSettings({
           userVisibleOnly: true,
           applicationServerKey: key,
         }));
-      setDevice({ ...device, subscription });
+      if (sessionStore.getSnapshot().session !== session) return;
+      updateDevice({ ...device, subscription });
       const saved = await saveDevice(session, subscription, defaultDeviceSettings);
-      setSettings(displaySettings(saved));
-      setDevice({ ...device, subscription, enrolled: true });
-      setNotice('Notifications are enabled on this device.');
+      updateDevice({ ...device, subscription, enrolled: true, settings: saved });
+      notify('Notifications are enabled on this device.');
     } catch {
       if (Notification.permission !== 'denied')
         setError('Notifications could not be enabled. Check your connection and browser settings.');
@@ -137,15 +173,14 @@ export function NotificationSettings({
     }
     setBusy(true);
     setError('');
-    setNotice('');
     try {
       const saved = await saveDevice(session, device.subscription, {
         quiet_start: minutes(settings.start),
         quiet_end: minutes(settings.end),
         show_name: settings.showName,
       });
-      setSettings(displaySettings(saved));
-      setNotice('Notification settings saved.');
+      updateDevice({ ...device, settings: saved });
+      notify('Notification settings saved.');
     } catch {
       setError('Notification settings could not be saved. Try again.');
     } finally {
@@ -157,11 +192,15 @@ export function NotificationSettings({
     if (!device || busy) return;
     setBusy(true);
     setError('');
-    setNotice('');
     try {
       await disableDevice(session);
-      setDevice({ ...device, subscription: null, enrolled: false });
-      setNotice('Notifications are off on this device.');
+      updateDevice({
+        ...device,
+        subscription: null,
+        enrolled: false,
+        settings: defaultDeviceSettings,
+      });
+      notify('Notifications are off on this device.');
     } catch {
       setError('Notifications could not be turned off. Check your connection and try again.');
     } finally {
@@ -190,8 +229,6 @@ export function NotificationSettings({
           Notifications are blocked. Allow them in your device or browser settings to turn them on
           again.
         </p>
-      ) : !device && !error ? (
-        <p role="status">Checking notification settings…</p>
       ) : device?.registration && !device.publicKey ? (
         <p>External reminders are currently unavailable. You can still use Catch up in the app.</p>
       ) : device?.enrolled ? (
@@ -213,7 +250,7 @@ export function NotificationSettings({
       ) : device ? (
         <>
           <p>The app is still getting ready. Try checking again.</p>
-          <Button className="self-start" onClick={() => setReload((value) => value + 1)}>
+          <Button className="self-start" onClick={() => void deviceQuery.refetch()}>
             Check again
           </Button>
         </>
@@ -230,7 +267,7 @@ export function NotificationSettings({
               value={settings.start}
               required
               disabled={busy}
-              onChange={(event) => setSettings({ ...settings, start: event.target.value })}
+              onChange={(event) => setDraft({ ...settings, start: event.target.value })}
             />
           </label>
           <label>
@@ -240,7 +277,7 @@ export function NotificationSettings({
               value={settings.end}
               required
               disabled={busy}
-              onChange={(event) => setSettings({ ...settings, end: event.target.value })}
+              onChange={(event) => setDraft({ ...settings, end: event.target.value })}
             />
           </label>
           <label className="checkbox-row">
@@ -249,7 +286,7 @@ export function NotificationSettings({
               checked={settings.showName}
               disabled={busy}
               aria-describedby="notification-name-help"
-              onChange={(event) => setSettings({ ...settings, showName: event.target.checked })}
+              onChange={(event) => setDraft({ ...settings, showName: event.target.checked })}
             />
             Show a name in reminders
           </label>
@@ -266,7 +303,6 @@ export function NotificationSettings({
           Turn off on this device
         </Button>
       )}
-      {notice && <p role="status">{notice}</p>}
       {error && (
         <p role="alert" className="error-text">
           {error}
@@ -277,7 +313,7 @@ export function NotificationSettings({
           className="self-start"
           onClick={() => {
             setError('');
-            setReload((value) => value + 1);
+            void deviceQuery.refetch();
           }}
         >
           Retry notification settings

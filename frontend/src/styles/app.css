@@ -737,7 +737,90 @@ input[type='checkbox'] {
   scroll-margin-top: calc(var(--library-nav-height, 80px) + var(--space-4));
 }
 
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-action);
+  touch-action: none;
+  overscroll-behavior: contain;
+}
+
+.loading-overlay[open] {
+  display: grid;
+  place-items: center;
+}
+
+.loading-overlay::backdrop {
+  background: color-mix(in srgb, var(--color-page) 66%, transparent);
+}
+
+html:has(.loading-overlay[open]) {
+  overflow: hidden;
+}
+
+.loading-heart {
+  width: min(44rem, 88vw, 86dvh);
+  height: auto;
+}
+
+.password-field {
+  position: relative;
+}
+
+.password-field > input {
+  padding-inline-end: 52px;
+}
+
+.password-field > input::-ms-reveal {
+  display: none;
+}
+
+.password-field__toggle {
+  position: absolute;
+  inset-inline-end: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  min-width: 44px;
+  padding: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .loading-heart path {
+    stroke-dasharray: 100;
+    animation: trace-heart 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes trace-heart {
+  from {
+    stroke-dashoffset: 100;
+  }
+  75%,
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
 .toast {
+  --toast-dismiss-height: max(44px, var(--line-body));
   position: fixed;
   z-index: 20;
   bottom: max(var(--space-4), env(safe-area-inset-bottom));
@@ -759,14 +842,16 @@ input[type='checkbox'] {
 }
 
 .toast .button {
-  padding: var(--space-2);
+  padding: 0;
   min-width: 44px;
+  min-height: var(--toast-dismiss-height);
 }
 
 .toast__message {
   display: grid;
   grid-template-columns: 24px minmax(0, 1fr);
   gap: min(var(--space-2), 8px);
+  padding-block-start: calc((var(--toast-dismiss-height) - var(--line-body)) / 2);
 }
 
 .toast__message > svg {
@@ -778,9 +863,6 @@ input[type='checkbox'] {
     grid-template-columns: minmax(0, 1fr) auto;
     gap: min(var(--space-2), 8px);
     padding: min(var(--space-3), 16px);
-  }
-  .toast .button {
-    padding: min(var(--space-2), 8px);
   }
 }
 

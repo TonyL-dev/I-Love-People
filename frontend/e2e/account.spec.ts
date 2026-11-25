@@ -3,7 +3,7 @@ import AxeBuilder from '@axe-core/playwright';
 
 const owner = '11111111-1111-4111-8111-111111111111';
 
-async function mockAccount(page: Page, expires = 3600, protectedPreview = false) {
+async function mockAccount(page: Page, expires = 3600, protectedPreview = false, signup = false) {
   let timezone = 'UTC';
   await page.route('**/api/people', (route) => route.fulfill({ json: [] }));
   if (protectedPreview) {
@@ -22,6 +22,7 @@ async function mockAccount(page: Page, expires = 3600, protectedPreview = false)
         url: 'https://auth.example',
         publishable_key: 'sb_publishable_synthetic',
         minimum_password_length: 12,
+        signup_enabled: signup,
       },
     });
   });
@@ -66,9 +67,119 @@ test('Preview protection cookies reach the same-origin API without reaching Auth
   await signIn(page);
   await expect(page.getByRole('heading', { name: 'Your private space.' })).toBeVisible();
   await openAccountMenu(page);
-  await page.getByLabel('Timezone', { exact: true }).fill('America/Toronto');
+  await page.getByLabel('Timezone', { exact: true }).selectOption('America/Toronto');
   await page.getByRole('button', { name: 'Save timezone' }).click();
-  await expect(page.getByRole('status')).toContainText('Timezone saved');
+  await expect(page.locator('.toast').getByRole('status')).toHaveText('Timezone saved.');
+});
+
+test('signup blocks input with a centered heart and preserves input after rate limiting', async ({
+  page,
+}) => {
+  await mockAccount(page, 3600, false, true);
+  let result = 429;
+  const releases: Array<() => void> = [];
+  await page.route('https://auth.example/auth/v1/signup', async (route) => {
+    const headers = {
+      'access-control-allow-origin': '*',
+      'access-control-allow-headers': 'apikey,content-type',
+      'access-control-allow-methods': 'POST,OPTIONS',
+    };
+    if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers });
+    await new Promise<void>((resolve) => {
+      releases.push(resolve);
+    });
+    return route.fulfill({
+      status: result,
+      headers,
+      json: result === 429 ? { error_code: 'over_email_send_rate_limit' } : {},
+    });
+  });
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Create account' }).click();
+  await page.getByLabel('Email', { exact: true }).fill('new@example.test');
+  const password = page.getByLabel('Password', { exact: true });
+  await password.fill('SyntheticPassword123');
+  const submit = page.getByRole('button', { name: 'Create account' });
+  await submit.click();
+  const overlay = page.getByRole('dialog', { name: 'Loading' });
+  await expect(overlay).toBeVisible();
+  const heart = overlay.locator('.loading-heart');
+  await expect(heart.locator('path')).toHaveCSS('animation-name', 'trace-heart');
+  const desktop = await heart.boundingBox();
+  expect(desktop?.width).toBeGreaterThan(400);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: 'dark' });
+  await expect(heart.locator('path')).toHaveCSS('animation-name', 'none');
+  const phone = (await heart.boundingBox())!;
+  expect(phone.width).toBeGreaterThan(270);
+  expect(phone.x + phone.width / 2).toBeCloseTo(195, 0);
+  expect(phone.y + phone.height / 2).toBeCloseTo(422, 0);
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Tab');
+  await page.mouse.click(40, 27);
+  await expect(overlay).toBeVisible();
+  await expect(page).toHaveURL(/\/create-account$/);
+  expect(await page.evaluate(() => document.activeElement?.closest('form') === null)).toBe(true);
+  await page.screenshot({ path: test.info().outputPath('loading-heart-dark-phone.png') });
+  await expect.poll(() => releases.length).toBe(1);
+  releases.shift()?.();
+  await expect(page.getByRole('alert')).toHaveText(
+    'Too many attempts. Wait a little before trying again.',
+  );
+  await expect(overlay).toBeHidden();
+  await expect(password).toHaveValue('SyntheticPassword123');
+  result = 200;
+  await submit.click();
+  await expect.poll(() => releases.length).toBe(1);
+  releases.shift()?.();
+  await expect(
+    page.getByRole('status').filter({ hasText: 'a confirmation link is on its way' }),
+  ).toBeVisible();
+  await expect(overlay).toBeHidden();
+  await expect(password).toHaveCount(0);
+});
+
+test('the overlay blocks the drawer until every pending API request finishes', async ({ page }) => {
+  await mockAccount(page);
+  await page.clock.setFixedTime(new Date('2026-11-25T23:59:00Z'));
+  let releaseSave: (() => void) | undefined;
+  let releaseRefresh: (() => void) | undefined;
+  await page.route('**/api/profile', async (route) => {
+    if (route.request().method() !== 'PUT') return route.fallback();
+    await new Promise<void>((resolve) => {
+      releaseSave = resolve;
+    });
+    await route.fulfill({ json: { owner_id: owner, timezone: 'UTC' } });
+  });
+  await page.goto('/');
+  await signIn(page);
+  const drawer = await openAccountMenu(page);
+  await page.route('**/api/people', async (route) => {
+    await new Promise<void>((resolve) => {
+      releaseRefresh = resolve;
+    });
+    await route.fulfill({ json: [] });
+  });
+  await drawer.getByRole('button', { name: 'Save timezone' }).click();
+  const overlay = page.getByRole('dialog', { name: 'Loading' });
+  await expect(overlay).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#account-menu')).toBeVisible();
+  expect(await overlay.evaluate((node) => node.matches(':modal'))).toBe(true);
+  await page.clock.setFixedTime(new Date('2026-11-26T00:00:01Z'));
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await expect.poll(() => typeof releaseRefresh).toBe('function');
+  await expect.poll(() => typeof releaseSave).toBe('function');
+  const saved = page.waitForResponse(
+    (response) => response.url().endsWith('/api/profile') && response.request().method() === 'PUT',
+  );
+  releaseSave?.();
+  await saved;
+  await expect(page.locator('#account-menu .toast')).toContainText('Timezone saved.');
+  await expect(overlay).toBeVisible();
+  releaseRefresh?.();
+  await expect(overlay).toBeHidden();
+  await expect(drawer.locator('.toast')).toContainText('Timezone saved.');
 });
 
 async function signIn(page: Page) {
@@ -93,13 +204,14 @@ test('backup review, conflict, download and password confirmation work on a phon
   await mockAccount(page);
   const backup = { version: 1, timezone: 'America/Toronto', people: [], meetups: [] };
   let currentPeople = 1;
+  let previewRequests = 0;
   let deletionAttempts = 0;
   await page.route('**/api/privacy/**', async (route) => {
     expect(route.request().headers().authorization).toBe('Bearer synthetic-access');
     const url = route.request().url();
     if (url.endsWith('/backup')) return route.fulfill({ json: backup });
     if (url.endsWith('/preview')) {
-      if (route.request().postData() === 'invalid') return route.fulfill({ status: 422, json: {} });
+      previewRequests++;
       expect(route.request().postDataJSON()).toEqual(backup);
       return route.fulfill({
         json: {
@@ -136,6 +248,11 @@ test('backup review, conflict, download and password confirmation work on a phon
   const downloaded = page.waitForEvent('download');
   await privacy.getByRole('button', { name: 'Download backup' }).click();
   expect((await downloaded).suggestedFilename()).toBe('i-love-people-backup.json');
+  await expect(drawer.locator('.toast').getByRole('status')).toHaveText(
+    'Backup ready. Check your downloads.',
+  );
+  await expectToastAlignment(page);
+  await drawer.getByRole('button', { name: 'Dismiss notification' }).click();
 
   const file = privacy.getByLabel('Choose a backup to restore');
   const upload = (contents: string) =>
@@ -146,6 +263,29 @@ test('backup review, conflict, download and password confirmation work on a phon
     });
   await upload('invalid');
   await expect(privacy.getByRole('alert')).toContainText('unsupported format');
+  const backupPerson = {
+    id: owner,
+    name: 'Synthetic Maya',
+    priority: null,
+    cadence_count: null,
+    cadence_unit: null,
+    archived: false,
+    paused: false,
+    snoozed_until: null,
+    dismissed_on: null,
+  };
+  await upload(
+    JSON.stringify({
+      ...backup,
+      people: [
+        backupPerson,
+        { ...backupPerson, id: '22222222-2222-4222-8222-222222222222', archived: true },
+      ],
+    }),
+  );
+  await expect(privacy.getByRole('alert')).toContainText('duplicate person names');
+  expect(previewRequests).toBe(0);
+  await expect(privacy.getByRole('button', { name: 'Restore backup' })).toHaveCount(0);
   await upload(JSON.stringify(backup));
   await expect(privacy.getByText('Restore requires an empty library.')).toBeVisible();
   await expect(privacy.getByRole('button', { name: 'Restore backup' })).toHaveCount(0);
@@ -155,7 +295,10 @@ test('backup review, conflict, download and password confirmation work on a phon
   await upload(JSON.stringify(backup));
   await expect(privacy.getByRole('heading', { name: 'Review backup' })).toBeVisible();
   await privacy.getByRole('button', { name: 'Restore backup' }).click();
-  await expect(privacy.getByRole('status')).toHaveText('Restored 0 people and 0 meetups.');
+  await expect(drawer.locator('.toast').getByRole('status')).toHaveText(
+    'Restored 0 people and 0 meetups.',
+  );
+  await drawer.getByRole('button', { name: 'Dismiss notification' }).click();
 
   await privacy.getByRole('button', { name: 'Delete all data' }).click();
   const password = privacy.getByLabel('Current password');
@@ -192,7 +335,9 @@ test('backup review, conflict, download and password confirmation work on a phon
   await password.fill('SyntheticPassword123');
   await page.screenshot({ path: 'artifacts/local/privacy-delete-320.png' });
   await deleteButton.press('Enter');
-  await expect(privacy.getByRole('status')).toHaveText('All application data deleted.');
+  await expect(drawer.locator('.toast').getByRole('status')).toHaveText(
+    'All application data deleted.',
+  );
 });
 
 async function setAccountAppearance(page: Page, value: string) {
@@ -205,16 +350,34 @@ async function expectToastAlignment(page: Page) {
   const alignment = await page.locator('.toast__message').evaluate((message) => {
     const icon = message.querySelector('svg')!.getBoundingClientRect();
     const text = message.querySelector('span')!.getBoundingClientRect();
+    const button = message.parentElement!.querySelector('button')!;
+    const target = button.getBoundingClientRect();
+    const dismiss = button.querySelector('svg')!.getBoundingClientRect();
+    const toast = message.parentElement!.getBoundingClientRect();
+    const lineHeight = parseFloat(getComputedStyle(message).lineHeight);
     return {
       iconRight: icon.right,
       textLeft: text.left,
-      centerDifference: Math.abs(
-        icon.y + icon.height / 2 - text.y - parseFloat(getComputedStyle(message).lineHeight) / 2,
-      ),
+      buttonHeight: target.height,
+      buttonWidth: target.width,
+      dismissDifference: Math.abs(dismiss.y + dismiss.height / 2 - icon.y - icon.height / 2),
+      centerDifference: Math.abs(icon.y + icon.height / 2 - text.y - lineHeight / 2),
+      dismissOffsetX: Math.abs(dismiss.x + dismiss.width / 2 - target.x - target.width / 2),
+      dismissOffsetY: Math.abs(dismiss.y + dismiss.height / 2 - target.y - target.height / 2),
+      singleLineTargetOffset:
+        text.height <= lineHeight
+          ? Math.abs(target.y + target.height / 2 - toast.y - toast.height / 2)
+          : 0,
     };
   });
   expect(alignment.iconRight).toBeLessThan(alignment.textLeft);
   expect(alignment.centerDifference).toBeLessThan(2);
+  expect(alignment.dismissDifference).toBeLessThan(2);
+  expect(alignment.buttonHeight).toBeGreaterThanOrEqual(44);
+  expect(alignment.buttonWidth).toBeGreaterThanOrEqual(44);
+  expect(alignment.dismissOffsetX).toBeLessThan(1);
+  expect(alignment.dismissOffsetY).toBeLessThan(1);
+  expect(alignment.singleLineTargetOffset).toBeLessThan(1);
 }
 
 test('login, account preferences, reload and logout clear private UI and credential storage', async ({
@@ -225,9 +388,12 @@ test('login, account preferences, reload and logout clear private UI and credent
   await signIn(page);
   await expect(page.getByRole('heading', { name: 'Your private space.' })).toBeVisible();
   await openAccountMenu(page);
-  await page.getByLabel('Timezone', { exact: true }).fill('America/Toronto');
+  await page.getByRole('searchbox', { name: 'Search timezones' }).fill('Toronto');
+  await page.getByRole('searchbox', { name: 'Search timezones' }).press('Enter');
+  await expect(page.getByLabel('Timezone', { exact: true })).toBeFocused();
+  await page.getByLabel('Timezone', { exact: true }).selectOption({ label: 'Toronto (America)' });
   await page.getByRole('button', { name: 'Save timezone' }).click();
-  await expect(page.getByRole('status')).toContainText('Timezone saved');
+  await expect(page.locator('.toast').getByRole('status')).toHaveText('Timezone saved.');
   expect(
     await page.evaluate(() =>
       JSON.stringify([Object.entries(localStorage), Object.entries(sessionStorage)]),
@@ -253,7 +419,9 @@ test('recovery uses generic confirmation, strips tokens and returns to fresh log
   await page.goto('/forgot-password');
   await page.getByLabel('Email', { exact: true }).fill('synthetic@example.test');
   await page.getByRole('button', { name: 'Send reset link' }).click();
-  await expect(page.getByRole('status')).toContainText('If this address belongs');
+  await expect(
+    page.getByRole('status').filter({ hasText: 'If this address belongs' }),
+  ).toBeVisible();
   await page.goto(
     '/reset-password#access_token=synthetic-recovery&refresh_token=must-not-persist&type=recovery&expires_in=3600',
   );
@@ -266,7 +434,7 @@ test('recovery uses generic confirmation, strips tokens and returns to fresh log
   await page.getByLabel('Confirm password', { exact: true }).fill('SyntheticReplacement123');
   await page.getByRole('button', { name: 'Update password' }).click();
   await expect(page.getByRole('heading', { name: 'Keep your people close.' })).toBeVisible();
-  await expect(page.getByRole('status')).toContainText('Password updated');
+  await expect(page.getByRole('status').filter({ hasText: 'Password updated' })).toBeVisible();
 });
 
 test('expired sessions remove the account view', async ({ page }) => {
@@ -277,7 +445,7 @@ test('expired sessions remove the account view', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Keep your people close.' })).toBeVisible({
     timeout: 5000,
   });
-  await expect(page.getByRole('status')).toContainText('session expired');
+  await expect(page.getByRole('status').filter({ hasText: 'session expired' })).toBeVisible();
 });
 
 for (const appearance of ['light', 'dark']) {
@@ -441,6 +609,118 @@ const nudgePerson = {
   suppression: null,
   reason: 'Last meetup 2020-02-29; every 2 weeks; catch-up date 2020-03-14',
 };
+
+test('cache reuses library and history until a day change, expiry, or manual refresh', async ({
+  page,
+}) => {
+  await mockAccount(page, 48 * 3600);
+  await page.clock.install({ time: new Date('2026-11-26T04:55:00Z') });
+  const reads = { people: 0, history: 0, profile: 0 };
+  await page.route('**/api/people', (route) => {
+    reads.people++;
+    return route.fulfill({ json: [nudgePerson] });
+  });
+  await page.route('**/api/people/*/meetups', (route) => {
+    reads.history++;
+    return route.fulfill({ json: [] });
+  });
+  await page.route('**/api/profile', (route) => {
+    reads.profile++;
+    return route.fulfill({ json: { owner_id: owner, timezone: 'America/Toronto' } });
+  });
+  await page.goto('http://127.0.0.1:4174/');
+  await signIn(page);
+  await page.getByRole('button', { name: 'People', exact: true }).click();
+  const openPerson = () =>
+    page.getByRole('button', { name: 'Synthetic Maya', exact: true }).click();
+  const back = () => page.getByRole('button', { name: 'Back to People', exact: true }).click();
+  await openPerson();
+  await expect(page.getByText('No meetup logged.', { exact: false })).toBeVisible();
+  expect(reads).toEqual({ people: 1, history: 1, profile: 1 });
+
+  await page.clock.fastForward(2 * 60 * 1000);
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await back();
+  await openPerson();
+  await expect(page.getByText('No meetup logged.', { exact: false })).toBeVisible();
+  expect(reads).toEqual({ people: 1, history: 1, profile: 1 });
+
+  await page.clock.fastForward(4 * 60 * 1000);
+  await expect(page.getByText('Today: 2026-11-26 · America/Toronto')).toBeVisible();
+  await expect.poll(() => reads.people).toBe(2);
+  expect(reads.history).toBe(1);
+  await page.getByRole('button', { name: 'Refresh history', exact: true }).click();
+  await expect.poll(() => reads.history).toBe(2);
+  expect(reads.people).toBe(2);
+  await page.getByRole('button', { name: 'Refresh people', exact: true }).click();
+  await expect.poll(() => reads.people).toBe(3);
+  expect(reads.history).toBe(2);
+
+  await back();
+  await page.clock.setSystemTime(new Date('2026-11-27T05:02:00Z'));
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await openPerson();
+  await expect.poll(() => reads.history).toBe(3);
+  expect(reads.profile).toBe(1);
+});
+
+test('person names are checked against active and archived entries before a write', async ({
+  page,
+}) => {
+  await mockAccount(page);
+  const archived = {
+    ...nudgePerson,
+    id: '22222222-2222-4222-8222-222222222222',
+    name: 'Synthetic Jo',
+    archived: true,
+  };
+  const people = [nudgePerson, archived];
+  const writes: string[] = [];
+  await page.route('**/api/people', (route) => {
+    if (route.request().method() === 'GET') return route.fulfill({ json: people });
+    const { name } = route.request().postDataJSON() as { name: string };
+    writes.push(name);
+    const saved = { ...nudgePerson, name, id: '33333333-3333-4333-8333-333333333333' };
+    people.push(saved);
+    return route.fulfill({ json: saved });
+  });
+  await page.route('**/api/people/*/meetups', (route) => route.fulfill({ json: [] }));
+  await page.route(`**/api/people/${owner}`, (route) => {
+    const { name } = route.request().postDataJSON() as { name: string };
+    writes.push(name);
+    return route.fulfill({ json: nudgePerson });
+  });
+  await page.goto('/');
+  await signIn(page);
+  await page.getByRole('button', { name: 'Add person', exact: true }).click();
+  const form = page.getByRole('dialog', { name: /^(Add|Edit) person$/ });
+  const name = form.getByRole('textbox', { name: 'Name', exact: true });
+  const save = form.getByRole('button', { name: 'Save person' });
+  await name.fill('  Synthetic Maya  ');
+  await save.click();
+  await expect(name).toHaveAccessibleDescription(
+    'A person already has this name. Choose a different name.',
+  );
+  await name.fill('Synthetic Jo');
+  await save.click();
+  await expect(form.getByRole('alert')).toContainText('An archived person already has this name');
+  expect(writes).toEqual([]);
+
+  await name.fill('  synthetic maya  ');
+  await save.click();
+  await expect(form).toBeHidden();
+  expect(writes).toEqual(['synthetic maya']);
+  await page.getByRole('button', { name: 'Synthetic Maya', exact: true }).click();
+  await page.getByRole('button', { name: 'Edit person', exact: true }).click();
+  await name.fill('Synthetic Jo');
+  await save.click();
+  await expect(form.getByRole('alert')).toContainText('An archived person already has this name');
+  expect(writes).toEqual(['synthetic maya']);
+  await name.fill('Synthetic Maya');
+  await save.click();
+  await expect(form).toBeHidden();
+  expect(writes).toEqual(['synthetic maya', 'Synthetic Maya']);
+});
 
 test('library navigation, person focus and back preserve mobile context', async ({ page }) => {
   test.setTimeout(90_000);
@@ -614,6 +894,7 @@ test('settings drawer stays out of the library and preserves context with keyboa
   await page.getByRole('button', { name: 'Synthetic Maya', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Your preferences', exact: true })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Account', exact: true })).toHaveCount(0);
+  const overlay = page.getByRole('dialog', { name: 'Loading' });
   for (const appearance of ['light', 'dark']) {
     for (const width of [320, 390, 768, 1440]) {
       await page.setViewportSize({ width, height: 900 });
@@ -629,6 +910,7 @@ test('settings drawer stays out of the library and preserves context with keyboa
       expect(await drawer.evaluate((e) => e.scrollWidth <= e.clientWidth)).toBe(true);
       expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
       await page.screenshot({ path: `artifacts/local/account-drawer-${appearance}-${width}.png` });
+      await expect(overlay).toBeHidden();
       await page.keyboard.press('Escape');
       await expect(drawer).toHaveCount(0);
       await expect(page.getByRole('button', { name: 'Menu', exact: true })).toBeFocused();
@@ -653,8 +935,12 @@ test('settings drawer stays out of the library and preserves context with keyboa
   await expect(drawer.getByRole('button', { name: 'Close', exact: true })).toBeInViewport();
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await page.screenshot({ path: 'artifacts/local/account-drawer-large-dark.png' });
-  await page.mouse.click(5, 450);
-  await expect(drawer).toHaveCount(0);
+  // A click returning focus from browser chrome can start a background refresh.
+  await expect(async () => {
+    await expect(overlay).toBeHidden();
+    if (await drawer.isVisible()) await page.mouse.click(5, 450);
+    await expect(drawer).toBeHidden({ timeout: 1000 });
+  }).toPass({ timeout: 10_000 });
   await expect(page.getByRole('button', { name: 'Menu', exact: true })).toBeFocused();
   await page.evaluate(() => {
     document.documentElement.style.fontSize = '';
@@ -700,11 +986,14 @@ test('notification preferences require opt-in and sign-out turns off this device
       Promise.resolve(registration as unknown as ServiceWorkerRegistration);
   });
   const calls: string[] = [];
+  const settingsReads: string[] = [];
   let savedSettings = { quiet_start: 1260, quiet_end: 540, show_name: false };
   await page.route('**/api/push/**', (route) => {
     const action = route.request().url().split('/').at(-1);
-    if (action === 'config') return route.fulfill({ json: { public_key: 'AQ' } });
-    if (action === 'status') return route.fulfill({ json: savedSettings });
+    if (action === 'config' || action === 'status') {
+      settingsReads.push(action);
+      return route.fulfill({ json: action === 'config' ? { public_key: 'AQ' } : savedSettings });
+    }
     calls.push(action ?? '');
     if (action === 'unsubscribe') return route.fulfill({ status: 204 });
     const { quiet_start, quiet_end, show_name } = route.request().postDataJSON() as {
@@ -719,18 +1008,29 @@ test('notification preferences require opt-in and sign-out turns off this device
   await signIn(page);
   const drawer = await openAccountMenu(page);
   const scope = drawer.getByRole('region', { name: 'Notifications on this device' });
+  const toast = drawer.locator('.toast');
+  const dismiss = toast.getByRole('button', { name: 'Dismiss notification' });
+  await drawer.getByLabel('Timezone', { exact: true }).selectOption('America/Toronto');
+  await drawer.getByRole('button', { name: 'Save timezone' }).click();
+  await expect(toast.getByRole('status')).toHaveText('Timezone saved.');
+  await dismiss.click();
   const enable = scope.getByRole('button', { name: 'Enable on this device' });
   await expect(enable).toBeEnabled();
   expect(calls).toEqual([]);
   await enable.click();
   await expect(scope.getByText('Enabled on this device.', { exact: true })).toBeVisible();
+  await expect(toast.getByRole('status')).toHaveText('Notifications are enabled on this device.');
+  await expect(
+    scope.getByText('Quiet hours follow your account timezone (America/Toronto).'),
+  ).toBeVisible();
+  await dismiss.click();
   const showNames = scope.getByRole('checkbox', { name: 'Show a name in reminders' });
   await expect(showNames).not.toBeChecked();
   await expect(showNames).toHaveAccessibleDescription('The name may appear on your lock screen.');
   await showNames.check();
   await scope.getByLabel('Quiet hours start').fill('22:00');
   await scope.getByRole('button', { name: 'Save notification settings' }).click();
-  await expect(scope.getByText('Notification settings saved.')).toBeVisible();
+  await expect(toast.getByRole('status')).toHaveText('Notification settings saved.');
   expect(savedSettings).toEqual({ quiet_start: 1320, quiet_end: 540, show_name: true });
   for (const [width, colorScheme] of [
     [390, 'light'],
@@ -739,6 +1039,7 @@ test('notification preferences require opt-in and sign-out turns off this device
     await page.setViewportSize({ width, height: 900 });
     await page.emulateMedia({ colorScheme });
     await showNames.scrollIntoViewIfNeeded();
+    await expectToastAlignment(page);
     await expect
       .poll(() => drawer.evaluate((node) => node.scrollWidth <= node.clientWidth))
       .toBe(true);
@@ -746,12 +1047,15 @@ test('notification preferences require opt-in and sign-out turns off this device
       path: test.info().outputPath(`notifications-${width}-${colorScheme}.png`),
     });
   }
+  await dismiss.click();
   await page.keyboard.press('Escape');
   await openAccountMenu(page);
   await expect(showNames).toBeChecked();
+  expect(settingsReads).toEqual(['config']);
   await showNames.uncheck();
   await scope.getByRole('button', { name: 'Save notification settings' }).click();
-  await expect(scope.getByText('Notification settings saved.')).toBeVisible();
+  await expect(toast.getByRole('status')).toHaveText('Notification settings saved.');
+  await dismiss.click();
   expect(savedSettings).toEqual({ quiet_start: 1320, quiet_end: 540, show_name: false });
   await page.keyboard.press('Escape');
   await openAccountMenu(page);

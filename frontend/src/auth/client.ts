@@ -1,4 +1,6 @@
 import type { components } from '../api/schema';
+import { createAccountCache, profileKey } from '../api/accountCache';
+import { beginRequest } from '../api/pendingRequests';
 
 export type AuthConfig = components['schemas']['PublicAuthConfig'];
 export type Profile = components['schemas']['AccountProfile'];
@@ -30,6 +32,7 @@ export async function jsonRequest(
   const timer = window.setTimeout(abort, 10_000);
   init?.signal?.addEventListener('abort', abort, { once: true });
   if (init?.signal?.aborted) controller.abort();
+  const finish = beginRequest();
   try {
     const response = await fetch(url, {
       ...init,
@@ -58,6 +61,7 @@ export async function jsonRequest(
   } finally {
     window.clearTimeout(timer);
     init?.signal?.removeEventListener('abort', abort);
+    finish();
   }
 }
 
@@ -71,6 +75,11 @@ async function passwordUpdateError(response: Response): Promise<string | undefin
     body.error_code === 'same_password'
   )
     return 'Choose a password different from your current one.';
+}
+
+async function providerErrorCode(response: Response): Promise<unknown> {
+  const body: unknown = await response.json().catch(() => null);
+  return body && typeof body === 'object' && 'error_code' in body ? body.error_code : undefined;
 }
 
 function record(value: unknown): Record<string, unknown> {
@@ -88,7 +97,12 @@ export async function loadAuthConfig(signal: AbortSignal): Promise<AuthConfig> {
     typeof value.minimum_password_length !== 'number'
   )
     throw new AccountError(0, 'Account setup is unavailable.');
-  return value as unknown as AuthConfig;
+  return {
+    url: value.url,
+    publishable_key: value.publishable_key,
+    minimum_password_length: value.minimum_password_length,
+    signup_enabled: value.signup_enabled === true,
+  };
 }
 
 export class AccountClient {
@@ -143,6 +157,52 @@ export class AccountClient {
       email,
       recovery: false,
     };
+  }
+  async signUp(email: string, password: string, signal: AbortSignal): Promise<void> {
+    if (!this.config.signup_enabled) throw new AccountError(403, 'Registration is closed.');
+    let duplicate = false;
+    try {
+      await this.provider(
+        '/signup',
+        'POST',
+        { email, password },
+        {
+          signal,
+          messageForError: async (response) => {
+            const code = await providerErrorCode(response);
+            duplicate = code === 'user_already_exists' || code === 'email_exists';
+            if (code === 'weak_password') return 'Choose a stronger password and try again.';
+            if (code === 'signup_disabled') return 'Registration is closed.';
+            if (code === 'over_email_send_rate_limit' || code === 'over_request_rate_limit')
+              return 'Too many attempts. Wait a little before trying again.';
+          },
+        },
+      );
+    } catch (error) {
+      if (!duplicate) throw error;
+    }
+    // Confirmation settings control whether the provider returns a session. Never use it here.
+  }
+  async confirmEmail(tokenHash: string): Promise<void> {
+    const value = record(
+      await this.provider(
+        '/verify',
+        'POST',
+        { token_hash: tokenHash, type: 'email' },
+        {
+          messageForError: async (response) =>
+            [400, 401, 403, 422].includes(response.status)
+              ? 'This confirmation link is invalid, expired, or already used.'
+              : undefined,
+        },
+      ),
+    );
+    if (typeof value.access_token !== 'string')
+      throw new AccountError(0, 'Email confirmation could not be verified. Try signing in.');
+    // End only the session created by confirmation. Existing signed-in devices are independent.
+    await this.provider('/logout?scope=local', 'POST', undefined, {
+      token: value.access_token,
+    }).catch(() => undefined);
   }
   async recover(email: string): Promise<void> {
     const redirect = encodeURIComponent(window.location.origin + '/reset-password');
@@ -220,13 +280,19 @@ export function recoveryFromLocation(): { session: Session | null; notice: strin
   };
 }
 
-type Snapshot = { session: Session | null; notice: string };
+type Snapshot = {
+  session: Session | null;
+  notice: string;
+  cache?: ReturnType<typeof createAccountCache>;
+};
 const listeners = new Set<() => void>();
 let snapshot: Snapshot = { session: null, notice: '' };
 let expiryTimer: number | undefined;
 function publish(next: Snapshot) {
   if (expiryTimer !== undefined) window.clearTimeout(expiryTimer);
+  const previousCache = snapshot.cache;
   snapshot = next;
+  previousCache?.clear();
   if (next.session) {
     expiryTimer = window.setTimeout(
       () => sessionStore.clear('Your session expired. Sign in again.'),
@@ -243,10 +309,26 @@ export const sessionStore = {
       listeners.delete(listener);
     };
   },
-  signIn: (session: Session) => publish({ session, notice: '' }),
+  signIn: (session: Session, profile?: Profile) => {
+    const cache = createAccountCache((error) => {
+      if (snapshot.session === session && error instanceof AccountError && error.status === 401) {
+        sessionStore.clear('Your session ended. Sign in again.');
+      }
+    });
+    if (profile) cache.setQueryData(profileKey, profile);
+    publish({ session, notice: '', cache });
+  },
   clear: (notice = '') => publish({ session: null, notice }),
 };
 
 export function initializeRecovery() {
   publish(recoveryFromLocation());
+}
+
+export function confirmationFromLocation() {
+  if (window.location.pathname !== '/confirm-email') return null;
+  const values = new URLSearchParams(window.location.hash.slice(1));
+  const token = values.get('token_hash');
+  window.history.replaceState(null, '', '/confirm-email');
+  return token;
 }

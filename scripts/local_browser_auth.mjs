@@ -37,6 +37,26 @@ try {
     await page.getByRole('button', { name: 'Sign in', exact: true }).click();
     await page.getByRole('heading', { name: 'Your private space.' }).waitFor();
   }
+  async function capturedLink(matches) {
+    const deadline = Date.now() + 15_000;
+    while (Date.now() < deadline) {
+      const listing = await (
+        await context.request.get('http://127.0.0.1:54324/api/v1/messages?limit=1000')
+      ).json();
+      for (const message of listing.messages) {
+        if (!message.To.some((recipient) => recipient.Address === fixture.email)) continue;
+        const detail = await (
+          await context.request.get('http://127.0.0.1:54324/api/v1/message/' + message.ID)
+        ).json();
+        for (const match of detail.HTML.matchAll(/href="([^"]+)"/g)) {
+          const url = new URL(match[1].replaceAll('&amp;', '&'));
+          if (matches(url)) return url.href;
+        }
+      }
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+    throw new Error('Captured Auth email link was not found');
+  }
   async function openAccountMenu() {
     const menu = page.getByRole('dialog', { name: 'Settings and account' });
     if (!(await menu.isVisible()))
@@ -58,11 +78,38 @@ try {
   stage = 'navigation';
   await page.goto('http://127.0.0.1:5173/');
   diagnostics.navigation = true;
+  stage = 'managed-signup';
+  await page.getByRole('link', { name: 'Create account', exact: true }).click();
+  await page.getByLabel('Email', { exact: true }).fill(fixture.email);
+  await page.getByLabel('Password', { exact: true }).fill(fixture.password);
+  await page.getByRole('button', { name: 'Create account', exact: true }).click();
+  await expect(page.getByText('Check your email.', { exact: true })).toBeVisible();
+  assert.equal((await context.request.get('http://127.0.0.1:8000/api/people')).status(), 401);
+  stage = 'captured-confirmation-email';
+  const confirmation = await capturedLink(
+    (url) =>
+      url.origin === 'http://127.0.0.1:5173' &&
+      url.pathname === '/confirm-email' &&
+      url.hash.startsWith('#token_hash='),
+  );
+  await page.goto(confirmation);
+  assert.equal(new URL(page.url()).hash, '');
+  await page.getByRole('button', { name: 'Confirm email' }).click();
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Email confirmed. Sign in to open your library.' }),
+  ).toBeVisible();
+  await page.goto(confirmation);
+  await page.getByRole('button', { name: 'Confirm email' }).click();
+  await expect(page.getByRole('alert')).toContainText('invalid, expired, or already used');
+  await page.getByRole('link', { name: 'Back to sign in' }).click();
   stage = 'managed-login';
   await login(fixture.password);
+  await page.getByRole('button', { name: 'People', exact: true }).click();
+  await expect(page.getByText('No people yet.', { exact: false })).toBeVisible();
   stage = 'owned-preference';
   await openAccountMenu();
-  await page.getByLabel('Timezone', { exact: true }).fill('America/Toronto');
+  await page.getByRole('searchbox', { name: 'Search timezones' }).fill('Toronto');
+  await page.getByLabel('Timezone', { exact: true }).selectOption('America/Toronto');
   await page.getByRole('button', { name: 'Save timezone' }).click();
   await page.getByText('Timezone saved.', { exact: true }).waitFor();
   await closeAccountMenu();
@@ -199,38 +246,19 @@ try {
   await page.getByLabel('Email', { exact: true }).fill(fixture.email);
   await page.getByRole('button', { name: 'Send reset link' }).click();
   await page.getByText('Check your email.', { exact: true }).waitFor();
-  let link;
-  const deadline = Date.now() + 15_000;
-  while (!link && Date.now() < deadline) {
-    const listing = await (
-      await context.request.get('http://127.0.0.1:54324/api/v1/messages?limit=1000')
-    ).json();
-    for (const message of listing.messages) {
-      if (!message.To.some((recipient) => recipient.Address === fixture.email)) continue;
-      const detail = await (
-        await context.request.get('http://127.0.0.1:54324/api/v1/message/' + message.ID)
-      ).json();
-      for (const match of detail.HTML.matchAll(/href="([^"]+)"/g)) {
-        const value = match[1].replaceAll('&amp;', '&');
-        const url = new URL(value);
-        if (
-          url.origin === 'http://127.0.0.1:54321' &&
-          url.pathname === '/auth/v1/verify' &&
-          url.searchParams.get('type') === 'recovery'
-        )
-          link = value;
-      }
-    }
-    if (!link) await new Promise((resolve) => setTimeout(resolve, 250));
-  }
-  assert(link);
+  const link = await capturedLink(
+    (url) =>
+      url.origin === 'http://127.0.0.1:54321' &&
+      url.pathname === '/auth/v1/verify' &&
+      url.searchParams.get('type') === 'recovery',
+  );
   const verified = await context.request.get(link, { maxRedirects: 0 });
   const destination = verified.headers().location;
   assert.equal(new URL(destination).origin, 'http://127.0.0.1:5173');
   assert.equal(new URL(destination).pathname, '/reset-password');
   stage = 'managed-password-reset';
   await page.goto(destination);
-  await page.getByRole('button', { name: 'Update password' }).waitFor();
+  await expect(page.getByRole('button', { name: 'Update password' })).toBeEnabled();
   assert.equal(new URL(page.url()).hash, '');
   stage = 'same-password-reset';
   await page.getByLabel('New password', { exact: true }).fill(fixture.password);

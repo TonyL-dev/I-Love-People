@@ -681,6 +681,11 @@ export interface components {
             minimum_password_length: number;
             /** Publishable Key */
             publishable_key: string;
+            /**
+             * Signup Enabled
+             * @default false
+             */
+            signup_enabled: boolean;
             /** Url */
             url: string;
         };

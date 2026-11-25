@@ -55,7 +55,9 @@ def public_config(settings: Settings) -> PublicAuthConfig:
                 raise ValueError()
         except Exception:
             raise AuthenticationUnavailable() from None
-    return PublicAuthConfig(url=url.rstrip("/"), publishable_key=key)
+    return PublicAuthConfig(
+        url=url.rstrip("/"), publishable_key=key, signup_enabled=settings.signup_enabled
+    )
 
 
 class TokenVerifier(Protocol):

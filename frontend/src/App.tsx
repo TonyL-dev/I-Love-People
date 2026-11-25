@@ -8,6 +8,7 @@ import { Notice } from './ui/Notice';
 import { samplePeople, type SamplePerson } from './design/fixtures';
 import { MeetupDialog } from './design/MeetupDialog';
 import { AccountPage } from './auth/AccountPage';
+import { confirmationFromLocation } from './auth/client';
 import { Components } from './design/Components';
 
 import { AppearanceField, type Appearance } from './ui/Appearance';
@@ -44,11 +45,12 @@ function subscribeToConnection(update: () => void) {
   };
 }
 
-export function App() {
+export function App({ initialConfirmation }: { initialConfirmation: string | null }) {
   const path = usePath();
   const online = useSyncExternalStore(subscribeToConnection, () => navigator.onLine);
   const isDesign = path === '/design' || path.startsWith('/design/');
   const [appearance, setAppearance] = useState<Appearance>(initialAppearance);
+  const [confirmation, setConfirmation] = useState({ token: initialConfirmation, attempt: 0 });
   const [sampleState, setSampleState] = useState<SampleState>('ready');
   const [query, setQuery] = useState('');
   const [logging, setLogging] = useState<SamplePerson | null>(null);
@@ -56,6 +58,16 @@ export function App() {
   const [notice, setNotice] = useState('');
   const mainRef = useRef<HTMLElement>(null);
   const previousPath = useRef(path);
+
+  useEffect(() => {
+    function captureConfirmation() {
+      if (window.location.pathname !== '/confirm-email' || !window.location.hash) return;
+      const token = confirmationFromLocation();
+      setConfirmation((current) => ({ token, attempt: current.attempt + 1 }));
+    }
+    window.addEventListener('hashchange', captureConfirmation);
+    return () => window.removeEventListener('hashchange', captureConfirmation);
+  }, []);
 
   useEffect(() => {
     document.documentElement.dataset.appearance = appearance;
@@ -81,8 +93,25 @@ export function App() {
 
   function renderPage() {
     if (!isDesign)
-      return ['/', '/login', '/forgot-password', '/reset-password'].includes(path) ? (
-        <AccountPage path={path} appearance={appearance} setAppearance={setAppearance} />
+      return [
+        '/',
+        '/login',
+        '/forgot-password',
+        '/reset-password',
+        '/create-account',
+        '/confirm-email',
+      ].includes(path) ? (
+        <AccountPage
+          path={path}
+          appearance={appearance}
+          setAppearance={setAppearance}
+          confirmation={confirmation}
+          discardConfirmation={(attempt) =>
+            setConfirmation((current) =>
+              current.attempt === attempt ? { ...current, token: null } : current,
+            )
+          }
+        />
       ) : (
         <EmptyState
           title="That page isn’t here."
