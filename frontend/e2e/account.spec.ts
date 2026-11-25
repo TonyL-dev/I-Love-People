@@ -141,6 +141,7 @@ test('signup blocks input with a centered heart and preserves input after rate l
 
 test('the overlay blocks the drawer until every pending API request finishes', async ({ page }) => {
   await mockAccount(page);
+  await page.clock.setFixedTime(new Date('2026-11-25T23:59:00Z'));
   let releaseSave: (() => void) | undefined;
   let releaseRefresh: (() => void) | undefined;
   await page.route('**/api/profile', async (route) => {
@@ -148,7 +149,7 @@ test('the overlay blocks the drawer until every pending API request finishes', a
     await new Promise<void>((resolve) => {
       releaseSave = resolve;
     });
-    await route.fulfill({ json: { owner_id: owner, timezone: 'America/Toronto' } });
+    await route.fulfill({ json: { owner_id: owner, timezone: 'UTC' } });
   });
   await page.goto('/');
   await signIn(page);
@@ -159,13 +160,13 @@ test('the overlay blocks the drawer until every pending API request finishes', a
     });
     await route.fulfill({ json: [] });
   });
-  await drawer.getByLabel('Timezone', { exact: true }).selectOption('America/Toronto');
   await drawer.getByRole('button', { name: 'Save timezone' }).click();
   const overlay = page.getByRole('dialog', { name: 'Loading' });
   await expect(overlay).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.locator('#account-menu')).toBeVisible();
   expect(await overlay.evaluate((node) => node.matches(':modal'))).toBe(true);
+  await page.clock.setFixedTime(new Date('2026-11-26T00:00:01Z'));
   await page.evaluate(() => window.dispatchEvent(new Event('focus')));
   await expect.poll(() => typeof releaseRefresh).toBe('function');
   await expect.poll(() => typeof releaseSave).toBe('function');
@@ -609,6 +610,60 @@ const nudgePerson = {
   reason: 'Last meetup 2020-02-29; every 2 weeks; catch-up date 2020-03-14',
 };
 
+test('cache reuses library and history until a day change, expiry, or manual refresh', async ({
+  page,
+}) => {
+  await mockAccount(page, 48 * 3600);
+  await page.clock.install({ time: new Date('2026-11-26T04:55:00Z') });
+  const reads = { people: 0, history: 0, profile: 0 };
+  await page.route('**/api/people', (route) => {
+    reads.people++;
+    return route.fulfill({ json: [nudgePerson] });
+  });
+  await page.route('**/api/people/*/meetups', (route) => {
+    reads.history++;
+    return route.fulfill({ json: [] });
+  });
+  await page.route('**/api/profile', (route) => {
+    reads.profile++;
+    return route.fulfill({ json: { owner_id: owner, timezone: 'America/Toronto' } });
+  });
+  await page.goto('http://127.0.0.1:4174/');
+  await signIn(page);
+  await page.getByRole('button', { name: 'People', exact: true }).click();
+  const openPerson = () =>
+    page.getByRole('button', { name: 'Synthetic Maya', exact: true }).click();
+  const back = () => page.getByRole('button', { name: 'Back to People', exact: true }).click();
+  await openPerson();
+  await expect(page.getByText('No meetup logged.', { exact: false })).toBeVisible();
+  expect(reads).toEqual({ people: 1, history: 1, profile: 1 });
+
+  await page.clock.fastForward(2 * 60 * 1000);
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await back();
+  await openPerson();
+  await expect(page.getByText('No meetup logged.', { exact: false })).toBeVisible();
+  expect(reads).toEqual({ people: 1, history: 1, profile: 1 });
+
+  await page.clock.fastForward(4 * 60 * 1000);
+  await expect(page.getByText('Today: 2026-11-26 · America/Toronto')).toBeVisible();
+  await expect.poll(() => reads.people).toBe(2);
+  expect(reads.history).toBe(1);
+  await page.getByRole('button', { name: 'Refresh history', exact: true }).click();
+  await expect.poll(() => reads.history).toBe(2);
+  expect(reads.people).toBe(2);
+  await page.getByRole('button', { name: 'Refresh people', exact: true }).click();
+  await expect.poll(() => reads.people).toBe(3);
+  expect(reads.history).toBe(2);
+
+  await back();
+  await page.clock.setSystemTime(new Date('2026-11-27T05:02:00Z'));
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await openPerson();
+  await expect.poll(() => reads.history).toBe(3);
+  expect(reads.profile).toBe(1);
+});
+
 test('person names are checked against active and archived entries before a write', async ({
   page,
 }) => {
@@ -931,11 +986,14 @@ test('notification preferences require opt-in and sign-out turns off this device
       Promise.resolve(registration as unknown as ServiceWorkerRegistration);
   });
   const calls: string[] = [];
+  const settingsReads: string[] = [];
   let savedSettings = { quiet_start: 1260, quiet_end: 540, show_name: false };
   await page.route('**/api/push/**', (route) => {
     const action = route.request().url().split('/').at(-1);
-    if (action === 'config') return route.fulfill({ json: { public_key: 'AQ' } });
-    if (action === 'status') return route.fulfill({ json: savedSettings });
+    if (action === 'config' || action === 'status') {
+      settingsReads.push(action);
+      return route.fulfill({ json: action === 'config' ? { public_key: 'AQ' } : savedSettings });
+    }
     calls.push(action ?? '');
     if (action === 'unsubscribe') return route.fulfill({ status: 204 });
     const { quiet_start, quiet_end, show_name } = route.request().postDataJSON() as {
@@ -993,6 +1051,7 @@ test('notification preferences require opt-in and sign-out turns off this device
   await page.keyboard.press('Escape');
   await openAccountMenu(page);
   await expect(showNames).toBeChecked();
+  expect(settingsReads).toEqual(['config']);
   await showNames.uncheck();
   await scope.getByRole('button', { name: 'Save notification settings' }).click();
   await expect(toast.getByRole('status')).toHaveText('Notification settings saved.');

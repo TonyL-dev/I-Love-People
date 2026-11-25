@@ -1,4 +1,5 @@
 import type { components } from '../api/schema';
+import { createAccountCache, profileKey } from '../api/accountCache';
 import { beginRequest } from '../api/pendingRequests';
 
 export type AuthConfig = components['schemas']['PublicAuthConfig'];
@@ -279,13 +280,19 @@ export function recoveryFromLocation(): { session: Session | null; notice: strin
   };
 }
 
-type Snapshot = { session: Session | null; notice: string };
+type Snapshot = {
+  session: Session | null;
+  notice: string;
+  cache?: ReturnType<typeof createAccountCache>;
+};
 const listeners = new Set<() => void>();
 let snapshot: Snapshot = { session: null, notice: '' };
 let expiryTimer: number | undefined;
 function publish(next: Snapshot) {
   if (expiryTimer !== undefined) window.clearTimeout(expiryTimer);
+  const previousCache = snapshot.cache;
   snapshot = next;
+  previousCache?.clear();
   if (next.session) {
     expiryTimer = window.setTimeout(
       () => sessionStore.clear('Your session expired. Sign in again.'),
@@ -302,7 +309,15 @@ export const sessionStore = {
       listeners.delete(listener);
     };
   },
-  signIn: (session: Session) => publish({ session, notice: '' }),
+  signIn: (session: Session, profile?: Profile) => {
+    const cache = createAccountCache((error) => {
+      if (snapshot.session === session && error instanceof AccountError && error.status === 401) {
+        sessionStore.clear('Your session ended. Sign in again.');
+      }
+    });
+    if (profile) cache.setQueryData(profileKey, profile);
+    publish({ session, notice: '', cache });
+  },
   clear: (notice = '') => publish({ session: null, notice }),
 };
 

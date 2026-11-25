@@ -7,11 +7,13 @@ export function NudgeControls({
   person,
   session,
   refresh,
+  reloadConflict,
   notify,
 }: {
   person: Person;
   session: Session;
   refresh: (updated: Person) => void;
+  reloadConflict: (error: unknown) => void;
   notify: (message: string) => void;
 }) {
   const [until, setUntil] = useState('');
@@ -39,6 +41,7 @@ export function NudgeControls({
         }[action] ?? 'Nudge preferences saved.',
       );
     } catch (failure) {
+      reloadConflict(failure);
       setError(
         failure instanceof AccountError && failure.status === 422
           ? 'Choose a snooze date after today in your saved account timezone.'

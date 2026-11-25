@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Check } from 'lucide-react';
-import type { Session } from '../auth/client';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { AccountError, sessionStore, type Session } from '../auth/client';
+import { meetupKey, peopleKey } from '../api/accountCache';
 import { Button } from '../ui/Button';
 import { Dialog } from '../ui/Dialog';
 import { journal, failureMessage, type Person, type PersonInput, type Meetup } from './client';
 import { DueList, NudgeControls } from './NudgeViews';
+import { today, useAccountDay } from './accountDay';
 
 const levels = [
   ['closest', 'Closest - make time regularly', 2, 'weeks'],
@@ -19,28 +22,20 @@ const blank: PersonInput = {
   cadence_unit: null,
   archived: false,
 };
-function today(timezone: string) {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: timezone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts();
-  return ['year', 'month', 'day'].map((k) => parts.find((p) => p.type === k)?.value).join('-');
-}
-
 function PersonEditor({
   person,
   people,
   session,
   done,
   close,
+  reloadConflict,
 }: {
   person: Person | null;
   people: Person[];
   session: Session;
   done: (saved: Person) => void;
   close: () => void;
+  reloadConflict: (error: unknown) => void;
 }) {
   const [draft, setDraft] = useState<PersonInput>(
     person
@@ -91,7 +86,10 @@ function PersonEditor({
             person ? 'PUT' : 'POST',
             { ...draft, name, ...(person ? { revision: person.revision } : {}) },
           )
-            .then(done, (e) => setError(failureMessage(e)))
+            .then(done, (e) => {
+              reloadConflict(e);
+              setError(failureMessage(e));
+            })
             .finally(() => setBusy(false));
         }}
       >
@@ -197,6 +195,7 @@ function MeetupEditor({
   session,
   done,
   close,
+  reloadConflict,
 }: {
   person: Person;
   meetup: Meetup | null;
@@ -204,6 +203,7 @@ function MeetupEditor({
   session: Session;
   done: (message: string) => void;
   close: () => void;
+  reloadConflict: (error: unknown) => void;
 }) {
   const [date, setDate] = useState(meetup?.completed_on ?? today(timezone));
   const [note, setNote] = useState(meetup?.note ?? '');
@@ -237,7 +237,10 @@ function MeetupEditor({
           )
             .then(
               () => done(meetup ? 'Meetup updated.' : 'Meetup logged.'),
-              (e) => setError(failureMessage(e)),
+              (e) => {
+                reloadConflict(e);
+                setError(failureMessage(e));
+              },
             )
             .finally(() => setBusy(false));
         }}
@@ -285,13 +288,18 @@ export function PeoplePage({
   timezone: string;
   notify: (message: string) => void;
 }) {
-  const [people, setPeople] = useState<Person[] | null>(null);
-  const [history, setHistory] = useState<Meetup[] | null>(null);
+  const cache = useQueryClient();
+  const date = useAccountDay(timezone);
+  const libraryKey = [...peopleKey, timezone, date];
+  const peopleQuery = useQuery({
+    queryKey: libraryKey,
+    queryFn: ({ signal }) => journal<Person[]>(session, 'people', 'GET', undefined, signal),
+  });
+  const people = peopleQuery.data;
   const [selected, setSelected] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [archived, setArchived] = useState(false);
   const [view, setView] = useState<'catchup' | 'people' | 'review'>('catchup');
-  const [attempt, setAttempt] = useState(0);
   const [error, setError] = useState('');
   const [editor, setEditor] = useState<'person' | 'meetup' | null>(null);
   const [editingPerson, setEditingPerson] = useState<Person | null>(null);
@@ -299,9 +307,11 @@ export function PeoplePage({
   const [confirmation, setConfirmation] = useState<{
     title: string;
     path: string;
-    method: string;
+    method: 'PUT' | 'DELETE';
     body?: unknown;
     success: string;
+    personId: string;
+    meetupDelete?: boolean;
   } | null>(null);
   const profileHeading = useRef<HTMLHeadingElement>(null);
   const profileSection = useRef<HTMLElement>(null);
@@ -310,6 +320,14 @@ export function PeoplePage({
   const opener = useRef<HTMLButtonElement | null>(null);
   const [busy, setBusy] = useState(false);
   const person = people?.find((p) => p.id === selected);
+  const historyQuery = useQuery({
+    queryKey: [...meetupKey, selected],
+    queryFn: ({ signal }) =>
+      journal<Meetup[]>(session, `people/${selected}/meetups`, 'GET', undefined, signal),
+    enabled: !!person,
+  });
+  const history = historyQuery.data;
+  const readError = peopleQuery.error ?? historyQuery.error;
   const viewTitle = { catchup: 'Catch up', people: 'People', review: 'Weekly review' }[view];
   useEffect(() => {
     const nav = navigation.current;
@@ -328,7 +346,6 @@ export function PeoplePage({
   }, [selected]);
   function openPerson(id: string, trigger?: HTMLButtonElement) {
     opener.current = trigger ?? null;
-    setHistory(null);
     setSelected(id);
   }
   function backToList() {
@@ -346,56 +363,24 @@ export function PeoplePage({
       if (document.activeElement === document.body) profileHeading.current?.focus();
     });
   }
-  useEffect(() => {
-    // Refresh across local midnight, returning to the tab, or a timezone change.
-    const refresh = () => setAttempt((a) => a + 1);
-    const timer = window.setInterval(refresh, 60_000);
-    window.addEventListener('focus', refresh);
-    return () => {
-      window.clearInterval(timer);
-      window.removeEventListener('focus', refresh);
-    };
-  }, [timezone]);
-  useEffect(() => {
-    const abort = new AbortController();
-    void journal<Person[]>(session, 'people', 'GET', undefined, abort.signal).then(
-      (value) => {
-        if (!abort.signal.aborted) setPeople(value);
-      },
-      (e) => {
-        if (!abort.signal.aborted) setError(failureMessage(e));
-      },
-    );
-    return () => abort.abort();
-  }, [session, attempt, timezone]);
-  useEffect(() => {
-    if (!selected) return;
-    const abort = new AbortController();
-    void journal<Meetup[]>(
-      session,
-      `people/${selected}/meetups`,
-      'GET',
-      undefined,
-      abort.signal,
-    ).then(
-      (value) => {
-        if (!abort.signal.aborted) setHistory(value);
-      },
-      (e) => {
-        if (!abort.signal.aborted) setError(failureMessage(e));
-      },
-    );
-    return () => abort.abort();
-  }, [session, selected, attempt]);
-  function refresh() {
-    setError('');
-    setAttempt((a) => a + 1);
+  function refreshPeople() {
+    void cache.invalidateQueries({ queryKey: peopleKey });
+  }
+  function refreshHistory(personId: string) {
+    void cache.invalidateQueries({ queryKey: [...meetupKey, personId] });
+  }
+  function reloadConflict(failure: unknown, personId?: string) {
+    if (failure instanceof AccountError && failure.status === 409) {
+      refreshPeople();
+      if (personId) refreshHistory(personId);
+    }
   }
   function done(message: string) {
+    if (sessionStore.getSnapshot().session !== session) return false;
     closeEditor();
     setConfirmation(null);
-    refresh();
     notify(message);
+    return true;
   }
   return (
     <section className="people-page stack stack--large" aria-label="People and meetup history">
@@ -405,7 +390,7 @@ export function PeoplePage({
         </h2>
         <p className="secondary">A little space to remember time together.</p>
         <p className="supporting secondary">
-          Today: {today(timezone)} · {timezone}
+          Today: {date} · {timezone}
         </p>
       </div>
       <nav ref={navigation} className="library-navigation actions" aria-label="Your library">
@@ -438,7 +423,7 @@ export function PeoplePage({
         >
           Add person
         </Button>
-        <Button onClick={refresh}>Refresh people</Button>
+        <Button onClick={() => void peopleQuery.refetch()}>Refresh people</Button>
       </div>
       {view === 'people' && !person && (
         <>
@@ -458,9 +443,9 @@ export function PeoplePage({
           Show archived people
         </label>
       )}
-      {error && (
+      {readError && (
         <p role="alert" className="error-text">
-          {error}
+          {failureMessage(readError)}
         </p>
       )}
       {people && !people.length && (
@@ -560,6 +545,7 @@ export function PeoplePage({
                   path: `people/${person.id}`,
                   method: 'PUT',
                   success: person.archived ? 'Person restored.' : 'Person archived.',
+                  personId: person.id,
                   body: {
                     name: person.name,
                     priority: person.priority ?? null,
@@ -581,6 +567,7 @@ export function PeoplePage({
                   path: `people/${person.id}?revision=${person.revision}`,
                   method: 'DELETE',
                   success: 'Person and meetup history deleted.',
+                  personId: person.id,
                 })
               }
             >
@@ -593,13 +580,18 @@ export function PeoplePage({
             session={session}
             notify={notify}
             refresh={(updated) => {
-              setPeople(
-                (current) => current?.map((p) => (p.id === updated.id ? updated : p)) ?? null,
+              if (sessionStore.getSnapshot().session !== session) return;
+              cache.setQueryData<Person[]>(libraryKey, (current) =>
+                current?.map((p) => (p.id === updated.id ? updated : p)),
               );
-              refresh();
+              refreshPeople();
             }}
+            reloadConflict={reloadConflict}
           />
-          <h3>Meetup history</h3>
+          <div className="actions">
+            <h3>Meetup history</h3>
+            <Button onClick={() => void historyQuery.refetch()}>Refresh history</Button>
+          </div>
           {!history ? null : !history.length ? (
             <p>No meetup logged. The last-seen date is unknown.</p>
           ) : (
@@ -624,6 +616,8 @@ export function PeoplePage({
                         path: `meetups/${m.id}?revision=${m.revision}`,
                         method: 'DELETE',
                         success: 'Meetup deleted.',
+                        personId: person.id,
+                        meetupDelete: true,
                       })
                     }
                   >
@@ -641,15 +635,17 @@ export function PeoplePage({
           people={people}
           session={session}
           done={(saved) => {
-            setPeople((current) => {
+            if (!done(editingPerson ? 'Person saved.' : 'Person added.')) return;
+            cache.setQueryData<Person[]>(libraryKey, (current) => {
               if (!current) return current;
               return current.some((entry) => entry.id === saved.id)
                 ? current.map((entry) => (entry.id === saved.id ? saved : entry))
                 : [...current, saved];
             });
-            done(editingPerson ? 'Person saved.' : 'Person added.');
+            refreshPeople();
           }}
           close={closeEditor}
+          reloadConflict={reloadConflict}
         />
       )}
       {editor === 'meetup' && person && (
@@ -658,8 +654,13 @@ export function PeoplePage({
           meetup={editingMeetup}
           timezone={timezone}
           session={session}
-          done={done}
+          done={(message) => {
+            if (!done(message)) return;
+            refreshPeople();
+            refreshHistory(person.id);
+          }}
           close={closeEditor}
+          reloadConflict={(failure) => reloadConflict(failure, person.id)}
         />
       )}
       {confirmation && (
@@ -681,10 +682,25 @@ export function PeoplePage({
               onClick={() => {
                 if (busy) return;
                 setBusy(true);
+                setError('');
                 void journal(session, confirmation.path, confirmation.method, confirmation.body)
                   .then(
-                    () => done(confirmation.success),
-                    (e) => setError(failureMessage(e)),
+                    () => {
+                      if (!done(confirmation.success)) return;
+                      refreshPeople();
+                      if (confirmation.meetupDelete) refreshHistory(confirmation.personId);
+                      else if (confirmation.method === 'DELETE') {
+                        setSelected(null);
+                        cache.removeQueries({ queryKey: [...meetupKey, confirmation.personId] });
+                      }
+                    },
+                    (e) => {
+                      reloadConflict(
+                        e,
+                        confirmation.meetupDelete ? confirmation.personId : undefined,
+                      );
+                      setError(failureMessage(e));
+                    },
                   )
                   .finally(() => setBusy(false));
               }}

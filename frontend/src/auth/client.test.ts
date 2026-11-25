@@ -45,8 +45,11 @@ describe('memory-only account sessions', () => {
       email: 'synthetic@example.test',
       recovery: false,
     });
+    const cache = sessionStore.getSnapshot().cache!;
+    cache.setQueryData(['people'], [{ name: 'Synthetic person' }]);
     vi.advanceTimersByTime(1001);
     expect(sessionStore.getSnapshot().session).toBeNull();
+    expect(cache.getQueryCache().getAll()).toEqual([]);
     expect(sessionStore.getSnapshot().notice).toContain('expired');
   });
   it('strips recovery credentials from history and retains no refresh token', () => {

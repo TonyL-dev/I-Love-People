@@ -9,6 +9,8 @@ import {
   type FormEvent,
 } from 'react';
 import { Eye, EyeOff, Menu } from 'lucide-react';
+import { QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query';
+import { deviceKey, meetupKey, peopleKey, profileKey } from '../api/accountCache';
 import { Link } from '../navigation';
 import { Button } from '../ui/Button';
 import { Dialog } from '../ui/Dialog';
@@ -25,7 +27,6 @@ import {
   loadAuthConfig,
   sessionStore,
   type AuthConfig,
-  type Profile,
   type Session,
 } from './client';
 
@@ -79,10 +80,10 @@ function CredentialsForm({
       }
       const session = await client.signIn(email, password, abort.signal);
       if (abort.signal.aborted) return;
-      await client.profile(session, undefined, abort.signal);
+      const profile = await client.profile(session, undefined, abort.signal);
       if (abort.signal.aborted) return;
       setPassword('');
-      sessionStore.signIn(session);
+      sessionStore.signIn(session, profile);
     } catch (failure) {
       if (!abort.signal.aborted) setError(errorMessage(failure));
     } finally {
@@ -450,10 +451,15 @@ function PrivateAccount({
   appearance: Appearance;
   setAppearance: (value: Appearance) => void;
 }) {
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [timezone, setTimezone] = useState('UTC');
-  const [attempt, setAttempt] = useState(0);
-  const [error, setError] = useState('');
+  const cache = useQueryClient();
+  const profileQuery = useQuery({
+    queryKey: profileKey,
+    queryFn: ({ signal }) => client.profile(session, undefined, signal),
+    staleTime: Infinity,
+  });
+  const profile = profileQuery.data;
+  const [timezoneDraft, setTimezone] = useState<string | null>(null);
+  const timezone = timezoneDraft ?? profile?.timezone ?? 'UTC';
   const [saveError, setSaveError] = useState('');
   const [toast, setToast] = useState<{ id: number; message: string } | null>(null);
   const toastSequence = useRef(0);
@@ -471,25 +477,6 @@ function PrivateAccount({
       setToast({ id: ++toastSequence.current, message });
     }
   }
-  useEffect(() => {
-    const abort = new AbortController();
-    void client.profile(session, undefined, abort.signal).then(
-      (value) => {
-        if (!abort.signal.aborted) {
-          setProfile(value);
-          setTimezone(value.timezone);
-          setError('');
-        }
-      },
-      (failure) => {
-        if (abort.signal.aborted) return;
-        if (failure instanceof AccountError && failure.status === 401)
-          sessionStore.clear('Your session ended. Sign in again.');
-        else setError('Your account could not be loaded. Check your connection and try again.');
-      },
-    );
-    return () => abort.abort();
-  }, [client, session, attempt]);
   async function save(event: FormEvent) {
     event.preventDefault();
     if (busy) return;
@@ -497,7 +484,12 @@ function PrivateAccount({
     setSaveError('');
     try {
       const value = await client.profile(session, timezone);
-      setProfile(value);
+      if (sessionStore.getSnapshot().session !== session) return;
+      if (value.timezone !== profile?.timezone) {
+        void cache.invalidateQueries({ queryKey: peopleKey, refetchType: 'none' });
+      }
+      cache.setQueryData(profileKey, value);
+      setTimezone(null);
       notify('Timezone saved.');
     } catch (failure) {
       if (failure instanceof AccountError && failure.status === 401)
@@ -542,17 +534,10 @@ function PrivateAccount({
     setConfirmLogout(false);
     setLogoutError('');
   }
-  const accountError = error && (
+  const accountError = profileQuery.isError && (
     <Notice title="Please try again." variant="error">
-      <p role="alert">{error}</p>
-      <Button
-        onClick={() => {
-          setProfile(null);
-          setAttempt((value) => value + 1);
-        }}
-      >
-        Try again
-      </Button>
+      <p role="alert">Your account could not be loaded. Check your connection and try again.</p>
+      <Button onClick={() => void profileQuery.refetch()}>Try again</Button>
     </Notice>
   );
   const feedback = toast && <Toast key={toast.id} message={toast.message} dismiss={dismissToast} />;
@@ -631,8 +616,12 @@ function PrivateAccount({
                 session={session}
                 notify={notify}
                 onChanged={() => {
+                  cache.removeQueries({ queryKey: peopleKey });
+                  cache.removeQueries({ queryKey: meetupKey });
+                  cache.removeQueries({ queryKey: deviceKey });
+                  setTimezone(null);
                   setDataVersion((value) => value + 1);
-                  setAttempt((value) => value + 1);
+                  void profileQuery.refetch();
                 }}
               />
             )}
@@ -747,15 +736,16 @@ export function AccountPage({
           </Link>
         </section>
       );
-  else if (client && state.session)
+  else if (client && state.session && state.cache)
     content = (
-      <PrivateAccount
-        key={state.session.accessToken}
-        client={client}
-        session={state.session}
-        appearance={appearance}
-        setAppearance={setAppearance}
-      />
+      <QueryClientProvider key={state.session.accessToken} client={state.cache}>
+        <PrivateAccount
+          client={client}
+          session={state.session}
+          appearance={appearance}
+          setAppearance={setAppearance}
+        />
+      </QueryClientProvider>
     );
   else if (path === '/create-account')
     content = config?.signup_enabled ? (
