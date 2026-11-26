@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { Eye, EyeOff, Menu } from 'lucide-react';
 import { QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Controller, useForm } from 'react-hook-form';
 import { deviceKey, meetupKey, peopleKey, profileKey } from '../api/accountCache';
 import { Link } from '../navigation';
 import { Button } from '../ui/Button';
@@ -458,13 +459,16 @@ function PrivateAccount({
     staleTime: Infinity,
   });
   const profile = profileQuery.data;
-  const [timezoneDraft, setTimezone] = useState<string | null>(null);
-  const timezone = timezoneDraft ?? profile?.timezone ?? 'UTC';
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { isSubmitting: busy },
+  } = useForm({ values: { timezone: profile?.timezone ?? 'UTC' } });
   const [saveError, setSaveError] = useState('');
   const [toast, setToast] = useState<{ id: number; message: string } | null>(null);
   const toastSequence = useRef(0);
   const dismissToast = useCallback(() => setToast(null), []);
-  const [busy, setBusy] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [optOutOnLogout, setOptOutOnLogout] = useState(true);
   const [pushBusy, setPushBusy] = useState(false);
@@ -477,10 +481,8 @@ function PrivateAccount({
       setToast({ id: ++toastSequence.current, message });
     }
   }
-  async function save(event: FormEvent) {
-    event.preventDefault();
+  async function save({ timezone }: { timezone: string }) {
     if (busy) return;
-    setBusy(true);
     setSaveError('');
     try {
       const value = await client.profile(session, timezone);
@@ -489,7 +491,7 @@ function PrivateAccount({
         void cache.invalidateQueries({ queryKey: peopleKey, refetchType: 'none' });
       }
       cache.setQueryData(profileKey, value);
-      setTimezone(null);
+      reset({ timezone: value.timezone });
       notify('Timezone saved.');
     } catch (failure) {
       if (failure instanceof AccountError && failure.status === 401)
@@ -500,8 +502,6 @@ function PrivateAccount({
             ? 'This timezone could not be saved. Choose another timezone and try again.'
             : errorMessage(failure),
         );
-    } finally {
-      setBusy(false);
     }
   }
   async function logout() {
@@ -581,11 +581,17 @@ function PrivateAccount({
               <form
                 className="surface stack"
                 onSubmit={(event) => {
-                  void save(event);
+                  void handleSubmit(save)(event);
                 }}
               >
                 <h2>Your preferences</h2>
-                <TimezoneField value={timezone} onChange={setTimezone} disabled={busy} />
+                <Controller
+                  control={control}
+                  name="timezone"
+                  render={({ field }) => (
+                    <TimezoneField value={field.value} onChange={field.onChange} disabled={busy} />
+                  )}
+                />
                 {saveError && (
                   <p className="error-text" role="alert">
                     {saveError}
@@ -619,7 +625,7 @@ function PrivateAccount({
                   cache.removeQueries({ queryKey: peopleKey });
                   cache.removeQueries({ queryKey: meetupKey });
                   cache.removeQueries({ queryKey: deviceKey });
-                  setTimezone(null);
+                  reset({ timezone: profile.timezone });
                   setDataVersion((value) => value + 1);
                   void profileQuery.refetch();
                 }}

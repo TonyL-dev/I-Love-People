@@ -108,8 +108,8 @@ try {
   await expect(page.getByText('No people yet.', { exact: false })).toBeVisible();
   stage = 'owned-preference';
   await openAccountMenu();
-  await page.getByRole('searchbox', { name: 'Search timezones' }).fill('Toronto');
-  await page.getByLabel('Timezone', { exact: true }).selectOption('America/Toronto');
+  await page.getByRole('combobox', { name: 'Timezone' }).fill('oron');
+  await page.getByRole('option', { name: 'Toronto (America)' }).click();
   await page.getByRole('button', { name: 'Save timezone' }).click();
   await page.getByText('Timezone saved.', { exact: true }).waitFor();
   await closeAccountMenu();
@@ -235,7 +235,10 @@ try {
   await page.getByRole('heading', { name: 'Keep your people close.' }).waitFor();
   await login(fixture.password);
   await openAccountMenu();
-  assert.equal(await page.getByLabel('Timezone', { exact: true }).inputValue(), 'America/Toronto');
+  assert.equal(
+    await page.getByLabel('Timezone', { exact: true }).inputValue(),
+    'Toronto (America)',
+  );
   await closeAccountMenu();
   await page.getByRole('button', { name: 'People', exact: true }).click();
   await page.getByRole('button', { name: 'Synthetic Maya', exact: true }).click();

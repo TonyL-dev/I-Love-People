@@ -67,7 +67,8 @@ test('Preview protection cookies reach the same-origin API without reaching Auth
   await signIn(page);
   await expect(page.getByRole('heading', { name: 'Your private space.' })).toBeVisible();
   await openAccountMenu(page);
-  await page.getByLabel('Timezone', { exact: true }).selectOption('America/Toronto');
+  await page.getByRole('combobox', { name: 'Timezone' }).fill('oron');
+  await page.getByRole('option', { name: 'Toronto (America)' }).click();
   await page.getByRole('button', { name: 'Save timezone' }).click();
   await expect(page.locator('.toast').getByRole('status')).toHaveText('Timezone saved.');
 });
@@ -388,10 +389,23 @@ test('login, account preferences, reload and logout clear private UI and credent
   await signIn(page);
   await expect(page.getByRole('heading', { name: 'Your private space.' })).toBeVisible();
   await openAccountMenu(page);
-  await page.getByRole('searchbox', { name: 'Search timezones' }).fill('Toronto');
-  await page.getByRole('searchbox', { name: 'Search timezones' }).press('Enter');
-  await expect(page.getByLabel('Timezone', { exact: true })).toBeFocused();
-  await page.getByLabel('Timezone', { exact: true }).selectOption({ label: 'Toronto (America)' });
+  const timezone = page.getByRole('combobox', { name: 'Timezone' });
+  await timezone.focus();
+  await expect(page.getByRole('option', { name: 'UTC', exact: true })).toBeVisible();
+  await expect(page.getByRole('option', { name: 'Toronto (America)' })).toBeAttached();
+  await timezone.fill('no-such-timezone');
+  await expect(page.getByText('No matching timezones.')).toBeVisible();
+  await timezone.fill('');
+  await expect(page.getByRole('option', { name: 'UTC', exact: true })).toBeAttached();
+  await timezone.fill('ORONT');
+  await expect(page.getByRole('listbox', { name: 'Timezones' }).getByRole('option')).toHaveCount(1);
+  await timezone.press('Escape');
+  await expect(timezone).toHaveAttribute('aria-expanded', 'false');
+  await expect(timezone).toBeVisible();
+  await timezone.fill('a/toron');
+  await timezone.press('ArrowDown');
+  await timezone.press('Enter');
+  await expect(timezone).toHaveValue('Toronto (America)');
   await page.getByRole('button', { name: 'Save timezone' }).click();
   await expect(page.locator('.toast').getByRole('status')).toHaveText('Timezone saved.');
   expect(
@@ -404,7 +418,7 @@ test('login, account preferences, reload and logout clear private UI and credent
   await expect(page.getByLabel('Email', { exact: true })).toHaveValue('');
   await signIn(page);
   await openAccountMenu(page);
-  await expect(page.getByLabel('Timezone', { exact: true })).toHaveValue('America/Toronto');
+  await expect(page.getByLabel('Timezone', { exact: true })).toHaveValue('Toronto (America)');
   await openAccountMenu(page);
   await page.getByRole('button', { name: 'Sign out', exact: true }).click();
   await page.getByRole('button', { name: 'Confirm sign out' }).click();
@@ -1010,7 +1024,8 @@ test('notification preferences require opt-in and sign-out turns off this device
   const scope = drawer.getByRole('region', { name: 'Notifications on this device' });
   const toast = drawer.locator('.toast');
   const dismiss = toast.getByRole('button', { name: 'Dismiss notification' });
-  await drawer.getByLabel('Timezone', { exact: true }).selectOption('America/Toronto');
+  await drawer.getByRole('combobox', { name: 'Timezone' }).fill('oron');
+  await drawer.getByRole('option', { name: 'Toronto (America)' }).click();
   await drawer.getByRole('button', { name: 'Save timezone' }).click();
   await expect(toast.getByRole('status')).toHaveText('Timezone saved.');
   await dismiss.click();
