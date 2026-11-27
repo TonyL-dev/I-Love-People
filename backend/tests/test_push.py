@@ -58,6 +58,7 @@ def test_web_push_encrypts_and_signs_without_redirecting(
         SecretStr(encode(sender.to_bytes(32, "big"))), "mailto:push@example.test"
     )
     endpoint = "https://fcm.googleapis.com/wp/synthetic"
+    tag = "a" * 32
 
     class MockHTTPS:
         def __init__(self, host: str, *, timeout: int) -> None:
@@ -69,10 +70,11 @@ def test_web_push_encrypts_and_signs_without_redirecting(
             assert (method, target) == ("POST", "/wp/synthetic")
             assert headers["Authorization"].startswith("vapid t=")
             assert headers["Content-Encoding"] == "aes128gcm" and headers["TTL"] == "60"
+            assert headers["Topic"] == tag
             plain = http_ece.decrypt(
                 body, private_key=receiver, auth_secret=auth, version="aes128gcm"
             )
-            expected = {"type": "catch-up"}
+            expected = {"type": "catch-up", "tag": tag}
             if name is not None:
                 expected["name"] = name
             assert loads(plain) == expected
@@ -94,4 +96,7 @@ def test_web_push_encrypts_and_signs_without_redirecting(
             pass
 
     monkeypatch.setattr("ilp.push.transport.HTTPSConnection", MockHTTPS)
-    assert transport.send(Subscription(endpoint, encode(point), encode(auth)), 60, name) == outcome
+    assert (
+        transport.send(Subscription(endpoint, encode(point), encode(auth)), 60, name, tag)
+        == outcome
+    )

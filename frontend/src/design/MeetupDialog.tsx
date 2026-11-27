@@ -1,4 +1,5 @@
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { Button } from '../ui/Button';
 import { Dialog } from '../ui/Dialog';
 import { Notice } from '../ui/Notice';
@@ -13,40 +14,41 @@ export function MeetupDialog({
   onClose: () => void;
   onSaved: (name: string) => void;
 }) {
-  const [date, setDate] = useState('2026-11-17');
-  const [note, setNote] = useState('');
+  const {
+    register,
+    handleSubmit,
+    formState: { isDirty },
+  } = useForm({
+    defaultValues: { date: '2026-11-17', note: '' },
+  });
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [error, setError] = useState('');
-  const dirty = date !== '2026-11-17' || note !== '';
 
   function requestClose() {
-    if (dirty) setConfirmDiscard(true);
+    if (isDirty) setConfirmDiscard(true);
     else onClose();
   }
 
-  function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  const submit = handleSubmit(({ date }) => {
     if (!date || date > '2026-11-17') {
       setError('Choose November 17, 2026 or a past date for this sample.');
       return;
     }
     onSaved(person.name);
-  }
+  });
 
   return (
     <Dialog open title={`A little time with ${person.name}`} onRequestClose={requestClose}>
-      <form className="stack" onSubmit={submit}>
+      <form className="stack" onSubmit={(event) => void submit(event)}>
         <p className="secondary">Today is ready. Add a note only if you’d like.</p>
         <label htmlFor="meetup-date">
           Meetup date
           <input
             id="meetup-date"
-            name="date"
             type="date"
             required
             max="2026-11-17"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
+            {...register('date')}
             aria-describedby="sample-date-help"
           />
         </label>
@@ -57,10 +59,8 @@ export function MeetupDialog({
           A note to remember <span className="optional">Optional</span>
           <textarea
             id="meetup-note"
-            name="note"
             maxLength={2000}
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
+            {...register('note')}
             placeholder="Something to ask about next time…"
           />
         </label>

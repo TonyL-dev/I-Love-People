@@ -165,3 +165,61 @@ Restore requires an empty library. This avoids guessing which duplicate names re
 Backup version 1 carries portable business data. Auth sessions, provider identifiers, delivery history, device credentials and local appearance remain environment-specific. Restored IDs and revisions are rebuilt. The app builds the export snapshot and commits restore or deletion atomically. Generated contracts define the request and response boundary.
 
 Use a protected, serialized migration job followed by staging and explicit promotion of the same tested deployment. Preserve Preview isolation and keep database recovery distinct from Vercel code rollback.
+
+## Production Web Push
+
+Reuse the verified Cloudflare-to-Vercel sender with a separate private Production Worker, stable origin, VAPID key, job bearer and named project automation credential. The five-minute schedule checks eligibility throughout the day. The existing receipt and quiet-hours rules determine when a device can be notified. Cloudflare Free permits five Cron Triggers and 100,000 requests per day. This schedule uses one trigger and runs up to 288 times per day. [Cloudflare Workers limits](https://developers.cloudflare.com/workers/platform/limits/)
+
+## Named reminders — November 23, 2026
+
+Keep generic wording unless a user enables names in the current device's notification settings. Pick the top eligible person using the existing Catch up ranking, and keep the daily receipt, quiet hours and click behavior. The setting explains that the name may appear on the lock screen. Names travel only in the encrypted push payload. Priorities and notes stay in the app. Existing device rows start with names off and older clients that omit the choice retain the stored preference.
+
+Use the same save action for quiet hours and name visibility. Disable the inputs while saving so a response cannot overwrite a newer edit made on the same form.
+
+Verify real-device name visibility with a disposable Preview account and two synthetic due people. Keep the Preview VAPID key and job bearer scoped to the Phase 6 branch. Remove trial access and scheduling when the device check ends.
+
+## Phase 7 planning — November 24, 2026
+
+Verify self-service signup on the isolated Preview before opening Production registration. Use the existing heart logo outline for loading feedback and the shared success toast for confirmed settings actions. Store the selected timezone as the existing IANA ID so the dropdown can preserve saved preferences and reminder semantics.
+
+Phase 8 was initially reserved for frontend changes. The session cache decision and later form organization scope are recorded below.
+
+### Phase 7 implementation
+
+Send account registration and confirmation directly to managed Auth. A confirmation link opens an explicit confirmation action using a token hash in the URL fragment, which keeps the credential out of page requests and protects against email scanners consuming the link with a GET. Use the fixed Auth Site URL in the template. Close the session issued by confirmation when possible and ask for password sign-in. Present duplicate signup results with the same email guidance and preserve inline rate-limit feedback.
+
+Use a labeled search field and a native select for timezone choice. Native selection handles platform keyboard and assistive-technology interaction. Keep the selected choice visible during filtering, including an existing saved alias, and apply changes only on Save timezone.
+
+The heart spinner uses a fullscreen native dialog so it blocks pointer and keyboard input above other dialogs. Count browser API requests centrally, including refreshes and overlapping operations. Keep the heart static for reduced motion. Put the password visibility action inside the input row and keep its accessible name and 44 px target.
+
+Let the toast button center its icon with the shared button layout. Offset the message's first line within the height of the dismiss target so wrapped copy and the success icon stay aligned with the centered X.
+
+Compare person names case-sensitively after trimming surrounding whitespace. Include archived people. Let users resolve existing repeats by renaming a record, with their meetup history retained by ID. Backup review asks for distinct names before restoring a file that contains repeats. A browser-only check uses the loaded library and cannot serialize writes across tabs.
+
+## Phase 8 session cache — November 25, 2026
+
+Pin the approved TanStack Query version `5.108.4`. Give each signed-in session its own cache. Seed the profile from the sign-in verification response. Remove the minute API poll and use a local-day boundary for Catch up. An edited person or nudge refreshes the People query. A meetup edit also refreshes its person's history. Reopen notification settings from memory and detect local subscription changes before revalidating.
+
+## Phase 8 form organization — November 26, 2026
+
+Use pinned React Hook Form for form state and submission, starting with timezone preferences. An editable combobox filters the full timezone list by partial label or IANA ID. Keep arbitrary search text local and submit the selected ID only through the explicit save action.
+
+Keep portable examples in `frontend-playbook/` and let each destination project supply its own API and session lifecycle.
+
+## Phase 8 scheduled meetups and delivery — November 26, 2026
+
+Treat the optional plan as a calendar date. Hold cadence reminders through that day in the saved timezone. Clearing the plan resumes the existing cadence immediately. An elapsed plan remains visible as passed. A plan creates no completed history or extra notification. Archive, pause, snooze and dismissal still apply.
+
+Key new push receipts by device, person and local day. Cap each run at four sends and allow the next scheduled run to pick up the remainder. Apply backoff per receipt to keep other people eligible. Send only an opaque tag and, when enabled on that device, the person's name. Keep the prior daily receipts so a legacy send earlier on the rollout day suppresses new sends to that device until its next local date.
+
+Keep plans in version 1 backups as an optional field. Existing files restore with no plan. The new API uses its own caller-scoped export RPC so the prior build can continue exporting during staged rollout.
+
+## Phase 8 compact meetup history — November 26, 2026
+
+Keep the newest three entries and the full history action inside an initially collapsed disclosure. Show the total count next to a chevron that rotates in place. The full history opens the newest month by default and lets each month expand independently. Expand individual entries for full notes and edit or deletion actions. Opening the full history uses the data already loaded for the profile.
+
+Group Log meetup, Edit person, Archive or Restore, and Delete above the profile details. Keep the catch-up date, reminder status, and controls together inside a collapsed **Nudge settings** section that matches **Recent meetups**.
+
+Prompt before discarding a meetup draft only while its date or note differs from its opening values. Restoring both values allows immediate dismissal.
+
+Close and Escape dismiss the **Add person** draft directly. Saving is an explicit action.

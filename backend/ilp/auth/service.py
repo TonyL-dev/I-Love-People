@@ -35,7 +35,7 @@ def public_config(settings: Settings) -> PublicAuthConfig:
         settings.environment != "production"
         and parsed.scheme == "http"
         and parsed.hostname == "127.0.0.1"
-        and parsed.port == 54321
+        and parsed.port is not None
     )
     if (
         not (secure or local)

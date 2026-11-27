@@ -113,7 +113,7 @@ async def exercise_push(
 
             with httpx.Client(base_url=data_url, timeout=5, trust_env=False) as data:
                 headers = {"apikey": public_key, **own, "Accept-Profile": "ilp_private"}
-                for table in ("push_devices", "push_deliveries"):
+                for table in ("push_devices", "push_deliveries", "person_push_deliveries"):
                     assert data.get("/" + table, headers=headers).is_error
 
             async def nudge(action: str) -> None:
@@ -129,11 +129,41 @@ async def exercise_push(
             async def job() -> httpx.Response:
                 return await api.post("/api/push/job", headers=job_auth)
 
+            async def plan(day: str | None) -> None:
+                people = (await api.get("/api/people", headers=own)).json()
+                item = next(person for person in people if person["id"] == pid)
+                body = {
+                    key: item[key]
+                    for key in (
+                        "name",
+                        "priority",
+                        "cadence_count",
+                        "cadence_unit",
+                        "archived",
+                        "revision",
+                    )
+                }
+                body["next_scheduled_on"] = day
+                assert (
+                    await api.put(f"/api/people/{pid}", headers=foreign, json=body)
+                ).status_code == 404
+                saved = await api.put(f"/api/people/{pid}", headers=own, json=body)
+                assert saved.is_success and saved.json()["next_scheduled_on"] == day
+
             with patch.object(WebPushTransport, "send", return_value="sent") as send:
                 await nudge("pause")
                 assert (await job()).json()["sent"] == 0
                 send.assert_not_called()
                 await nudge("unpause")
+                await plan(local.date().isoformat())
+                await reset_check()
+                assert (await job()).json()["sent"] == 0
+                send.assert_not_called()
+                await plan("2099-01-01")
+                await reset_check()
+                assert (await job()).json()["sent"] == 0
+                send.assert_not_called()
+                await plan(None)
                 await reset_check()
                 one, two = await asyncio.gather(job(), job())
                 assert one.status_code == two.status_code == 200
@@ -144,6 +174,9 @@ async def exercise_push(
                 assert (await job()).json()["sent"] == 0
                 send.assert_called_once()
 
+            await api.post("/api/push/unsubscribe", headers=own, json=endpoint)
+            assert (await api.post("/api/push/status", headers=own, json=endpoint)).json() is None
+            await plan("2020-02-01")
             await due_person(own, "Synthetic push Aaron", "distant")
             await due_person(foreign, "A foreign synthetic person", "closest")
             named = {**device, "endpoint": endpoint["endpoint"] + "-named", "show_name": True}
@@ -155,9 +188,15 @@ async def exercise_push(
             legacy = {key: value for key, value in named.items() if key != "show_name"}
             assert (await api.put("/api/push/device", headers=own, json=legacy)).json()["show_name"]
             with patch.object(WebPushTransport, "send", return_value="sent") as send:
-                assert (await job()).json()["sent"] == 1
-                send.assert_called_once()
-                assert send.call_args.args[2] == "Synthetic push Maya"
+                assert (await job()).json()["sent"] == 2
+                assert [call.args[2] for call in send.call_args_list] == [
+                    "Synthetic push Maya",
+                    "Synthetic push Aaron",
+                ]
+                assert len({call.args[3] for call in send.call_args_list}) == 2
+                await reset_check()
+                assert (await job()).json()["sent"] == 0
+                assert send.call_count == 2
             assert (
                 await api.post("/api/push/unsubscribe", headers=own, json=named_endpoint)
             ).status_code == 204
@@ -176,17 +215,15 @@ async def exercise_push(
                 await api.put("/api/push/device", headers=own, json={**opt_out, "show_name": False})
             ).json()["show_name"] is False
             with patch.object(WebPushTransport, "send", return_value="sent") as send:
-                assert (await job()).json()["sent"] == 1
-                send.assert_called_once()
-                assert send.call_args.args[2] is None
+                assert (await job()).json()["sent"] == 2
+                assert [call.args[2] for call in send.call_args_list] == [None, None]
+                assert len({call.args[3] for call in send.call_args_list}) == 2
             assert (
                 await api.post(
                     "/api/push/unsubscribe", headers=own, json={"endpoint": opt_out["endpoint"]}
                 )
             ).status_code == 204
 
-            await api.post("/api/push/unsubscribe", headers=own, json=endpoint)
-            assert (await api.post("/api/push/status", headers=own, json=endpoint)).json() is None
             with patch.object(WebPushTransport, "send", return_value="revoked") as send:
                 assert (await job()).json()["sent"] == 0
                 send.assert_not_called()
@@ -203,7 +240,7 @@ async def exercise_push(
 
             with repo.transaction() as db:
                 for role in ("anon", "authenticated", "service_role"):
-                    for table in ("push_devices", "push_deliveries"):
+                    for table in ("push_devices", "push_deliveries", "person_push_deliveries"):
                         assert not db.execute(
                             text(
                                 "SELECT has_table_privilege("
@@ -214,7 +251,7 @@ async def exercise_push(
                 outcomes = (
                     db.execute(
                         text("""
-                    SELECT r.outcome FROM ilp_private.push_deliveries r
+                    SELECT r.outcome FROM ilp_private.person_push_deliveries r
                     JOIN ilp_private.push_devices d ON d.id = r.device_id
                     WHERE d.owner_id = :owner
                 """),
@@ -230,15 +267,18 @@ async def exercise_push(
             retry_device = {**device, "endpoint": endpoint["endpoint"] + "-retry"}
             enabled = await api.put("/api/push/device", headers=own, json=retry_device)
             assert enabled.status_code == 200
+            tags: list[set[str]] = []
             with patch.object(WebPushTransport, "send", return_value="retry") as send:
                 for expected in ("retry", "retry", "failed"):
-                    assert (await job()).json()[expected] == 1
+                    send.reset_mock()
+                    assert (await job()).json()[expected] == 2
+                    tags.append({call.args[3] for call in send.call_args_list})
                     assert (await job()).json()["retry"] == 0
                     await reset_check()
                     with repo.transaction() as db:
                         db.execute(
                             text("""
-                                UPDATE ilp_private.push_deliveries r SET ready_after = now()
+                                UPDATE ilp_private.person_push_deliveries r SET ready_after = now()
                                 FROM ilp_private.push_devices d
                                 WHERE r.device_id = d.id AND d.owner_id = :owner
                                     AND r.outcome = 'retry'
@@ -246,6 +286,7 @@ async def exercise_push(
                             {"owner": sessions[0][0]},
                         )
                 assert (await job()).json()["retry"] == 0
-                assert send.call_count == 3
+                assert send.call_count == 2
+                assert len(tags[0]) == 2 and tags[0] == tags[1] == tags[2]
     finally:
         get_settings.cache_clear()

@@ -1,0 +1,135 @@
+.playbook-ui {
+  color-scheme: light;
+  --color-page: #f5f5f7;
+  --color-surface: #fff;
+  --color-text: #1d1d1f;
+  --color-action: #005fcc;
+  --color-on-action: #fff;
+  --color-boundary: #76767b;
+  --color-danger: #b42318;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --font-body: 1.0625rem;
+  --line-body: 1.625rem;
+  --radius-control: 10px;
+  --width-form: 35rem;
+  background: var(--color-page);
+  color: var(--color-text);
+  font-family: system-ui, sans-serif;
+  font-size: var(--font-body);
+  line-height: var(--line-body);
+}
+
+@media (prefers-color-scheme: dark) {
+  .playbook-ui:not([data-appearance='light']) {
+    color-scheme: dark;
+    --color-page: #121214;
+    --color-surface: #1c1c1e;
+    --color-text: #f5f5f7;
+    --color-action: #7db5ff;
+    --color-on-action: #121214;
+    --color-boundary: #8e8e93;
+    --color-danger: #ffb4ab;
+  }
+}
+
+.playbook-ui[data-appearance='dark'] {
+  color-scheme: dark;
+  --color-page: #121214;
+  --color-surface: #1c1c1e;
+  --color-text: #f5f5f7;
+  --color-action: #7db5ff;
+  --color-on-action: #121214;
+  --color-boundary: #8e8e93;
+  --color-danger: #ffb4ab;
+}
+
+.playbook-ui .playbook-form {
+  display: grid;
+  gap: var(--space-2);
+  max-inline-size: var(--width-form);
+  padding: var(--space-4);
+  overflow-wrap: anywhere;
+}
+
+.playbook-ui .playbook-form label {
+  font-weight: 600;
+}
+
+.playbook-ui :is(.playbook-form :is(input, button), .timezone-picker input) {
+  min-block-size: 44px;
+  min-inline-size: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-boundary);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+}
+
+.playbook-ui .playbook-form button {
+  justify-self: start;
+  border-color: var(--color-action);
+  background: var(--color-action);
+  color: var(--color-on-action);
+  cursor: pointer;
+}
+
+.playbook-ui .playbook-form button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.playbook-ui :is(.playbook-form, .timezone-picker) :focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 2px;
+}
+
+.playbook-ui .playbook-form p {
+  margin: 0;
+}
+
+.playbook-ui .playbook-form [role='alert'] {
+  color: var(--color-danger);
+}
+
+.playbook-ui .timezone-picker {
+  position: relative;
+  display: grid;
+  gap: var(--space-2);
+}
+.playbook-ui .timezone-picker__popup {
+  position: absolute;
+  z-index: 1;
+  inset: 100% 0 auto;
+  max-block-size: min(16rem, 30dvh);
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--color-boundary);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+}
+.playbook-ui .timezone-picker__popup ul {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.playbook-ui .timezone-picker__popup li,
+.playbook-ui .timezone-picker__popup p {
+  min-block-size: 44px;
+  padding: var(--space-2) var(--space-3);
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.playbook-ui .timezone-picker__popup li {
+  cursor: pointer;
+}
+.playbook-ui .timezone-picker__popup li:hover,
+.playbook-ui .timezone-picker__popup li[data-highlighted='true'] {
+  outline: 2px solid currentColor;
+  outline-offset: -2px;
+}
+.playbook-ui .timezone-picker__popup li[aria-selected='true'] {
+  font-weight: 650;
+}

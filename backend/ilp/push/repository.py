@@ -179,7 +179,9 @@ class PushRepository:
             row.show_name,
         )
 
-    def schedules(self, db: Connection, device: Device, today: date) -> Iterator[Schedule]:
+    def schedules(
+        self, db: Connection, device: Device, today: date, person: UUID | None = None
+    ) -> Iterator[Schedule]:
         rows = db.execute(
             text("""
                 SELECT p.cadence_count, p.cadence_unit, latest.completed_on, p.id,
@@ -193,57 +195,86 @@ class PushRepository:
                 ) latest
                 WHERE p.owner_id = :owner AND NOT p.archived AND NOT p.paused
                     AND p.cadence_count IS NOT NULL
+                    AND (p.next_scheduled_on IS NULL OR p.next_scheduled_on < :today)
                     AND p.dismissed_on IS DISTINCT FROM :today
                     AND (p.snoozed_until IS NULL OR p.snoozed_until <= :today)
+                    AND (
+                        p.id = CAST(:person AS uuid) OR (
+                            CAST(:person AS uuid) IS NULL AND NOT EXISTS (
+                                SELECT 1 FROM ilp_private.person_push_deliveries r
+                                WHERE r.device_id = :id AND r.person_id = p.id
+                                    AND r.local_day = :today AND NOT (
+                                        r.outcome IN ('retry', 'sending')
+                                        AND r.attempts < 3 AND r.ready_after <= now()
+                                    )
+                            ) AND NOT EXISTS (
+                                SELECT 1 FROM ilp_private.push_deliveries legacy
+                                WHERE legacy.device_id = :id AND legacy.local_day = :today
+                                    AND legacy.outcome IN ('sending', 'sent')
+                            )
+                        )
+                    )
             """),
-            {"owner": device.owner_id, "today": today, "show_name": device.show_name},
+            {
+                "owner": device.owner_id,
+                "id": device.id,
+                "today": today,
+                "show_name": device.show_name,
+                "person": person,
+            },
         )
         for row in rows.tuples():
             yield Schedule(*row)
 
-    def claim(self, db: Connection, device: UUID, day: date) -> UUID | None:
+    def claim(self, db: Connection, device: UUID, person: UUID, day: date) -> UUID | None:
         return db.execute(
             text("""
-                INSERT INTO ilp_private.push_deliveries
-                    (device_id, local_day, attempts, lease_token, ready_after, outcome)
-                VALUES (:id, :day, 1, :lease, now() + interval '2 minutes', 'sending')
-                ON CONFLICT (device_id, local_day) DO UPDATE SET
-                    attempts = push_deliveries.attempts + 1, lease_token = EXCLUDED.lease_token,
+                INSERT INTO ilp_private.person_push_deliveries AS receipt
+                    (device_id, person_id, local_day, attempts, lease_token, ready_after, outcome)
+                SELECT :id, :person, :day, 1, :lease, now() + interval '2 minutes', 'sending'
+                FROM public.people WHERE id = :person FOR KEY SHARE
+                ON CONFLICT (device_id, person_id, local_day) DO UPDATE SET
+                    attempts = receipt.attempts + 1, lease_token = EXCLUDED.lease_token,
                     ready_after = EXCLUDED.ready_after, outcome = 'sending'
-                WHERE push_deliveries.outcome IN ('retry', 'sending')
-                    AND push_deliveries.ready_after <= now() AND push_deliveries.attempts < 3
+                WHERE receipt.outcome IN ('retry', 'sending')
+                    AND receipt.ready_after <= now() AND receipt.attempts < 3
                 RETURNING lease_token
             """),
-            {"id": device, "day": day, "lease": uuid4()},
+            {"id": device, "person": person, "day": day, "lease": uuid4()},
         ).scalar_one_or_none()
 
-    def owns_lease(self, db: Connection, device: UUID, day: date, lease: UUID) -> bool:
+    def owns_lease(
+        self, db: Connection, device: UUID, person: UUID, day: date, lease: UUID
+    ) -> bool:
         return bool(
             db.execute(
                 text("""
                 SELECT EXISTS (
-                    SELECT 1 FROM ilp_private.push_deliveries
-                    WHERE device_id = :id AND local_day = :day AND lease_token = :lease
+                    SELECT 1 FROM ilp_private.person_push_deliveries
+                    WHERE device_id = :id AND person_id = :person AND local_day = :day
+                        AND lease_token = :lease
                         AND outcome = 'sending' AND ready_after > clock_timestamp()
+                    FOR UPDATE
                 )
             """),
-                {"id": device, "day": day, "lease": lease},
+                {"id": device, "person": person, "day": day, "lease": lease},
             ).scalar_one()
         )
 
     def finish(
-        self, db: Connection, device: UUID, day: date, lease: UUID, result: Outcome
+        self, db: Connection, device: UUID, person: UUID, day: date, lease: UUID, result: Outcome
     ) -> Outcome:
         stored = db.execute(
             text("""
-                UPDATE ilp_private.push_deliveries
+                UPDATE ilp_private.person_push_deliveries
                 SET outcome = CASE WHEN :outcome = 'retry' AND attempts = 3
                     THEN 'failed' ELSE :outcome END,
                     ready_after = now() + interval '30 minutes'
-                WHERE device_id = :id AND local_day = :day AND lease_token = :lease
+                WHERE device_id = :id AND person_id = :person AND local_day = :day
+                    AND lease_token = :lease
                 RETURNING outcome
             """),
-            {"id": device, "day": day, "lease": lease, "outcome": result},
+            {"id": device, "person": person, "day": day, "lease": lease, "outcome": result},
         ).scalar_one()
         if result == "revoked":
             db.execute(
@@ -257,8 +288,36 @@ class PushRepository:
             )
         return cast(Outcome, stored)
 
+    def release(self, db: Connection, device: UUID, person: UUID, day: date) -> None:
+        params = {"id": device, "person": person, "day": day}
+        db.execute(
+            text("""
+                DELETE FROM ilp_private.person_push_deliveries
+                WHERE device_id = :id AND person_id = :person AND local_day = :day AND attempts = 1
+            """),
+            params,
+        )
+        db.execute(
+            text("""
+                UPDATE ilp_private.person_push_deliveries
+                SET attempts = attempts - 1, outcome = 'retry', ready_after = now()
+                WHERE device_id = :id AND person_id = :person AND local_day = :day
+            """),
+            params,
+        )
+
     def prune(self) -> None:
         with self.transaction() as db:
+            db.execute(
+                text("""
+                DELETE FROM ilp_private.person_push_deliveries
+                WHERE (device_id, person_id, local_day) IN (
+                    SELECT device_id, person_id, local_day
+                    FROM ilp_private.person_push_deliveries
+                    WHERE local_day < current_date - 30 LIMIT 100 FOR UPDATE SKIP LOCKED
+                );
+            """)
+            )
             db.execute(
                 text("""
                 DELETE FROM ilp_private.push_devices WHERE id IN (

@@ -22,12 +22,15 @@ def derive(person: Person, today: date) -> Person:
         if person.last_seen and person.cadence_count and person.cadence_unit
         else None
     )
-    eligible = max(due, person.snoozed_until or due) if due else None
+    planned = person.next_scheduled_on is not None and person.next_scheduled_on >= today
+    eligible = max(due, person.snoozed_until or due) if due and not planned else None
     suppression = (
         "archived"
         if person.archived
         else "paused"
         if person.paused
+        else "scheduled"
+        if planned
         else "dismissed"
         if person.dismissed_on == today
         else "snoozed"

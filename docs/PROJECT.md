@@ -1,6 +1,6 @@
 # I Love People project plan
 
-Updated November 22, 2026. This document defines the implementation roadmap. Phases 0 through 5 are accepted. The private release is live on protected Production. Release evidence is in [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md).
+Updated November 26, 2026. The private release is live on protected Production. Phase 8 covers form organization with React Hook Form, a more compact person view, and meetup reminder changes. Release evidence, including the shipped session cache, is in [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md).
 
 ## Goal and scope
 
@@ -100,11 +100,53 @@ Acceptance requires an actual export/restore drill, passing ownership/security r
 
 Phase 5 was accepted November 22, 2026 after the owner confirmed stable Production recovery and meetup checks. The [operating runbook](OPERATIONS.md) records measured usage within free quotas, and [implementation status](IMPLEMENTATION_STATUS.md) records verification and rollout evidence.
 
+The optional Production Web Push rollout uses the Phase 4 sender with its own credentials and private Cloudflare schedule. [Push setup](PUSH_SETUP.md#production) covers device opt-in and the closed-app check.
+
 ## Phase 6 — Selected improvements
 
 After the private release, choose features from the original backlog based on actual use. Candidates include groups, multi-person meetups, planned meetups, CSV import, birthdays, and calendar export. Each needs its own bounded acceptance checklist. Native iPhone widgets, Apple Watch, and App Store distribution require a later platform decision. Public registration or commercial use requires revisiting email, abuse controls, account lifecycle, and hosting terms.
 
+The selected improvement is an optional name in reminder text. Acceptance covers the default-off device setting, owned preference persistence, encrypted payload and Catch up ordering, closed-app delivery on a real device, and a return to generic wording after turning names off. Use the [named reminder device check](PUSH_SETUP.md#named-reminder-device-check). Release evidence is recorded in [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md).
+
+The user confirmed named and generic reminder wording on iPhone in the protected Phase 6 Preview. Phase 6 was promoted to protected Production on November 24, 2026 after migration, staged smoke, and disposable-account cleanup. Stable HTTP checks passed and the owner confirmed the scheduled named reminder on iPhone.
+
+## Phase 7 — Self-service signup and interface refinements
+
+Build and test the signup flow in local Supabase and the isolated, protected Preview. Keep the personal-use hosting budget and review email delivery and abuse controls before opening Production registration.
+
+Follow the [Phase 7 Auth setup](AUTH_SETUP.md#phase-7-protected-preview-signup) for local captured mail and protected Preview configuration.
+
+The browser also prevents exact duplicate person names when adding, renaming, or restoring a backup. Compare names case-sensitively after trimming surrounding whitespace and include archived people in the comparison.
+
+| Work | Acceptance |
+| --- | --- |
+| **Self-service signup** | Add a **Create account** path from sign-in using Supabase-managed email and password registration. Locally and in Preview, verify email confirmation, first sign-in into an empty library, password recovery, invalid or expired links, duplicate requests, and rate-limit feedback. Verify that unconfirmed and signed-out visitors cannot read private data. Verify API and Data API isolation between two newly registered synthetic users. |
+| **Heart loading indicator** | Show one large, centered spinner while any browser API or managed Auth request is pending. Trace the existing heart outline over a dimmed page and block input even when a drawer is open. Release the overlay after the last request settles. Announce loading for screen readers and show a static heart with reduced motion. Verify overlapping requests, errors, and retry. |
+| **Settings success toasts** | Replace inline notices for completed actions in the settings menu with the shared success toast. Cover timezone saves, notification preferences and enrollment, and completed backup actions. Show one toast after each confirmed success, visible above the open drawer and announced without moving focus. Keep instructions, permission states, errors, and destructive confirmations in context. |
+| **Timezone dropdown** | Replace the free-text field in the settings menu with a searchable, labeled dropdown backed by supported IANA timezone IDs. Show friendly city or region labels, preserve existing saved selections, and retain the explicit save action. Verify keyboard and VoiceOver operation, saved values after sign-in, and local dates and quiet hours after changing the zone. |
+| **Toast dismissal alignment** | Center the **X** inside its dismiss button and align it with the checkmark and first line of text, including wrapped messages. Keep the 44 px dismiss target, visible focus, safe-area spacing, and existing pause-on-focus behavior. Check single-line and wrapped toasts in and out of the menu at phone and desktop widths and with enlarged text. |
+
+Record local Auth and captured-mail tests, hosted CI, protected Preview signup and recovery with a real test inbox, and real iPhone Safari and VoiceOver review. Check that common use fits the free plan and that the chosen sender can deliver confirmations and password resets to people outside the Supabase team.
+
+Treat opening Production registration as a separate rollout after those checks. If approved, configure Production email and signup controls, then switch Vercel from All Deployments to Standard Protection. Verify the stable URL shows app sign-in and signup without a Vercel account, Preview still requires Vercel sign-in, and anonymous requests cannot access private APIs or invoke the reminder job. [Vercel Deployment Protection](https://vercel.com/docs/deployment-protection) · [Supabase Auth email](https://supabase.com/docs/guides/auth/auth-smtp)
+
+## Phase 8 — Form organization, person view, and reminders
+
+Organize React forms with React Hook Form. Start with account timezone preferences, then migrate the remaining form groups incrementally. Keep existing validation, typed API payloads, explicit saves, error feedback, and cache invalidation working through each migration.
+
+Use one editable timezone combobox. Opening it or clearing the input shows all supported timezones. Match partial text case-insensitively against labels and timezone IDs. Support keyboard and touch selection, display the current selection when closed, and save the selected IANA ID using the existing **Save timezone** action. Verify the flow with keyboard, iPhone Safari, and VoiceOver.
+
+- **Compact person view.** Reduce vertical spacing and group related details so the most important information and actions are visible sooner. Preserve readable text and usable touch targets. Review on a phone and with enlarged text.
+- **Compact meetup history.** Start with the recent section collapsed and show the total meetup count. Expand it to see up to three recent entries and **View all**. Open the newest month by default in full history. Reveal full notes and actions on entry expansion. Confirm dismissal of the meetup editor only when it contains unsaved changes.
+- **Profile disclosures.** Group the profile actions at the top and keep reminder details and controls in a collapsed **Nudge settings** section. Let people open multiple months in full history.
+- **Next scheduled meetup.** Hold cadence reminders through the planned date in the account timezone. Changing the date moves the hold. Clearing the date or passing it resumes cadence eligibility. Plans and completed meetup history are separate.
+- **Per-person notifications.** Send a separate push notification for each eligible person. Preserve quiet hours and the existing name privacy setting. Verify two distinct notifications and a repeat scheduler run on the protected Preview. Review the compact profile and timezone combobox in iPhone Safari with enlarged text and VoiceOver.
+
+The local implementation adds Alembic `0010_person_reminders`. [Implementation status](IMPLEMENTATION_STATUS.md#phase-8-form-organization--november-26-2026) records verification and release gates.
+
 ## Session maintenance
+
+Use the [frontend playbook](../frontend-playbook/README.md) to apply the styling, caching, and form workflow in other React projects.
 
 Before ending work, update ../AGENTS.md, ARCHITECTURE.md, IMPLEMENTATION_STATUS.md, DECISIONS.md, SKILLS.md, and PROJECT.md with meaningful changes or a concise status confirmation. Preserve the original product backlog and imported references. Report only checks actually run and features actually implemented. Proceed through phases in order when implementation is requested.
 

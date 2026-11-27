@@ -111,4 +111,4 @@ Show a concise toast only after a mutation is confirmed. Use a polite status ann
 
 Keep preferences/account controls behind a labeled Menu action in a right-side native modal. Preserve the current library view underneath; provide Close, Escape/backdrop dismissal and focus return. Initial focus belongs on Close to avoid opening a mobile keyboard without intent. Let the heading/Close row wrap at large text sizes and keep Close visible during scrolling.
 
-The toast success icon sits beside the first message line at mobile and desktop widths. The message can wrap; constrain gaps/padding growth on narrow enlarged-text layouts so ordinary words remain readable. Preserve the accessible dismiss target and existing announcement/lifetime rules.
+Center the toast's dismiss icon inside its button. Align the success and dismiss icons with the first message line at mobile and desktop widths. The message can wrap. Constrain gaps and padding on narrow enlarged-text layouts so ordinary words remain readable. Preserve the accessible dismiss target and existing announcement and lifetime rules.

@@ -12,6 +12,7 @@ class PersonInput(BaseModel):
     cadence_count: int | None = Field(default=None, ge=1, le=365)
     cadence_unit: Literal["days", "weeks", "months"] | None = None
     archived: bool = False
+    next_scheduled_on: date | None = None
 
     @model_validator(mode="after")
     def paired_cadence(self) -> "PersonInput":
@@ -33,7 +34,7 @@ class Person(PersonInput):
     due_on: date | None = None
     eligible_on: date | None = None
     timing: Literal["now", "soon", "later", "unknown"] = "unknown"
-    suppression: Literal["archived", "paused", "snoozed", "dismissed"] | None = None
+    suppression: Literal["archived", "paused", "scheduled", "snoozed", "dismissed"] | None = None
     reason: str = "No meetup logged"
 
 

@@ -101,12 +101,14 @@ On November 22, 2026, the owner reported successful Production password reset an
 
 Local Supabase enables signup with email confirmation. Use `scripts/tasks.py api-local` for the app flag, and open captured messages at `http://127.0.0.1:54324`. The local database and browser checks exercise signup and recovery with disposable addresses.
 
-Configure the isolated Preview Supabase project after choosing the protected Phase 7 deployment origin.
+Use the [protected Phase 8 branch URL](https://i-love-people-git-codex-phase-8-session-cache-smooshy.vercel.app), which includes the Phase 7 signup flow and has signup enabled for the trial. Configure the trial in the [isolated Preview Supabase project](https://supabase.com/dashboard/project/efuixughigoyyyflyelm). The trial uses the configured Proton SMTP sender. Enter credentials in the Preview project's SMTP settings and keep them out of chat.
 
 1. Set the Auth **Site URL** to the exact protected Preview origin and allow that origin's exact `/reset-password` redirect. The confirmation template constructs its link from the Site URL.
 2. In **Email Templates**, set **Confirm signup** to the [repository template](../supabase/templates/confirmation.html), with subject “Confirm your I Love People email.” Keep the existing recovery template.
 3. Configure a sender that can deliver to outside-team test inboxes within the $0 target. Turn off link tracking, preserve provider rate limits, record the actual mail cap and per-address cooldown, and review abuse controls before broader access. The built-in SMTP sends only to project team members and is currently limited to two emails per hour. [Supabase SMTP documentation](https://supabase.com/docs/guides/auth/auth-smtp)
-4. Keep **Confirm email** enabled and anonymous sign-ins disabled, then enable **Allow new users to sign up** on the Preview Supabase project. Set `ILP_SIGNUP_ENABLED=true` for the Phase 7 Vercel Preview branch and deploy that setting. Make sure the Auth Site URL matches the resulting test origin.
+4. Keep **Confirm email** enabled and anonymous sign-ins disabled, then enable **Allow new users to sign up** on the Preview Supabase project. Set `ILP_SIGNUP_ENABLED=true` for the trial's Vercel Preview branch and deploy that setting. Verify the resulting deployment and save its exact site and reset URLs before sending test mail.
 5. Use two disposable inboxes. Confirm the first account cannot sign in before verifying. Open the confirmation link, select **Confirm email**, and sign in with the new password to an empty library. Check a used or invalid link, a duplicate signup, rate-limit feedback, and recovery in a real inbox. Use both accounts for API and Data API isolation checks. Remove the test accounts after verification.
 
 Production registration is a separate rollout. Follow the release gates in [Phase 7](PROJECT.md#phase-7--self-service-signup-and-interface-refinements).
+
+November 25, 2026. Proton SMTP delivered real Preview recovery mail. The exact reset redirect, password replacement and sign-in passed, and the temporary account was removed. The signup test remains open. [Verification record](IMPLEMENTATION_STATUS.md#phase-7-preview-email-recovery--november-25-2026)

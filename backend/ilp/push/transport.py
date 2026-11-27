@@ -26,7 +26,7 @@ class Subscription:
 
 
 class PushTransport(Protocol):
-    def send(self, subscription: Subscription, ttl: int, name: str | None = None) -> Outcome: ...
+    def send(self, subscription: Subscription, ttl: int, name: str | None, tag: str) -> Outcome: ...
 
 
 class WebPushTransport:
@@ -55,7 +55,7 @@ class WebPushTransport:
         except ValueError:
             return None
 
-    def send(self, subscription: Subscription, ttl: int, name: str | None = None) -> Outcome:
+    def send(self, subscription: Subscription, ttl: int, name: str | None, tag: str) -> Outcome:
         try:
             url = push_url(subscription.endpoint)
             headers = self._vapid.sign(
@@ -66,7 +66,7 @@ class WebPushTransport:
                     "Content-Encoding": "aes128gcm",
                     "Content-Type": "application/octet-stream",
                     "TTL": str(ttl),
-                    "Topic": "ilp-catch-up",
+                    "Topic": tag,
                     "Urgency": "normal",
                 }
             )
@@ -76,7 +76,7 @@ class WebPushTransport:
                     "keys": {"p256dh": subscription.p256dh, "auth": subscription.auth},
                 }
             )
-            payload = {"type": "catch-up"}
+            payload = {"type": "catch-up", "tag": tag}
             if name is not None:
                 payload["name"] = name
             body = pusher.encode(dumps(payload, separators=(",", ":")).encode())["body"]

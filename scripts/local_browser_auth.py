@@ -126,6 +126,7 @@ def main() -> int:
             "managed-login",
             "owned-preference",
             "people-and-meetup-persistence",
+            "scheduled-meetup",
             "due-nudges",
             "reload-and-logout",
             "captured-recovery-email",
@@ -153,7 +154,7 @@ def main() -> int:
             raise RuntimeError("Live journey failed")
         print(
             "Live browser due/snooze/dismiss/pause/new-meetup cycle, weekly review, "
-            "people/meetup persistence, responsive accessibility, "
+            "scheduled meetup editing, people/meetup persistence, responsive accessibility, "
             "signup, captured confirmation mail, preference, reload/logout "
             "and captured-email password reset passed."
         )

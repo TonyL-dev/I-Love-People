@@ -103,7 +103,10 @@ async def exercise(
             await exercise_people(api, sessions, public_key, data_url)
             if check_push:
                 await exercise_push(api, sessions, public_key, data_url)
-                print("Phase 4 device isolation, pause, concurrent jobs and revocation passed.")
+                print(
+                    "Device isolation, scheduled meetup holds, per-person push, concurrent job "
+                    "deduplication, retries and revocation passed."
+                )
                 database_url = get_settings().database_url
                 assert database_url
                 with httpx.Client(base_url=data_url, timeout=20, trust_env=False) as backup_data:

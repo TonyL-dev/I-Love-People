@@ -108,8 +108,8 @@ try {
   await expect(page.getByText('No people yet.', { exact: false })).toBeVisible();
   stage = 'owned-preference';
   await openAccountMenu();
-  await page.getByRole('searchbox', { name: 'Search timezones' }).fill('Toronto');
-  await page.getByLabel('Timezone', { exact: true }).selectOption('America/Toronto');
+  await page.getByRole('combobox', { name: 'Timezone' }).fill('oron');
+  await page.getByRole('option', { name: 'Toronto (America)' }).click();
   await page.getByRole('button', { name: 'Save timezone' }).click();
   await page.getByText('Timezone saved.', { exact: true }).waitFor();
   await closeAccountMenu();
@@ -125,7 +125,51 @@ try {
   await dialog.getByLabel('Meetup date').fill('2020-02-29');
   await dialog.getByLabel('Note (optional)').fill('Synthetic walk');
   await dialog.getByRole('button', { name: 'Save meetup', exact: true }).click();
-  await expect(page.getByText('Synthetic walk', { exact: true })).toBeVisible();
+  await page.locator('.recent-meetups > summary').click();
+  await expect(page.locator('summary').getByText('Synthetic walk', { exact: true })).toBeVisible();
+  stage = 'scheduled-meetup';
+  const detail = page.getByRole('region', { name: 'Profile for Synthetic Maya' });
+  await page.getByRole('button', { name: 'Edit person', exact: true }).click();
+  const plannedDate = dialog.getByLabel('Next scheduled meetup (optional)', { exact: true });
+  await plannedDate.fill('2099-03-31');
+  await dialog.getByRole('button', { name: 'Save person', exact: true }).click();
+  const nudgeSettings = page.locator('.nudge-settings > summary');
+  await nudgeSettings.click();
+  await expect(detail.getByText('Meetup scheduled for 2099-03-31')).toBeVisible();
+  await expect(
+    detail.locator('summary').getByText('Synthetic walk', { exact: true }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Catch up', exact: true }).click();
+  await expect(page.getByRole('region', { name: 'Taking a pause' })).toContainText(
+    'Synthetic Maya',
+  );
+  await page.getByRole('button', { name: 'More about Synthetic Maya', exact: true }).click();
+  await page.getByRole('button', { name: 'Edit person', exact: true }).click();
+  await expect(plannedDate).toHaveValue('2099-03-31');
+  await dialog.getByRole('button', { name: 'Clear scheduled meetup', exact: true }).click();
+  await dialog.getByRole('button', { name: 'Save person', exact: true }).click();
+  await expect(detail.getByText('None scheduled', { exact: true })).toBeVisible();
+  await expect(detail.locator('.person-summary')).toContainText('2020-02-29');
+  await expect(page.getByRole('dialog', { name: 'Loading' })).toBeHidden();
+  await page.getByRole('button', { name: 'Dismiss notification' }).click();
+  mkdirSync('artifacts/local', { recursive: true });
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.screenshot({ path: 'artifacts/local/phase8-person-phone.png' });
+  await page.setViewportSize({ width: 320, height: 900 });
+  await page.evaluate(() => {
+    globalThis.document.documentElement.style.fontSize = '200%';
+  });
+  assert(
+    await page.evaluate(
+      () => globalThis.document.documentElement.scrollWidth <= globalThis.innerWidth,
+    ),
+  );
+  assert.equal((await new AxeBuilder({ page }).analyze()).violations.length, 0);
+  await detail.getByRole('heading', { name: 'Synthetic Maya' }).scrollIntoViewIfNeeded();
+  await page.screenshot({ path: 'artifacts/local/phase8-person-large-text.png' });
+  await page.evaluate(() => {
+    globalThis.document.documentElement.style.fontSize = '';
+  });
   stage = 'due-nudges';
   await page.getByRole('button', { name: 'Catch up', exact: true }).click();
   diagnostics.nudgeStep = 1;
@@ -134,6 +178,8 @@ try {
   diagnostics.nudgeStep = 2;
   await page.getByRole('button', { name: 'More about Synthetic Maya', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Synthetic Maya', exact: true })).toBeFocused();
+  await expect(page.getByLabel('Snooze until', { exact: true })).toBeHidden();
+  await nudgeSettings.click();
   await page.getByLabel('Snooze until', { exact: true }).fill('2099-01-01');
   await page.getByRole('button', { name: 'Snooze nudge', exact: true }).click();
   diagnostics.nudgeStep = 3;
@@ -154,6 +200,7 @@ try {
   );
   diagnostics.nudgeStep = 5;
   await page.getByRole('button', { name: 'More about Synthetic Maya', exact: true }).click();
+  await nudgeSettings.click();
   await page.getByRole('button', { name: 'Pause nudges', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Unpause nudges', exact: true })).toBeVisible();
   await expect(page.getByRole('status').filter({ hasText: 'Nudges paused.' })).toBeVisible();
@@ -164,6 +211,7 @@ try {
   diagnostics.nudgeStep = 6;
   await page.getByRole('button', { name: 'People', exact: true }).click();
   await page.getByRole('button', { name: 'Synthetic Maya', exact: true }).click();
+  await nudgeSettings.click();
   await page.getByRole('button', { name: 'Unpause nudges', exact: true }).click();
   diagnostics.nudgeStep = 7;
   await page.getByRole('button', { name: 'Dismiss for today', exact: true }).click();
@@ -220,7 +268,6 @@ try {
   await page.getByRole('button', { name: 'More about Synthetic Maya', exact: true }).click();
   await page.getByRole('button', { name: 'Log meetup', exact: true }).click();
   await page.screenshot({ path: 'artifacts/local/phase3-meetup-dialog.png', fullPage: true });
-  page.once('dialog', (d) => d.accept());
   await dialog.getByRole('button', { name: 'Close', exact: true }).click();
   const stored = await page.evaluate(() =>
     JSON.stringify([Object.entries(localStorage), Object.entries(sessionStorage)]),
@@ -235,11 +282,33 @@ try {
   await page.getByRole('heading', { name: 'Keep your people close.' }).waitFor();
   await login(fixture.password);
   await openAccountMenu();
-  assert.equal(await page.getByLabel('Timezone', { exact: true }).inputValue(), 'America/Toronto');
+  assert.equal(
+    await page.getByLabel('Timezone', { exact: true }).inputValue(),
+    'Toronto (America)',
+  );
   await closeAccountMenu();
   await page.getByRole('button', { name: 'People', exact: true }).click();
   await page.getByRole('button', { name: 'Synthetic Maya', exact: true }).click();
-  await expect(page.getByText('Synthetic walk', { exact: true })).toBeVisible();
+  await page.locator('.recent-meetups > summary').click();
+  await expect(page.locator('summary').getByText('Synthetic walk', { exact: true })).toBeVisible();
+  const viewHistory = page.getByRole('button', { name: 'View all 2 meetups' });
+  await viewHistory.click();
+  const fullHistory = page.getByRole('region', { name: 'Meetup history', exact: true });
+  await expect(fullHistory.getByRole('heading')).toBeFocused();
+  await expect(fullHistory.getByRole('button', { name: 'March 2020 1 meetup' })).toHaveAttribute(
+    'aria-expanded',
+    'true',
+  );
+  await fullHistory.getByRole('button', { name: 'February 2020 1 meetup' }).click();
+  await expect(fullHistory.getByRole('button', { name: 'March 2020 1 meetup' })).toHaveAttribute(
+    'aria-expanded',
+    'true',
+  );
+  await expect(
+    fullHistory.locator('summary').getByText('Synthetic walk', { exact: true }),
+  ).toBeVisible();
+  await fullHistory.getByRole('button', { name: 'Back to Synthetic Maya' }).click();
+  await expect(viewHistory).toBeFocused();
   await logout();
   stage = 'captured-recovery-email';
   await page.getByRole('link', { name: 'Forgot password?' }).click();

@@ -7,6 +7,7 @@ Start with the project plan for the ordered roadmap. Phases 0 through 4 are acce
 | [Project plan](PROJECT.md) | Goals, hosting proposal, phases, and acceptance gates |
 | [Product guidelines](PROJECT_GUIDELINES.md) | Feature ideas and meetup priority scale |
 | [Design standards](DESIGN_STANDARDS.md) | Interface, code, and documentation craft |
+| [Frontend playbook](../frontend-playbook/README.md) | Portable workflow for infrastructure, sign-in, styling, caching, and forms |
 | [Interaction specification](INTERACTION_SPEC.md) | Detailed screen flows, visual mockup decisions, states, and backlog boundaries |
 | [Architecture](ARCHITECTURE.md) | Proposed runtime, domains, data, and security boundaries |
 | [Decisions](DECISIONS.md) | Selected approaches and their rationale |

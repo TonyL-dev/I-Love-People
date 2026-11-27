@@ -1,0 +1,9 @@
+name = "ilp-production-push-scheduler"
+main = "worker.js"
+compatibility_date = "2026-11-19"
+workers_dev = false
+preview_urls = false
+
+# Attach the Production Cron Trigger after verification in docs/PUSH_SETUP.md.
+[vars]
+ILP_PREVIEW_ORIGIN = "https://i-love-people.vercel.app"

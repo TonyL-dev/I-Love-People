@@ -67,7 +67,8 @@ test('Preview protection cookies reach the same-origin API without reaching Auth
   await signIn(page);
   await expect(page.getByRole('heading', { name: 'Your private space.' })).toBeVisible();
   await openAccountMenu(page);
-  await page.getByLabel('Timezone', { exact: true }).selectOption('America/Toronto');
+  await page.getByRole('combobox', { name: 'Timezone' }).fill('oron');
+  await page.getByRole('option', { name: 'Toronto (America)' }).click();
   await page.getByRole('button', { name: 'Save timezone' }).click();
   await expect(page.locator('.toast').getByRole('status')).toHaveText('Timezone saved.');
 });
@@ -388,10 +389,23 @@ test('login, account preferences, reload and logout clear private UI and credent
   await signIn(page);
   await expect(page.getByRole('heading', { name: 'Your private space.' })).toBeVisible();
   await openAccountMenu(page);
-  await page.getByRole('searchbox', { name: 'Search timezones' }).fill('Toronto');
-  await page.getByRole('searchbox', { name: 'Search timezones' }).press('Enter');
-  await expect(page.getByLabel('Timezone', { exact: true })).toBeFocused();
-  await page.getByLabel('Timezone', { exact: true }).selectOption({ label: 'Toronto (America)' });
+  const timezone = page.getByRole('combobox', { name: 'Timezone' });
+  await timezone.focus();
+  await expect(page.getByRole('option', { name: 'UTC', exact: true })).toBeVisible();
+  await expect(page.getByRole('option', { name: 'Toronto (America)' })).toBeAttached();
+  await timezone.fill('no-such-timezone');
+  await expect(page.getByText('No matching timezones.')).toBeVisible();
+  await timezone.fill('');
+  await expect(page.getByRole('option', { name: 'UTC', exact: true })).toBeAttached();
+  await timezone.fill('ORONT');
+  await expect(page.getByRole('listbox', { name: 'Timezones' }).getByRole('option')).toHaveCount(1);
+  await timezone.press('Escape');
+  await expect(timezone).toHaveAttribute('aria-expanded', 'false');
+  await expect(timezone).toBeVisible();
+  await timezone.fill('a/toron');
+  await timezone.press('ArrowDown');
+  await timezone.press('Enter');
+  await expect(timezone).toHaveValue('Toronto (America)');
   await page.getByRole('button', { name: 'Save timezone' }).click();
   await expect(page.locator('.toast').getByRole('status')).toHaveText('Timezone saved.');
   expect(
@@ -404,7 +418,7 @@ test('login, account preferences, reload and logout clear private UI and credent
   await expect(page.getByLabel('Email', { exact: true })).toHaveValue('');
   await signIn(page);
   await openAccountMenu(page);
-  await expect(page.getByLabel('Timezone', { exact: true })).toHaveValue('America/Toronto');
+  await expect(page.getByLabel('Timezone', { exact: true })).toHaveValue('Toronto (America)');
   await openAccountMenu(page);
   await page.getByRole('button', { name: 'Sign out', exact: true }).click();
   await page.getByRole('button', { name: 'Confirm sign out' }).click();
@@ -527,7 +541,26 @@ test('people and meetup browser journey, cadence confirmation and deletion', asy
   });
   await page.goto('/');
   await signIn(page);
-  await page.getByRole('button', { name: 'Add person', exact: true }).click();
+  const addPerson = page.getByRole('button', { name: 'Add person', exact: true });
+  const addDialog = page.getByRole('dialog', { name: 'Add person', exact: true });
+  const nameField = addDialog.getByLabel('Name', { exact: true });
+  const prompts: string[] = [];
+  page.on('dialog', (prompt) => {
+    prompts.push(prompt.message());
+    return prompt.dismiss();
+  });
+  await addPerson.click();
+  await nameField.fill('Discard this synthetic draft');
+  await addDialog.getByRole('button', { name: 'Close' }).click();
+  await expect(addDialog).toBeHidden();
+  await addPerson.click();
+  await expect(nameField).toHaveValue('');
+  await nameField.fill('Another synthetic draft');
+  await nameField.press('Escape');
+  await expect(addDialog).toBeHidden();
+  expect(prompts).toEqual([]);
+  expect(people).toHaveLength(0);
+  await addPerson.click();
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Name', { exact: true }).fill('Synthetic Maya');
   await dialog.getByLabel('Private priority').selectOption('closest');
@@ -537,11 +570,19 @@ test('people and meetup browser journey, cadence confirmation and deletion', asy
   await dialog.getByRole('button', { name: 'Save person', exact: true }).click();
   await page.getByLabel('Search people').fill('maya');
   await page.getByRole('button', { name: 'Synthetic Maya', exact: true }).click();
-  await page.getByRole('button', { name: 'Log meetup', exact: true }).click();
+  const personActions = page.getByRole('group', { name: 'Person actions' });
+  await expect(personActions.getByRole('button')).toHaveText([
+    'Log meetup',
+    'Edit person',
+    'Archive person',
+    'Delete person',
+  ]);
+  await personActions.getByRole('button', { name: 'Log meetup', exact: true }).click();
   await dialog.getByLabel('Meetup date').fill('2020-02-29');
   await dialog.getByLabel('Note (optional)').fill('Synthetic walk');
   await dialog.getByRole('button', { name: 'Save meetup', exact: true }).click();
-  await expect(page.getByText('Synthetic walk', { exact: true })).toBeVisible();
+  await page.locator('.recent-meetups > summary').click();
+  await expect(page.locator('summary').getByText('Synthetic walk', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Delete person', exact: true }).click();
   await expect(dialog).toContainText('Synthetic Maya');
   await dialog.getByRole('button', { name: 'Confirm', exact: true }).click();
@@ -610,6 +651,174 @@ const nudgePerson = {
   reason: 'Last meetup 2020-02-29; every 2 weeks; catch-up date 2020-03-14',
 };
 
+test('compact meetup history keeps the count and chevron steady and groups older entries', async ({
+  page,
+}) => {
+  await mockAccount(page);
+  await page.route('**/api/people', (route) => route.fulfill({ json: [nudgePerson] }));
+  const dates = [
+    '2020-02-29',
+    '2020-02-21',
+    '2020-02-12',
+    '2020-01-18',
+    '2019-12-04',
+    '2019-11-04',
+    '2019-10-04',
+    '2019-09-04',
+    '2019-08-04',
+    '2019-07-04',
+    '2019-06-04',
+    '2019-05-04',
+    '2019-04-04',
+    '2019-03-04',
+  ];
+  const note = 'A long synthetic meetup note. '.repeat(12).trim();
+  let history = dates.map((date, index) => ({
+    id: `meetup-${index}`,
+    completed_on: date,
+    note: index === 3 ? note : '',
+    revision: 1,
+  }));
+  let reads = 0;
+  await page.route('**/api/people/*/meetups', (route) => {
+    reads++;
+    return route.fulfill({ json: history });
+  });
+  await page.route('**/api/meetups/meetup-3*', (route) => {
+    if (route.request().method() === 'PUT') {
+      const payload = route.request().postDataJSON();
+      expect(payload.revision).toBe(1);
+      history = history.map((entry) =>
+        entry.id === 'meetup-3' ? { ...entry, ...payload, revision: 2 } : entry,
+      );
+      return route.fulfill({ json: history[3] });
+    }
+    expect(route.request().method()).toBe('DELETE');
+    expect(new URL(route.request().url()).searchParams.get('revision')).toBe('2');
+    history = history.filter((entry) => entry.id !== 'meetup-3');
+    return route.fulfill({ json: {} });
+  });
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto('/');
+  await signIn(page);
+  await page.getByRole('button', { name: 'People', exact: true }).click();
+  await page.getByRole('button', { name: 'Synthetic Maya', exact: true }).click();
+  const recent = page.getByRole('region', { name: 'Recent meetups' });
+  const summary = recent.locator('.recent-meetups > summary');
+  const more = recent.getByRole('button', { name: 'View all 14 meetups' });
+  await expect(summary).toContainText('14');
+  await expect(more).toBeHidden();
+  await expect(recent.locator('.history-entry').first()).toBeHidden();
+  const iconOffset = () =>
+    summary.evaluate(
+      (element) =>
+        element.querySelector('svg')!.getBoundingClientRect().top -
+        element.getBoundingClientRect().top,
+    );
+  const collapsedOffset = await iconOffset();
+  await summary.press('Enter');
+  await expect(more).toBeVisible();
+  await expect(recent.locator('.history-entry')).toHaveCount(3);
+  expect(await iconOffset()).toBeCloseTo(collapsedOffset, 1);
+  const screenshotStyle = '.library-navigation { position: static !important; }';
+  await recent.screenshot({
+    path: test.info().outputPath('recent-meetups-light-phone.png'),
+    style: screenshotStyle,
+  });
+  await more.click();
+  const full = page.getByRole('region', { name: 'Meetup history', exact: true });
+  await expect(full.getByRole('heading')).toBeFocused();
+  const latest = full.getByRole('button', { name: 'February 2020 3 meetups' });
+  const older = full.getByRole('button', { name: 'January 2020 1 meetup' });
+  const olderGroup = full.locator('.history-month').filter({
+    has: page.getByRole('button', { name: 'January 2020 1 meetup' }),
+  });
+  await expect(latest).toHaveAttribute('aria-expanded', 'true');
+  await expect(older).toHaveAttribute('aria-expanded', 'false');
+  await expect(full.locator('.history-month')).toHaveCount(12);
+  await older.click();
+  await expect(latest).toHaveAttribute('aria-expanded', 'true');
+  await expect(older).toHaveAttribute('aria-expanded', 'true');
+  await latest.click();
+  await expect(latest).toHaveAttribute('aria-expanded', 'false');
+  await expect(older).toHaveAttribute('aria-expanded', 'true');
+  await latest.click();
+  await expect(olderGroup.locator('.history-note-preview')).toHaveCSS('text-overflow', 'ellipsis');
+  await expect(full.getByRole('button', { name: 'Edit meetup on 2020-01-18' })).toBeHidden();
+  await olderGroup.locator('.history-entry > summary').click();
+  await expect(olderGroup.locator('p.meetup-note')).toHaveText(note);
+  expect(reads).toBe(1);
+  await full.getByRole('button', { name: 'Back to Synthetic Maya' }).click();
+  await expect(more).toBeFocused();
+  await more.click();
+  await expect(latest).toHaveAttribute('aria-expanded', 'true');
+  await expect(older).toHaveAttribute('aria-expanded', 'true');
+
+  await olderGroup.locator('.history-entry > summary').click();
+  const editMeetup = full.getByRole('button', { name: 'Edit meetup on 2020-01-18' });
+  const dialog = page.getByRole('dialog').filter({ hasText: 'Edit meetup with Synthetic Maya' });
+  const noteField = dialog.getByLabel('Note (optional)');
+  const prompts: string[] = [];
+  page.on('dialog', (prompt) => {
+    prompts.push(prompt.message());
+    return prompt.dismiss();
+  });
+  await editMeetup.click();
+  await dialog.getByRole('button', { name: 'Close' }).click();
+  await expect(dialog).toBeHidden();
+  await editMeetup.click();
+  await noteField.fill('Temporary synthetic note.');
+  await noteField.fill(note);
+  await noteField.press('Escape');
+  await expect(dialog).toBeHidden();
+  expect(prompts).toEqual([]);
+  await editMeetup.click();
+  await noteField.fill('Updated synthetic meetup note.');
+  await dialog.getByRole('button', { name: 'Close' }).click();
+  expect(prompts).toEqual(['Discard this meetup form?']);
+  await expect(noteField).toHaveValue('Updated synthetic meetup note.');
+  await dialog.getByRole('button', { name: 'Save meetup' }).click();
+  await expect(
+    full.getByText('Updated synthetic meetup note.', { exact: true }).filter({ visible: true }),
+  ).toBeVisible();
+  expect(reads).toBe(2);
+  await full.getByRole('button', { name: 'Delete meetup on 2020-01-18' }).click();
+  await page
+    .getByRole('dialog')
+    .filter({ hasText: 'Delete meetup with Synthetic Maya' })
+    .getByRole('button', { name: 'Confirm' })
+    .click();
+  await expect(full.getByText('Synthetic Maya · 13 meetups', { exact: true })).toBeVisible();
+  await expect(older).toHaveCount(0);
+  await expect(latest).toHaveAttribute('aria-expanded', 'true');
+
+  await full.screenshot({
+    path: test.info().outputPath('meetup-history-light-phone.png'),
+    style: screenshotStyle,
+  });
+  for (const width of [768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+  }
+  await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' });
+  await page.setViewportSize({ width: 320, height: 900 });
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = '200%';
+  });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  const monthTitle = await latest.getByText('February 2020', { exact: true }).boundingBox();
+  const monthCount = await latest.getByText('3 meetups', { exact: true }).boundingBox();
+  expect(monthTitle!.width).toBeGreaterThan(120);
+  expect(monthCount!.y).toBeGreaterThanOrEqual(monthTitle!.y + monthTitle!.height - 1);
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  await full.screenshot({
+    path: test.info().outputPath('meetup-history-dark-large-text.png'),
+    style: screenshotStyle,
+  });
+});
+
 test('cache reuses library and history until a day change, expiry, or manual refresh', async ({
   page,
 }) => {
@@ -635,6 +844,7 @@ test('cache reuses library and history until a day change, expiry, or manual ref
     page.getByRole('button', { name: 'Synthetic Maya', exact: true }).click();
   const back = () => page.getByRole('button', { name: 'Back to People', exact: true }).click();
   await openPerson();
+  await page.locator('.recent-meetups > summary').click();
   await expect(page.getByText('No meetup logged.', { exact: false })).toBeVisible();
   expect(reads).toEqual({ people: 1, history: 1, profile: 1 });
 
@@ -642,6 +852,7 @@ test('cache reuses library and history until a day change, expiry, or manual ref
   await page.evaluate(() => window.dispatchEvent(new Event('focus')));
   await back();
   await openPerson();
+  await page.locator('.recent-meetups > summary').click();
   await expect(page.getByText('No meetup logged.', { exact: false })).toBeVisible();
   expect(reads).toEqual({ people: 1, history: 1, profile: 1 });
 
@@ -649,7 +860,10 @@ test('cache reuses library and history until a day change, expiry, or manual ref
   await expect(page.getByText('Today: 2026-11-26 · America/Toronto')).toBeVisible();
   await expect.poll(() => reads.people).toBe(2);
   expect(reads.history).toBe(1);
-  await page.getByRole('button', { name: 'Refresh history', exact: true }).click();
+  const refreshHistory = page.getByRole('button', { name: 'Refresh history', exact: true });
+  await expect(page.locator('.recent-meetups > summary')).toBeVisible();
+  if (!(await refreshHistory.isVisible())) await page.locator('.recent-meetups > summary').click();
+  await refreshHistory.click();
   await expect.poll(() => reads.history).toBe(2);
   expect(reads.people).toBe(2);
   await page.getByRole('button', { name: 'Refresh people', exact: true }).click();
@@ -825,12 +1039,24 @@ test('nudge toasts wait for success, report failures inline and pause dismissal 
   await page.goto('/');
   await signIn(page);
   await page.getByRole('button', { name: 'More about Synthetic Maya', exact: true }).click();
+  const nudges = page.getByRole('region', { name: 'Nudge preferences' });
+  const nudgeSettings = nudges.locator('.nudge-settings > summary');
+  await expect(nudges.getByText('Catch-up date: 2020-03-14')).toBeHidden();
+  await expect(nudges.getByLabel('Snooze until')).toBeHidden();
+  await expect(nudges.getByRole('button', { name: 'Pause nudges' })).toBeHidden();
+  await nudgeSettings.press('Enter');
+  await expect(nudges.getByText('Catch-up date: 2020-03-14')).toBeVisible();
   await page.getByRole('button', { name: 'Pause nudges', exact: true }).click();
   await expect(page.locator('.toast')).toHaveCount(0);
   release();
   await expect(page.locator('.toast').getByRole('status')).toHaveText('Nudges paused.');
   await expectToastAlignment(page);
   await page.getByRole('button', { name: 'Dismiss notification' }).click();
+  await nudgeSettings.click();
+  await expect(nudges.getByRole('status', { includeHidden: true })).toBeHidden();
+  await expect(nudges.getByRole('button', { name: 'Unpause nudges' })).toBeHidden();
+  await nudgeSettings.click();
+  await expect(nudges.getByRole('status')).toHaveText('Nudges paused');
   fail = true;
   await page.getByRole('button', { name: 'Unpause nudges', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('changed in another tab');
@@ -1010,7 +1236,8 @@ test('notification preferences require opt-in and sign-out turns off this device
   const scope = drawer.getByRole('region', { name: 'Notifications on this device' });
   const toast = drawer.locator('.toast');
   const dismiss = toast.getByRole('button', { name: 'Dismiss notification' });
-  await drawer.getByLabel('Timezone', { exact: true }).selectOption('America/Toronto');
+  await drawer.getByRole('combobox', { name: 'Timezone' }).fill('oron');
+  await drawer.getByRole('option', { name: 'Toronto (America)' }).click();
   await drawer.getByRole('button', { name: 'Save timezone' }).click();
   await expect(toast.getByRole('status')).toHaveText('Timezone saved.');
   await dismiss.click();

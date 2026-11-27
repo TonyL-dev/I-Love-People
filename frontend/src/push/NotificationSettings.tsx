@@ -1,4 +1,5 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { deviceKey } from '../api/accountCache';
 import { sessionStore, type Session } from '../auth/client';
@@ -52,7 +53,6 @@ export function NotificationSettings({
   notify: (message: string) => void;
 }) {
   const cache = useQueryClient();
-  const [draft, setDraft] = useState<ReturnType<typeof displaySettings> | null>(null);
   const [permission, setPermission] = useState(() =>
     'Notification' in window ? Notification.permission : 'default',
   );
@@ -86,7 +86,10 @@ export function NotificationSettings({
     },
   });
   const device = deviceQuery.data;
-  const settings = draft ?? displaySettings(device?.settings ?? defaultDeviceSettings);
+  const { register, reset, handleSubmit } = useForm({
+    values: displaySettings(device?.settings ?? defaultDeviceSettings),
+    resetOptions: { keepDirtyValues: true },
+  });
   const error =
     actionError || (deviceQuery.isError ? 'Notification settings could not be loaded.' : '');
 
@@ -126,7 +129,7 @@ export function NotificationSettings({
   function updateDevice(value: Device) {
     if (sessionStore.getSnapshot().session === session) {
       cache.setQueryData(deviceKey, value);
-      setDraft(null);
+      reset(displaySettings(value.settings));
     }
   }
 
@@ -164,8 +167,7 @@ export function NotificationSettings({
     }
   }
 
-  async function saveSettings(event: FormEvent) {
-    event.preventDefault();
+  const saveSettings = handleSubmit(async (settings) => {
     if (!device?.subscription || busy) return;
     if (settings.start === settings.end) {
       setError('Choose different start and end times.');
@@ -186,7 +188,7 @@ export function NotificationSettings({
     } finally {
       setBusy(false);
     }
-  }
+  });
 
   async function disable() {
     if (!device || busy) return;
@@ -217,7 +219,9 @@ export function NotificationSettings({
           in. On desktop, use your browser’s install option if available.
         </p>
       )}
-      <p className="secondary">A reminder may appear while the app is closed.</p>
+      <p className="secondary">
+        You can receive a reminder for each person due for a catch-up, even while the app is closed.
+      </p>
       {!supported ? (
         <p>
           {appleMobile
@@ -262,31 +266,18 @@ export function NotificationSettings({
           </p>
           <label>
             Quiet hours start
-            <input
-              type="time"
-              value={settings.start}
-              required
-              disabled={busy}
-              onChange={(event) => setDraft({ ...settings, start: event.target.value })}
-            />
+            <input type="time" required disabled={busy} {...register('start')} />
           </label>
           <label>
             Quiet hours end
-            <input
-              type="time"
-              value={settings.end}
-              required
-              disabled={busy}
-              onChange={(event) => setDraft({ ...settings, end: event.target.value })}
-            />
+            <input type="time" required disabled={busy} {...register('end')} />
           </label>
           <label className="checkbox-row">
             <input
               type="checkbox"
-              checked={settings.showName}
               disabled={busy}
               aria-describedby="notification-name-help"
-              onChange={(event) => setDraft({ ...settings, showName: event.target.checked })}
+              {...register('showName')}
             />
             Show a name in reminders
           </label>

@@ -389,6 +389,8 @@ export interface components {
             id: string;
             /** Name */
             name: string;
+            /** Next Scheduled On */
+            next_scheduled_on?: string | null;
             /** Paused */
             paused: boolean;
             /** Priority */
@@ -603,6 +605,8 @@ export interface components {
             last_seen?: string | null;
             /** Name */
             name: string;
+            /** Next Scheduled On */
+            next_scheduled_on?: string | null;
             /**
              * Paused
              * @default false
@@ -620,7 +624,7 @@ export interface components {
             /** Snoozed Until */
             snoozed_until?: string | null;
             /** Suppression */
-            suppression?: ("archived" | "paused" | "snoozed" | "dismissed") | null;
+            suppression?: ("archived" | "paused" | "scheduled" | "snoozed" | "dismissed") | null;
             /**
              * Timing
              * @default unknown
@@ -646,6 +650,8 @@ export interface components {
             cadence_unit?: ("days" | "weeks" | "months") | null;
             /** Name */
             name: string;
+            /** Next Scheduled On */
+            next_scheduled_on?: string | null;
             /** Priority */
             priority?: ("closest" | "close" | "occasional" | "distant") | null;
             /** Revision */
@@ -664,6 +670,8 @@ export interface components {
             cadence_unit?: ("days" | "weeks" | "months") | null;
             /** Name */
             name: string;
+            /** Next Scheduled On */
+            next_scheduled_on?: string | null;
             /** Priority */
             priority?: ("closest" | "close" | "occasional" | "distant") | null;
         };

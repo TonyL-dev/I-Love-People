@@ -77,7 +77,12 @@ def edit_person(person: UUID, value: PersonEdit, account: Account, svc: Service)
         "person_edit",
         person,
         value.revision,
-        value.model_dump(mode="json", exclude={"revision"}),
+        value.model_dump(
+            mode="json",
+            exclude={"revision"}
+            if "next_scheduled_on" in value.model_fields_set
+            else {"revision", "next_scheduled_on"},
+        ),
     )
 
 
