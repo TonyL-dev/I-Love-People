@@ -33,10 +33,7 @@ a:hover {
   text-decoration-thickness: 2px;
 }
 button,
-a,
-input,
-select,
-textarea {
+a {
   transition: background-color var(--duration-feedback) var(--ease-feedback);
 }
 :focus-visible {
