@@ -91,3 +91,7 @@ Open **Delete all data**, confirm you can read its scope and cancel without chan
 The user reports a pass with VoiceOver active on an iPhone 16 Pro running iOS 27. Names, fields, status updates and errors were read in order. The downloaded backup appeared in Files. The user heard and canceled the existing-library conflict, then restored into an empty disposable account. VoiceOver read the counts and timezone, and the person and meetup notes appeared after restore.
 
 The user canceled delete-all first, then completed it on a disposable account using the password and typed confirmation. Text, keyboard presentation, focus when opening and closing Menu, and light and dark appearance worked. The report gives one iPhone result and leaves the Safari and Home Screen surfaces unspecified.
+
+## Phase 7 and 8 device review — November 25, 2026
+
+On the [protected Preview](https://i-love-people-5ys8tojeg-smooshy.vercel.app), the user reported that caching works and all three requested device checks passed. The checklist covered fresh meetup history and Catch up after saves, timezone search and toast dismissal with VoiceOver, and the password eye, loading heart, and sign-out including Safari Back. This is user-reported evidence. The phone model and OS version were unspecified.

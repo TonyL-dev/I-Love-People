@@ -160,7 +160,7 @@ Phase 3 acceptance, November 19: the user confirmed final Auth URL configuration
 
 ## Phase 4 notification architecture - November 19, 2026
 
-The build emits a same-origin service worker with an allowlist of hashed JavaScript and CSS. Navigations go to the network and fall back to a plain offline page. Account requests and personal state stay in online API responses and component memory. Push events always render fixed text. Clicking a notification focuses or opens the normal account entry point.
+The build emits a same-origin service worker with an allowlist of hashed JavaScript and CSS. Navigations go to the network and fall back to a plain offline page. Account requests and personal state stay in online API responses and component memory. Clicking a notification focuses or opens the normal account entry point.
 
 FastAPI derives ownership from the verified account for every subscription operation. The privileged database connection is confined to the repository. Alembic 0007 stores device data and delivery receipts in `ilp_private` with forced RLS and explicit client-grant revocation. Account deletion cascades to device records and receipts. An unsubscribe clears credentials, retains a hash for idempotency, and removes inactive records after 30 days. Provider 404/410 clears credentials and the hash. The API gives the browser only its settings and the VAPID public key.
 
@@ -168,14 +168,62 @@ The job bearer is separate from user authentication. Each invocation considers u
 
 ### Protected scheduler trial — November 21, 2026
 
-The phase branch has Preview-only VAPID and job secrets. Cloudflare holds the job bearer and temporary Vercel automation credential as secret bindings. The worker targets the exact deployment origin and has both public and preview URLs disabled. Cloudflare required initial account-level `workers.dev` setup before attaching the Cron Trigger. The trial uses the documented Worker deployment and Vercel protection paths. The temporary Vercel automation credential is project-scoped and is revoked at trial close.
+During the Preview trial, Cloudflare held a Preview-only job bearer and temporary Vercel project automation credential as secret bindings. The Worker targeted the exact deployment origin and had both public and preview URLs disabled. Cloudflare required initial account-level `workers.dev` setup before attaching the Cron Trigger.
 
 ### Trial closure — November 22, 2026
 
 The recorded iPhone receipt and subsequent ineligible device state completed the protected trial. Cloudflare Cron Triggers and both trial Worker secret bindings were removed. Vercel Deployment Protection rejected the revoked automation credential. The synthetic account, device and receipt rows were cleaned up. [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) records the evidence.
+
+A separate private Production Worker calls the stable origin every five minutes. It uses a Production-only job bearer and a dedicated Vercel project automation credential. Production subscriptions use their own VAPID key. The Vercel hosting gate and the app's own job and user authorization checks remain active. [PUSH_SETUP.md](PUSH_SETUP.md) records the deployment and pause procedures.
+
+Phase 6 adds a default-off device preference in Alembic `0009_push_names`. The sender reads a name only for an opted-in device and rechecks eligibility and the preference under the same device lock used for delivery. It takes the first eligible person in Catch up order and includes only their name in the encrypted payload. The service worker renders plain text with a generic fallback for older or invalid payloads. Turning off a subscription clears its preference.
+
+Saving the option off keeps the subscription and quiet hours intact. The next eligible reminder uses generic wording.
+
+The Phase 6 trial used the isolated Preview database and branch-scoped push settings. Its private Cloudflare Worker targeted the exact tested Preview deployment. The trial schedule has been removed.
 
 ## Phase 5 portable recovery — November 22, 2026
 
 The privacy router bounds upload bodies and redacts validation errors. Services validate version, identifiers, parent links and dates, and bind restore confirmation to the normalized backup and the destination. The privacy repository uses the caller's verified Supabase bearer token. An invoker RPC reads one export snapshot and a separate invoker RPC repeats the empty-destination check under an account lock before restoring. Existing journal, reminder and direct Data API writes share that lock. Portable IDs are translated to new account-owned rows. Reminder overrides are applied after meetup inserts reset cycles.
 
 Delete-all issues a one-use database challenge and obtains a new managed password session for the same verified account. The deletion transaction checks that the password-authenticated session was created after the challenge and consumes it atomically. A narrow private database helper clears only the caller's profile and push registrations and their receipts. Owned people, history and idempotency receipts are deleted through caller-scoped RLS and cascades. The API revokes the new password session after use. The original sign-in stays available. Alembic serializes migrations with a database session lock.
+
+## Timezone preferences form
+
+The [frontend playbook](../frontend-playbook/README.md) extracts reusable examples from the account form, session cache, and design tokens.
+
+React Hook Form tracks the selected IANA timezone ID and the save lifecycle. The combobox keeps the filter text local and opens with all supported options. Choosing a match updates the form. Saving uses the existing profile request and refreshes the cached profile and affected People queries after success.
+
+## Phase 7 signup and settings boundaries
+
+Supabase Auth owns registration and email confirmation. The server advertises the default-off `ILP_SIGNUP_ENABLED` setting through the no-store public Auth config. Supabase controls actual signup and confirmation policy. The confirmation template uses the configured Site URL and puts the single-use token hash in the fragment. The app strips it before rendering, submits it to Supabase on an explicit confirmation action, and discards the provider session. Password sign-in establishes the existing memory-only application session. The private APIs and reminder job retain their existing authorization boundaries.
+
+The browser's API and managed Auth clients count pending requests until the response body is processed or the request fails. React uses that state to open one native modal above the page and any drawer while at least one request is active. The signed-in account view owns success feedback. While the settings drawer is open, the toast lives inside the native modal so it stays visible and operable in the browser's top layer. The timezone selector searches browser-supported IANA IDs and retains the saved ID as an option. It submits through the existing profile API, which validates the ID for date and reminder calculations.
+
+The toast's CSS centers the dismiss icon within the shared button and aligns the first line of text with that button. This layout applies in the account drawer and in the library.
+
+The person editor checks the unfiltered library in tab memory before sending a save. The backup picker checks names within the file before requesting a restore preview. Name uniqueness is a browser rule. The API and database still identify records by ID.
+
+## Current caching and frontend state
+
+The production service worker precaches build-versioned JavaScript and CSS and removes superseded caches when a new worker activates. It fetches page navigations from the network and supplies a generic offline page if that request fails. API traffic and cross-origin Auth traffic bypass the worker. Vercel can serve the static app shell and bundles from its CDN. The browser revalidates HTML and the service worker, and API responses use `Cache-Control: no-store`.
+
+The signed-in session owns one in-memory TanStack Query cache. People queries use the saved timezone and calendar day as part of their key. Meetup history is keyed by person ID. Both reads use a 24-hour freshness window. Profile and notification settings are session-scoped and update after confirmed saves. A timezone-aware timer switches the People query at local midnight while the tab is visible and checks the date again on return. Refresh actions and relevant confirmed mutations revalidate the affected queries.
+
+Sign-out and expiry clear the query cache, and a reload starts a fresh session. Local storage holds the appearance preference. Cold offline access still shows the generic app state. Authorization, backup export, restore review and confirmation, and delete-all use live request paths. [Vercel cache-control headers](https://vercel.com/docs/caching/cache-control-headers)
+
+## Phase 8 plans and per-person reminders
+
+Alembic `0010_person_reminders` adds the optional plan date to the owned people row and extends the existing revision-checked invoker RPC. An older edit payload that omits the field preserves the plan. The client sends an explicit null when clearing it. Backup export and restore carry the plan through the existing ownership boundary.
+
+Catch up and the sender use the saved timezone to hold cadence reminders through an active planned date. The compact profile groups the latest completed meetup, plan, priority, and cadence. People edits refresh the session's People query, while completed meetup writes also refresh that person's history.
+
+The private sender claims per-device, per-person, per-local-day receipts. Each send rechecks current eligibility, quiet hours and name preference under the device lock. An opaque tag distinguishes different people at the push provider and in the service worker while collapsing retry copies for the same receipt. The sender checks up to four devices and claims up to four deliveries per run. Browser clients with the older worker need the updated worker to display separate notifications.
+
+React Hook Form owns interactive form values and submit state. Managed Auth remains responsible for credentials. Confirmation dialogs, navigation, and browser push permission remain ordinary component state and browser interactions.
+
+The compact profile and month-by-month history read from the same per-person meetup query. The presentation groups completed dates by calendar month and renders entries for each open month. Expansion state stays with the open profile. Edit, deletion and manual refresh continue through the existing history query and journal paths. The profile's collapsed nudge disclosure owns the current reminder summary and controls.
+
+The meetup editor uses the form's opening date and note as the baseline for discard confirmation.
+
+Local development can point the Auth API at an explicit alternate IPv4 loopback port when Windows reserves the default port. Production Auth still requires HTTPS.

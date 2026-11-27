@@ -33,10 +33,7 @@ a:hover {
   text-decoration-thickness: 2px;
 }
 button,
-a,
-input,
-select,
-textarea {
+a {
   transition: background-color var(--duration-feedback) var(--ease-feedback);
 }
 :focus-visible {
@@ -201,6 +198,45 @@ textarea {
   background: var(--color-surface);
   padding: 9px var(--space-3);
   line-height: var(--line-body);
+}
+.timezone-picker {
+  position: relative;
+  display: grid;
+  gap: var(--space-2);
+}
+.timezone-picker__popup {
+  position: absolute;
+  z-index: 1;
+  inset: 100% 0 auto;
+  border: 1px solid var(--color-boundary);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+}
+.timezone-picker__popup ul {
+  max-block-size: min(16rem, 30dvh);
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.timezone-picker__popup li,
+.timezone-picker__popup p {
+  min-block-size: 44px;
+  padding: var(--space-2) var(--space-3);
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.timezone-picker__popup li {
+  cursor: pointer;
+}
+.timezone-picker__popup li:hover,
+.timezone-picker__popup li[data-highlighted='true'] {
+  outline: 2px solid currentColor;
+  outline-offset: -2px;
+}
+.timezone-picker__popup li[aria-selected='true'] {
+  font-weight: 650;
 }
 input::placeholder,
 textarea::placeholder {
@@ -735,6 +771,143 @@ input[type='checkbox'] {
 
 .person-detail {
   scroll-margin-top: calc(var(--library-nav-height, 80px) + var(--space-4));
+  gap: var(--space-3);
+  padding: var(--space-4) min(var(--space-4), 4vw);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.person-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+  gap: var(--space-2) var(--space-4);
+  margin: 0;
+}
+
+.person-summary dt {
+  color: var(--color-text-secondary);
+  font-size: var(--font-supporting);
+}
+
+.person-summary dd {
+  margin: 0;
+}
+
+.person-overview,
+.full-meetup-history {
+  gap: var(--space-3);
+}
+
+.person-history,
+.nudge-settings,
+.history-entry,
+.history-month {
+  border-block-start: 1px solid var(--color-separator);
+}
+
+.recent-meetups > summary,
+.history-entry > summary,
+.nudge-settings > summary,
+.history-month .history-month-toggle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2);
+  min-block-size: 44px;
+  padding: var(--space-2);
+  list-style: none;
+  text-align: start;
+}
+
+.recent-meetups > summary:has(.history-count) {
+  grid-template-columns: minmax(0, 1fr) minmax(0, auto) auto;
+}
+
+.recent-meetups > summary,
+.history-entry > summary,
+.nudge-settings > summary {
+  cursor: pointer;
+}
+
+.recent-meetups > summary::-webkit-details-marker,
+.history-entry > summary::-webkit-details-marker,
+.nudge-settings > summary::-webkit-details-marker {
+  display: none;
+}
+
+.recent-meetups > summary,
+.nudge-settings > summary {
+  font-weight: 600;
+}
+
+.history-month .history-month-toggle {
+  inline-size: 100%;
+}
+
+.history-month-label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0 var(--space-2);
+}
+
+.history-count {
+  font-weight: 400;
+  text-align: end;
+}
+
+.disclosure-chevron {
+  justify-self: end;
+  color: var(--color-text-secondary);
+  transform-origin: center;
+}
+
+details[open] > summary > .disclosure-chevron,
+.history-month-toggle[aria-expanded='true'] > .disclosure-chevron {
+  transform: rotate(180deg);
+}
+
+.history-entry-label,
+.history-note-preview {
+  display: block;
+  min-width: 0;
+}
+
+.history-note-preview {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.history-entry[open] > summary .history-note-preview {
+  display: none;
+}
+
+.history-entry-body,
+.history-month-entries {
+  padding-inline-start: var(--space-2);
+}
+
+.history-entry-body {
+  padding-block-end: var(--space-2);
+}
+
+.recent-meetups > .supporting {
+  padding-inline: var(--space-2);
+}
+
+.history-action {
+  margin-block-start: var(--space-2);
+}
+
+.nudge-settings > div {
+  padding-inline: var(--space-2);
+  padding-block-end: var(--space-2);
+}
+
+.snooze-form {
+  align-items: end;
 }
 
 .visually-hidden {

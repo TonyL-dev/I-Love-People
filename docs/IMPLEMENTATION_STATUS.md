@@ -1,6 +1,6 @@
 # Implementation status
 
-Updated November 22, 2026. Phases 0 through 5 are accepted. The private release is live at the protected Production URL.
+Updated November 26, 2026. Phases 0 through 6 are accepted. The private release is live at the protected Production URL.
 
 | Phase | State |
 | --- | --- |
@@ -10,7 +10,91 @@ Updated November 22, 2026. Phases 0 through 5 are accepted. The private release 
 | 3 Due list | Accepted on the protected Preview; UI approval and final-origin recovery pass |
 | 4 PWA and Web Push | Accepted on the protected Preview. Hosted schedule, desktop and iPhone evidence recorded |
 | 5 Personal release | Accepted in protected Production. Owner recovery and stable meetup checks passed by user report. Hosted HTTP, ownership checks, migration, VoiceOver and free-quota review are recorded below. |
-| 6 Enhancements | Backlog |
+| 6 Enhancements | Accepted and live in protected Production. The owner confirmed a scheduled named reminder on iPhone. |
+| 7 Signup and interface refinements | [Preview signup and recovery verified](#phase-7-preview-email-recovery--november-25-2026). Device checks passed by user report. Public Production registration is a separate rollout. |
+| 8 Forms, person view, and reminders | [Implemented locally](#phase-8-form-organization--november-26-2026). The timezone-only build is on protected Preview. The session cache is live on protected Production. |
+
+## Phase 7 implementation — November 24, 2026
+
+The review branch adds Supabase email signup and confirmation, a shared heart indicator with reduced-motion support, a searchable native timezone selector, and success toasts for settings and backup actions. The shared toast aligns both icons with the first text line and uses the existing 44 px dismiss control. The API only adds a default-off signup setting to the public Auth config. Alembic stays at `0009_push_names`.
+
+Local source checks passed, including 97 Python tests, seven frontend tests, and contract and build checks. Loopback Supabase verified captured confirmation and recovery emails, unconfirmed sign-in denial, duplicate and rate-limit behavior, invalid and used links, and cleanup. Two users registered through public Auth passed the existing application API and Data API ownership checks.
+
+Both [Linux CI jobs](https://github.com/TonyL-dev/I-Love-People/actions/runs/45426186007) passed for `2ed4f49`, including the 41-test Chrome suite and real local signup, captured confirmation, sign-in, and recovery. The Windows Chrome journey also passed with real local Supabase and captured mail. Focused Windows Chrome checks verified keyboard timezone search, saved selection, quiet-hours timezone, and settings toasts. Inspected synthetic 390 px light and 1440 px dark settings screenshots.
+
+Vercel serves `2ed4f49` at the [protected Phase 7 Preview](https://i-love-people-m28pcfu5k-smooshy.vercel.app) as `dpl_2wKJbq4GbZz3UVAe1w6TTUaMRqZC`. Both signup routes returned HTTP 200 with the isolated Preview CSP. Readiness and Auth config returned HTTP 200 with no-store. Auth config identifies isolated Preview and reports signup off. Hosted signup, real-inbox recovery and delivery to outside-team addresses require a configured SMTP sender in the isolated Preview. iPhone Safari and VoiceOver checks remain open. [Phase 7 Auth setup](AUTH_SETUP.md#phase-7-protected-preview-signup)
+
+### Phase 7 loading overlay and password control
+
+The app counts pending API and managed Auth requests and opens a fullscreen native modal with the centered heart. The overlay stays open through overlapping requests, and reduced-motion settings show a static heart. The sign-in and signup forms place the password visibility eye at the end of the input.
+
+Local source checks, all seven frontend unit tests, and the build passed for the overlay implementation. Type checking and focused Chrome reruns passed after adjusting recovery input and synchronizing browser actions with the overlay. Chrome verified the desktop and phone geometry, blocked click and keyboard input, overlapped request completion, rate-limit recovery, reduced motion, and the eye toggle's keyboard behavior and tap target. Inspected a synthetic dark phone screenshot. The [updated protected Preview](https://i-love-people-10tv0gegn-smooshy.vercel.app) serves `2644f5d` with the expected CSS and HTTP 200 readiness. Physical iPhone Safari and VoiceOver review remain open.
+
+Both [Linux CI jobs](https://github.com/TonyL-dev/I-Love-People/actions/runs/45432054937) passed for `2644f5d`. The source and browser job passed all 42 tests. The real local Supabase and Chrome job passed on retry after an initial captured-confirmation email timeout.
+
+### Phase 7 toast dismiss centering
+
+The dismiss X is centered within its button on single-line and wrapped toasts. Three local Chrome checks measured the button and icon centers, first-line alignment and 44 px target for library and drawer toasts, including enlarged text. Inspected synthetic dark phone and desktop screenshots. The [protected Preview](https://i-love-people-oqzoeaalt-smooshy.vercel.app) serves `6550719`, with the same stylesheet as the local build and HTTP 200 readiness. Physical-device review remains open.
+
+### Phase 7 exact person-name checks
+
+The browser blocks duplicate names on person saves and backup review. The comparison trims surrounding whitespace, preserves case, and includes archived entries. Existing duplicates remain available to rename. Local Chrome checked that rejected adds, edits, and backups send no write or restore-review request, that a case-distinct name saves, and that an edit can retain its own name. The source checks and build passed. The [protected Preview](https://i-love-people-1pj7yimvy-smooshy.vercel.app) serves `1263e44` with the verified JavaScript bundle and HTTP 200 readiness.
+
+## Phase 8 session cache — November 25, 2026
+
+TanStack Query `5.108.4` keeps private queries in a cache owned by the signed-in session. People and meetup history use a 24-hour freshness window, and account and device settings are reused within the session. Catch up checks the saved calendar day without a recurring API poll. Backup actions use live requests and invalidate cached state after a successful restore or deletion.
+
+Local source, contract, build, and dependency audit checks passed. Chrome verified request counts in the built app across idle time, focus, profile reopen, manual refresh, Toronto midnight, and history freshness expiry. Focused tests also passed for settings cache reuse, live save flows, backup review, and overlapping requests. The [protected Preview](https://i-love-people-5ys8tojeg-smooshy.vercel.app) serves `f18e6f0` with HTTP 200 readiness, the matching JS bundle, and the isolated Preview Auth config. Physical iPhone and VoiceOver review remain open.
+
+Both [Linux CI jobs](https://github.com/TonyL-dev/I-Love-People/actions/runs/45636374452) passed for `f18e6f0`. The real Windows Chrome journey also passed with loopback Supabase, including captured signup and recovery mail, preferences, meetup saves, and logout. The local stack was stopped.
+
+The user reported that caching works and that all three requested device checks passed on the Preview. [Device review](DEVICE_REVIEW.md#phase-7-and-8-device-review--november-25-2026) records what was covered.
+
+### Phase 7 Preview email recovery — November 25, 2026
+
+The user configured Proton SMTP and saved the exact Preview Site URL and reset redirect for the recovery trial. A no-email probe verified the redirect. The user confirmed real-inbox delivery, password reset and sign-in. The temporary account had zero people, meetups and push devices before deletion. Its absence was verified afterward.
+
+For the signup trial, Vercel redeployed `f18e6f0` as `dpl_AaYyjBKy7rusuhUPPAjrrhNL9Cvm` with the branch-scoped signup flag. The protected branch URL returned signup enabled with isolated Preview Auth. Readiness, `/create-account`, confirmation and reset routes returned HTTP 200 through authenticated Vercel access. Supabase signup is enabled, email confirmation is required, and anonymous sign-ins are disabled. A no-email probe verified the branch Site URL and its exact `/reset-password` redirect. Real-inbox signup and isolation between newly registered accounts remain open.
+
+The first real-inbox signup produced one successful signup request and two reported emails. Supabase confirmed the test account on the first direct `GET /verify`. The next direct verification reported expiration. These requests differ from the repository confirmation page, which verifies via `POST` after the user selects **Confirm email**. The dashboard template and duplicate delivery need review before using the second address. The first account is confirmed. First password sign-in and two-account isolation remain open.
+
+The user found that the custom HTML had been saved under a different email template. Signup worked after updating **Confirm signup**. Both test accounts were confirmed, and the user verified that each could access only its own data in the app. The application API running locally against hosted Preview Auth returned only owned people, denied a signed-out request, and returned 404 when the other account requested the person's meetups. The hosted Supabase Data API returned the person record only to its owner. Both temporary accounts and the person record were deleted with user approval and their absence was verified. The cause of the earlier duplicate email delivery remains unverified.
+
+### Protected Production release — November 25, 2026
+
+[Release PR #6](https://github.com/TonyL-dev/I-Love-People/pull/6) passed both PR jobs and merged as `488753f`. Both [exact main checks](https://github.com/TonyL-dev/I-Love-People/actions/runs/45708213148) passed. Staging commit `8fc7dcb` changes only the CSP Auth origin. Production Supabase reports signup and anonymous sign-ins disabled. The user approved the [Production migration workflow](https://github.com/TonyL-dev/I-Love-People/actions/runs/45708562342), which passed. Production remains at `0009_push_names`.
+
+Vercel's `staging` target loaded Preview Auth. Rebuilt `8fc7dcb` with Production settings and automatic domain assignment disabled. The [protected candidate](https://i-love-people-iiyr5bpu3-smooshy.vercel.app), `dpl_EAawwHLQExAg6Ry1ouUKdtcSgjur`, passed health, readiness, Production Auth and CSP, disabled app signup, assets, reset route, service worker and signed-out API checks. Unauthenticated browser requests were redirected to Vercel sign-in. The stable URL still resolves to `dpl_EJSiMUM54XKEg1grwswDgT9hPirv`. The signed-in disposable meetup smoke and test-account cleanup remain open before promotion.
+
+The owner reported that staged sign-in and all meetup checks passed. Before promotion, Production was back at one account, two people and three meetups, matching the baseline, with zero orphaned people or meetups. Vercel promoted `dpl_EAawwHLQExAg6Ry1ouUKdtcSgjur` to the [stable Production URL](https://i-love-people.vercel.app). The previous deployment `dpl_EJSiMUM54XKEg1grwswDgT9hPirv` is the rollback target. Stable smoke verified the new deployment ID, health, readiness, Production Auth and CSP, disabled signup, reset page, active hosting protection, signed-out API denial and the push service worker. Stable signed-in smoke and a fresh verification of the Production Auth reset redirect remain open.
+
+The owner confirmed that sign-in and the password-reset redirect check passed on stable Production. This completes verification of the protected rollout. Public signup remains a separate rollout.
+
+## Phase 8 form organization — November 26, 2026
+
+The [frontend playbook](../frontend-playbook/README.md) provides an adoption workflow and portable examples for cache policy, forms, and styling. The example TypeScript and internal links were checked locally. The [infrastructure guide](../frontend-playbook/infrastructure.md) covers local setup, managed sign-in, protected deployments, and scheduled jobs.
+
+The account timezone form uses React Hook Form 7.92.0. Its editable combobox opens with all supported timezones, filters by partial labels and IDs, and preserves the explicit save and success feedback. The earlier timezone-only [protected Preview](https://i-love-people-clu96esom-smooshy.vercel.app) serves `019ff76` with healthy readiness, isolated Preview Auth, and signup closed.
+
+The completed local implementation migrates the remaining React forms, compacts the person view and adds plans and per-person delivery receipts in Alembic `0010_person_reminders`. A plan holds cadence reminders through its local date. The local two-account Supabase drill verified migration, ownership isolation, planned-date suppression and resumption, two named and two generic sends to their respective devices, repeated and concurrent run deduplication, retry limits, opt-out, and portable backup and restore. The drill substitutes the push transport to avoid sending to real devices.
+
+Local source verification includes 98 Python and seven frontend unit tests. All 44 Chrome checks passed across the full run and focused rerun. The live local Chrome journey saved and cleared a plan, checked Catch up and history, and passed the 320 px reflow and automated accessibility check at 200% text. Inspected synthetic 390 px and enlarged 320 px captures. Local Supabase advisors returned no warnings or errors.
+
+The full revision still needs hosted CI, the protected Preview trial, and physical iPhone Safari and VoiceOver review. The [per-person reminder trial](PUSH_SETUP.md#per-person-reminder-trial) covers live provider delivery and device behavior.
+
+### Compact meetup history
+
+The profile starts with Recent meetups collapsed and keeps the total count visible beside a fixed-position chevron. Expanding the section reveals three recent entries and **View all**. The full history groups entries by month and expands individual notes and actions on demand. Chrome verified the collapsed default and keyboard expansion.
+
+Each month can expand independently. The profile groups Log meetup, Edit person, Archive or Restore, and Delete above the summary. **Nudge settings** matches the collapsed **Recent meetups** section and reveals the catch-up date, status, and controls on demand. Focused Chrome checks verified the action group, hidden reminder details, keyboard expansion, simultaneous month expansion, and existing nudge save and error flows.
+
+Focused Chrome checks passed for keyboard disclosure, chevron alignment, the 12-month list, note expansion, edit and delete, focus return, and cache reuse. Visual review covered a 390 px light view and a 320 px dark view at 200% text, with reflow checks at 768 and 1440 px. The local Chrome and Supabase journey reopened a saved meetup in an older month after signing back in. Protected Preview and physical-device review are pending.
+
+The meetup editor now asks for discard confirmation only when the draft differs from its opening values. A focused Chrome run verified clean dismissal through Close, clean dismissal through Escape after reverting an edit, and preservation of an edited note after canceling the discard prompt.
+
+Focused Chrome verification confirmed that Close and Escape dismiss an unsaved **Add person** draft immediately. Reopening the form starts a blank draft.
+
+November 27 local restart. Windows reserved the configured Docker ports. A temporary configuration under `.tools/` moved Supabase to verified loopback-only ports 55421–55424. The app still ran on 5173, and the synthetic account could sign in and read both saved meetups.
 
 ## Phase 5 implementation — November 22, 2026
 
@@ -78,6 +162,56 @@ The owner subsequently reported that password recovery works after the fix. Repl
 The owner confirmed successful password reset and sign-in with the replacement password, then confirmed adding, reopening, editing and deleting a sample meetup on the stable Production site. This is owner-reported acceptance evidence. An independent alias check confirmed [the protected Production URL](https://i-love-people.vercel.app/) still serves deployment `dpl_3eVKdtxV7XamHkhTXJ8kTHf4C6z6`.
 
 Together with the actual protected Preview export/restore drill, ownership and security checks, reported iPhone VoiceOver pass, gated Production migration, stable HTTP smoke and [measured free-quota usage](OPERATIONS.md#monthly-cost-review), this closes Phase 5. The private release includes in-app reminders. Production Web Push remains an optional rollout.
+
+### Production Web Push — November 22, 2026
+
+Vercel staged and promoted `dpl_3Vp2bU33kNCb4UHKtK8weZMY4D4c` from the same `01ea36e` source with separate sensitive Production VAPID and job settings. The previous stable deployment, `dpl_3eVKdtxV7XamHkhTXJ8kTHf4C6z6`, is the rollback target. Staged and stable checks passed for the hosting gate, Production CSP, health, database readiness, manifest and service worker. The app returned 401 for a missing or wrong job bearer and 200 for the correct bearer, with zero devices checked and zero messages sent.
+
+Cloudflare's private `ilp-production-push-scheduler` Worker has both URL flags off and no routes. It targets the stable origin with two secret bindings. Its five-minute trigger was installed at 11:24 p.m. Toronto time. The first observed automatic run at 11:35:38 p.m. Toronto time completed successfully in 3.3 seconds. Cloudflare Analytics reported one invocation, one outbound subrequest and zero errors. The Preview trigger remains disabled. A closed-iPhone delivery on Production remains to be verified after the owner opts in. [Production device check and pause procedure](PUSH_SETUP.md#production)
+
+## Named reminders — November 23, 2026
+
+Phase 6 adds an unchecked **Show a name in reminders** setting for each enabled device. The sender uses the first eligible person in Catch up order and encrypts the name with the push payload. Alembic `0009_push_names` defaults existing subscriptions to generic wording. Unsubscribing clears the choice.
+
+The source and production build checks passed with 97 Python and seven frontend tests. The Windows browser run passed 38 checks. Two dark-mode checks timed out and passed on a single-worker rerun, along with the notification flow and installed service worker. The notification flow verifies the accessible lock-screen description, saved opt-in across drawer reopen, and a saved opt-out that preserves quiet hours and enrollment. The setting was reviewed visually at 390 px in light mode and 1440 px in dark mode.
+
+Both Linux jobs passed for `081b9e2` in [Checks run 45186259355](https://github.com/TonyL-dev/I-Love-People/actions/runs/45186259355). This includes all 40 browser tests and the Docker-backed Auth and two-user database drill. The drill covers repeat migrations, generic and named delivery selection, ownership, legacy requests, unsubscribe and explicit name opt-out. The Windows Supabase restart failed in this follow-up. The Docker checks for this commit ran in CI.
+
+The [protected Phase 6 Preview](https://i-love-people-92ididpy2-smooshy.vercel.app) is READY for that commit as `dpl_9edtXyUroKC3GPv4v8hQRpFvNLUZ`. The isolated Preview database upgraded from `0008_portable_backups` to `0009_push_names`. A repeat upgrade, default false, forced RLS and client-role isolation passed. Protected readiness and Auth config returned 200, push config required app authentication, and the deployed service worker contained the updated notification text and returned `no-cache`.
+
+The two-user drill also passed against hosted Preview Auth and Postgres using the local ASGI app and a simulated transport. Temporary Auth accounts and device data were removed.
+
+### Live trial
+
+The [push-enabled protected Preview](https://i-love-people-5wf9drj1g-smooshy.vercel.app), deployment `dpl_Hmrw5RYSy2UYu7q3JLdHfGCi4wZV`, serves the same CI-passed `081b9e2` commit with three sensitive Phase 6 branch-scoped settings. Readiness, Preview Auth origin, service worker, and hosting protection passed. The job rejected both missing and incorrect bearers and returned aggregate counts for a valid bearer.
+
+The private Preview Cloudflare Worker targets the exact deployment with separate automation and job credentials. Cloudflare reports an active five-minute Preview Cron Trigger. At 9:26 a.m. Toronto time, the first observed run appeared in Cloudflare Analytics with one successful invocation, one subrequest, and zero errors. The Production Cron Trigger also remains active.
+
+A disposable Chrome subscription was revoked by the provider on the first attempt. The app cleared the subscription. A fresh subscription received “A little time to reconnect with Maya Test.” through the real push provider while the app page was closed. The authenticated job reported one send and the test browser then opted out.
+
+On request, the same-day delivery receipt for the sole active disposable Preview device was reset twice. The saved name preference was off for the first resend and on for the second. Each authenticated Preview job reported one send and recorded a replacement `sent` receipt. The user confirmed the second, named reminder worked on their iPhone. The device still had names enabled at the follow-up check.
+
+The user confirmed the generic wording on iPhone as well. The hosted sender recorded successful trial sends with each saved preference. CI, the protected scheduled sender, Chrome live push, and the user-reported iPhone results close Phase 6 Preview acceptance. Production rollout is pending.
+
+Cloudflare reports no Preview Cron Triggers, both trial Worker bindings removed, and the Worker still private. The disposable account, push devices, delivery receipts, and local encrypted trial credentials were removed. The revoked Vercel automation credential returned HTTP 302 at the hosting gate. Three sensitive Vercel settings scoped to the Phase 6 Preview branch remain pending removal.
+
+[Pull request #5](https://github.com/TonyL-dev/I-Love-People/pull/5) merged into protected `main` at `a247cb0`. Both [Checks jobs](https://github.com/TonyL-dev/I-Love-People/actions/runs/45248233293) passed on that commit. The owner confirmed saving a current Production backup. [Production migration run 45258033293](https://github.com/TonyL-dev/I-Love-People/actions/runs/45258033293) was queued with the required reviewer rule verified. The staged smoke and promotion follow successful migration.
+
+Production migration run 45258033293 completed successfully. GitHub records the review gate as skipped. An independent read confirmed Production Alembic head `0009_push_names`. The stable domain still served `dpl_3Vp2bU33kNCb4UHKtK8weZMY4D4c` at verification. Staged smoke and promotion remain pending.
+
+The initial staged build exposed a Preview Auth origin in its browser policy while the app was configured for Production Auth. Staging commit `d43497b` changes only that origin in `vercel.json` from CI-passed `a247cb0`. The [corrected staged Production build](https://i-love-people-3muyb4m0d-smooshy.vercel.app) is READY as `dpl_EJSiMUM54XKEg1grwswDgT9hPirv`. Health, database readiness, exact Production Auth and CSP, JS/CSS assets, manifest, named-reminder service worker, and unauthorized push API behavior passed. The staging hosting gate returned HTTP 302 without authentication. The stable domain continued to serve `dpl_3Vp2bU33kNCb4UHKtK8weZMY4D4c`. Signed-in smoke and promotion remain pending.
+
+November 24 follow-up. The user reported generic wording after testing from the staged build. Cloudflare's active five-minute Production Worker was verified to call the stable URL, which still served the Phase 5 sender that only emits generic payloads. Staging shares the Production database, so saving the name setting there does not switch the scheduled sender. Production metadata showed one opted-in active device and one generic active device, each with a successful daily receipt. The exact staging test receipt could not be attributed to an account from the available evidence.
+
+The user confirmed staged sign-in and the meetup create, edit, and delete checks passed. Production is still at `0009_push_names`, and stable still points to the prior deployment. The suggested disposable email is absent. A second account was created during the staged test window and has saved data. Confirm whether it is the disposable account before completing the runbook's cleanup and promoting.
+
+### Production release — November 24, 2026
+
+The user identified and deleted the disposable staging account. Production queries confirmed one remaining account and zero orphaned people, meetups, devices, or delivery receipts. Vercel promoted staged commit `d43497b` as deployment `dpl_EJSiMUM54XKEg1grwswDgT9hPirv`. The prior deployment `dpl_3Vp2bU33kNCb4UHKtK8weZMY4D4c` is the rollback target.
+
+On the [stable Production URL](https://i-love-people.vercel.app/), the deployment alias, Vercel protection, exact Production Auth origin and CSP, health, readiness, reset page, named-reminder worker and unauthenticated push API checks passed. The signed-in meetup result applies to the staged build by user report.
+
+At the owner's request, reset the pre-promotion daily receipt for the sole active Production device with names enabled. The scheduled Production job recorded one successful send at 9:35 a.m. Toronto time on November 24. The owner confirmed the named reminder arrived on iPhone, completing Phase 6 acceptance.
 
 ## Phase 1 evidence (historical) — November 18, 2026
 

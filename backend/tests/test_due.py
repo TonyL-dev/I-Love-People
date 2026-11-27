@@ -94,6 +94,19 @@ def test_timing_then_priority_then_due_name_id() -> None:
     assert due_order(derive(a, today)) < due_order(derive(b, today))
 
 
+def test_scheduled_meetup_holds_cadence_through_its_local_date() -> None:
+    today = date(2024, 3, 1)
+    planned = derive(person(next_scheduled_on=today), today)
+    assert planned.suppression == "scheduled"
+    assert planned.eligible_on is None
+    assert planned.due_on == date(2024, 2, 29)
+    assert planned.last_seen == date(2024, 1, 31)
+    assert derive(planned, date(2024, 3, 2)).eligible_on == planned.due_on
+    cleared = planned.model_copy(update={"next_scheduled_on": None})
+    assert derive(cleared, today).suppression is None
+    assert derive(person(next_scheduled_on=today, paused=True), today).suppression == "paused"
+
+
 @pytest.mark.parametrize(
     ("timezone", "timing"),
     [

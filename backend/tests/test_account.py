@@ -163,6 +163,18 @@ def test_public_config_never_returns_privileged_or_malformed_keys(key: str) -> N
         )
 
 
+def test_alternate_loopback_auth_port_works_in_development_and_fails_in_production() -> None:
+    url = "http://127.0.0.1:55421"
+    settings = Settings(
+        environment="development",
+        supabase_url=url,
+        supabase_publishable_key="sb_publishable_synthetic",
+    )
+    assert public_config(settings).url == url
+    with pytest.raises(AuthenticationUnavailable):
+        public_config(settings.model_copy(update={"environment": "production"}))
+
+
 class SyntheticProfiles:
     def __init__(self) -> None:
         self.saved: list[tuple[UUID, str]] = []

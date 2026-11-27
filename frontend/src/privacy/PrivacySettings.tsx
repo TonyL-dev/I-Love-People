@@ -1,4 +1,5 @@
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 import type { components } from '../api/schema';
 import { AccountError, jsonRequest, sessionStore, type Session } from '../auth/client';
 import { Button } from '../ui/Button';
@@ -51,8 +52,10 @@ export function PrivacySettings({
 }) {
   const [review, setReview] = useState<Review | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [confirmation, setConfirmation] = useState('');
-  const [password, setPassword] = useState('');
+  const { register, control, handleSubmit, reset, resetField } = useForm({
+    defaultValues: { confirmation: '', password: '' },
+  });
+  const [confirmation, password] = useWatch({ control, name: ['confirmation', 'password'] });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -153,16 +156,14 @@ export function PrivacySettings({
 
   function cancelDelete() {
     setConfirmDelete(false);
-    setConfirmation('');
-    setPassword('');
+    reset();
   }
 
-  function deleteAll(event: FormEvent) {
-    event.preventDefault();
+  const deleteAll = handleSubmit(async ({ confirmation, password }) => {
     if (confirmation !== 'DELETE' || !password) return;
     const body = JSON.stringify({ confirmation, password });
-    setPassword('');
-    void run(async () => {
+    resetField('password');
+    await run(async () => {
       await request('delete-all', body);
       if (!isCurrent()) return;
       cancelDelete();
@@ -170,7 +171,7 @@ export function PrivacySettings({
       notify('All application data deleted.');
       onChanged();
     }, 'Deletion could not be confirmed. Check your library before trying again.');
-  }
+  });
 
   return (
     <section className="surface stack" aria-labelledby="privacy-heading">
@@ -229,7 +230,11 @@ export function PrivacySettings({
         </div>
       )}
       {confirmDelete ? (
-        <form className="stack" onSubmit={deleteAll} aria-labelledby="delete-data-heading">
+        <form
+          className="stack"
+          onSubmit={(event) => void deleteAll(event)}
+          aria-labelledby="delete-data-heading"
+        >
           <h3 id="delete-data-heading">Delete all application data</h3>
           <p>
             This permanently removes all people, meetup history, your saved timezone, and
@@ -243,8 +248,7 @@ export function PrivacySettings({
               autoComplete="current-password"
               required
               maxLength={1024}
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
+              {...register('password')}
             />
           </label>
           <label htmlFor="delete-confirmation">
@@ -254,9 +258,8 @@ export function PrivacySettings({
               autoComplete="off"
               autoCapitalize="characters"
               spellCheck={false}
-              value={confirmation}
               maxLength={6}
-              onChange={(event) => setConfirmation(event.target.value)}
+              {...register('confirmation')}
             />
           </label>
           <div className="actions">

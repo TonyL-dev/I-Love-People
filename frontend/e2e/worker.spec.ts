@@ -37,6 +37,8 @@ test('production worker caches only public bundles and displays optional names',
       for (const payload of [
         { name: 'Synthetic Maya', url: 'https://example.test/' },
         { type: 'catch-up', name: 'Synthetic  Maïa' },
+        { type: 'catch-up', name: 'Synthetic  Maïa', tag: 'a'.repeat(32) },
+        { type: 'catch-up', tag: 'b'.repeat(32) },
         null,
       ]) {
         self.dispatchEvent(
@@ -67,6 +69,8 @@ test('production worker caches only public bundles and displays optional names',
   expect(notifications).toEqual([
     generic,
     { ...generic, body: 'A little time to reconnect with Synthetic Maïa.' },
+    { ...generic, body: 'A little time to reconnect with Synthetic Maïa.', tag: 'a'.repeat(32) },
+    { ...generic, tag: 'b'.repeat(32) },
     generic,
   ]);
 

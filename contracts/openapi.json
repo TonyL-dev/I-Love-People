@@ -153,6 +153,18 @@
             "title": "Name",
             "type": "string"
           },
+          "next_scheduled_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Scheduled On"
+          },
           "paused": {
             "title": "Paused",
             "type": "boolean"
@@ -618,6 +630,18 @@
             "title": "Name",
             "type": "string"
           },
+          "next_scheduled_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Scheduled On"
+          },
           "paused": {
             "default": false,
             "title": "Paused",
@@ -667,6 +691,7 @@
                 "enum": [
                   "archived",
                   "paused",
+                  "scheduled",
                   "snoozed",
                   "dismissed"
                 ],
@@ -748,6 +773,18 @@
             "title": "Name",
             "type": "string"
           },
+          "next_scheduled_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Scheduled On"
+          },
           "priority": {
             "anyOf": [
               {
@@ -820,6 +857,18 @@
             "minLength": 1,
             "title": "Name",
             "type": "string"
+          },
+          "next_scheduled_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Scheduled On"
           },
           "priority": {
             "anyOf": [

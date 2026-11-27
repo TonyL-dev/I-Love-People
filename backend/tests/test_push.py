@@ -1,6 +1,9 @@
+from base64 import urlsafe_b64decode
 from datetime import UTC, datetime
+from http.client import HTTPResponse
 from json import loads
 from secrets import token_bytes
+from unittest.mock import Mock
 from uuid import uuid4
 
 import http_ece  # type: ignore[import-untyped]
@@ -10,9 +13,25 @@ from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 from ilp.push.models import push_url
 from ilp.push.repository import Device
 from ilp.push.service import send_window
-from ilp.push.transport import Subscription, WebPushTransport
+from ilp.push.transport import Subscription, WebPushTransport, apple_reason
 from push_smoke import encode
 from pydantic import SecretStr
+
+
+@pytest.mark.parametrize(
+    "body, expected",
+    [
+        (b'{"reason":"BadJwtToken","detail":"secret"}', "BadJwtToken"),
+        (b'{"reason":"https://push.apple.com/private"}', "unknown"),
+        (b'{"reason":["BadJwtToken"]}', "unknown"),
+        (b"invalid", "unknown"),
+    ],
+)
+def test_apple_push_reason_uses_only_documented_codes(body: bytes, expected: str) -> None:
+    response = Mock(spec=HTTPResponse)
+    response.read.return_value = body
+    assert apple_reason(response) == expected
+    response.read.assert_called_once_with(1024)
 
 
 @pytest.mark.parametrize(
@@ -47,17 +66,17 @@ def test_quiet_hours_wrap_and_ttl_respects_the_dst_jump() -> None:
     "status, outcome", [(201, "sent"), (410, "revoked"), (429, "retry"), (307, "failed")]
 )
 @pytest.mark.parametrize("name", [None, "Synthetic Maïa"])
+@pytest.mark.parametrize("subject", ["mailto:push@example.test", "https://push.example.test"])
 def test_web_push_encrypts_and_signs_without_redirecting(
-    monkeypatch: pytest.MonkeyPatch, status: int, outcome: str, name: str | None
+    monkeypatch: pytest.MonkeyPatch, status: int, outcome: str, name: str | None, subject: str
 ) -> None:
     receiver = ec.generate_private_key(ec.SECP256R1())
     point = receiver.public_key().public_bytes(Encoding.X962, PublicFormat.UncompressedPoint)
     auth = token_bytes(16)
     sender = ec.generate_private_key(ec.SECP256R1()).private_numbers().private_value
-    transport = WebPushTransport(
-        SecretStr(encode(sender.to_bytes(32, "big"))), "mailto:push@example.test"
-    )
+    transport = WebPushTransport(SecretStr(encode(sender.to_bytes(32, "big"))), subject)
     endpoint = "https://fcm.googleapis.com/wp/synthetic"
+    tag = "a" * 32
 
     class MockHTTPS:
         def __init__(self, host: str, *, timeout: int) -> None:
@@ -68,11 +87,16 @@ def test_web_push_encrypts_and_signs_without_redirecting(
         ) -> None:
             assert (method, target) == ("POST", "/wp/synthetic")
             assert headers["Authorization"].startswith("vapid t=")
+            claims = headers["Authorization"].split(".")[1]
+            decoded = loads(urlsafe_b64decode(claims + "=" * (-len(claims) % 4)))
+            assert decoded["sub"] == subject
+            assert decoded["aud"] == "https://fcm.googleapis.com"
             assert headers["Content-Encoding"] == "aes128gcm" and headers["TTL"] == "60"
+            assert headers["Topic"] == tag
             plain = http_ece.decrypt(
                 body, private_key=receiver, auth_secret=auth, version="aes128gcm"
             )
-            expected = {"type": "catch-up"}
+            expected = {"type": "catch-up", "tag": tag}
             if name is not None:
                 expected["name"] = name
             assert loads(plain) == expected
@@ -94,4 +118,7 @@ def test_web_push_encrypts_and_signs_without_redirecting(
             pass
 
     monkeypatch.setattr("ilp.push.transport.HTTPSConnection", MockHTTPS)
-    assert transport.send(Subscription(endpoint, encode(point), encode(auth)), 60, name) == outcome
+    assert (
+        transport.send(Subscription(endpoint, encode(point), encode(auth)), 60, name, tag)
+        == outcome
+    )

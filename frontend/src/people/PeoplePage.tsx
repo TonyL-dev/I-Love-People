@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 import { ArrowLeft, Check } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AccountError, sessionStore, type Session } from '../auth/client';
@@ -6,6 +7,7 @@ import { meetupKey, peopleKey } from '../api/accountCache';
 import { Button } from '../ui/Button';
 import { Dialog } from '../ui/Dialog';
 import { journal, failureMessage, type Person, type PersonInput, type Meetup } from './client';
+import { MeetupHistory } from './MeetupHistory';
 import { DueList, NudgeControls } from './NudgeViews';
 import { today, useAccountDay } from './accountDay';
 
@@ -15,13 +17,15 @@ const levels = [
   ['occasional', 'Comme ci, comme \u00e7a - see occasionally', 3, 'months'],
   ['distant', 'Distant - catch up once in a while', 6, 'months'],
 ] as const;
-const blank: PersonInput = {
-  name: '',
-  priority: null,
-  cadence_count: null,
-  cadence_unit: null,
-  archived: false,
+
+type PersonDraft = {
+  name: string;
+  priority: NonNullable<PersonInput['priority']> | '';
+  cadence_unit: NonNullable<PersonInput['cadence_unit']> | '';
+  cadence_count: number;
+  next_scheduled_on: string;
 };
+
 function PersonEditor({
   person,
   people,
@@ -37,62 +41,80 @@ function PersonEditor({
   close: () => void;
   reloadConflict: (error: unknown) => void;
 }) {
-  const [draft, setDraft] = useState<PersonInput>(
-    person
-      ? {
-          name: person.name,
-          priority: person.priority ?? null,
-          cadence_count: person.cadence_count ?? null,
-          cadence_unit: person.cadence_unit ?? null,
-          archived: person.archived,
-        }
-      : blank,
-  );
-  const [busy, setBusy] = useState(false);
-  const [nameError, setNameError] = useState('');
-  const [error, setError] = useState('');
-  const suggestion = levels.find((l) => l[0] === draft.priority);
+  const {
+    register,
+    control,
+    setValue,
+    setError,
+    clearErrors,
+    setFocus,
+    handleSubmit,
+    formState: { errors, isSubmitting: busy },
+  } = useForm<PersonDraft>({
+    defaultValues: {
+      name: person?.name ?? '',
+      priority: person?.priority ?? '',
+      cadence_unit: person?.cadence_unit ?? '',
+      cadence_count: person?.cadence_count ?? 1,
+      next_scheduled_on: person?.next_scheduled_on ?? '',
+    },
+  });
+  const priority = useWatch({ control, name: 'priority' });
+  const cadenceUnit = useWatch({ control, name: 'cadence_unit' });
+  const scheduled = useWatch({ control, name: 'next_scheduled_on' });
+  const suggestion = levels.find((level) => level[0] === priority);
+  const nameError = errors.name?.message;
+
+  const submit = handleSubmit(async (draft) => {
+    const name = draft.name.trim();
+    if (!name) {
+      setError('name', { message: 'Enter a name.' }, { shouldFocus: true });
+      return;
+    }
+    const duplicate = people.find((entry) => entry.id !== person?.id && entry.name.trim() === name);
+    if (duplicate) {
+      setError(
+        'name',
+        {
+          message: duplicate.archived
+            ? 'An archived person already has this name. Choose a different name.'
+            : 'A person already has this name. Choose a different name.',
+        },
+        { shouldFocus: true },
+      );
+      return;
+    }
+    const payload: PersonInput = {
+      name,
+      priority: draft.priority || null,
+      cadence_unit: draft.cadence_unit || null,
+      cadence_count: draft.cadence_unit ? draft.cadence_count : null,
+      next_scheduled_on: draft.next_scheduled_on || null,
+      archived: person?.archived ?? false,
+    };
+    try {
+      const saved = await journal<Person>(
+        session,
+        person ? `people/${person.id}` : 'people',
+        person ? 'PUT' : 'POST',
+        { ...payload, ...(person ? { revision: person.revision } : {}) },
+      );
+      done(saved);
+    } catch (failure) {
+      reloadConflict(failure);
+      setError('root.save', { message: failureMessage(failure) });
+    }
+  });
+
   return (
     <Dialog
       open
       title={person ? 'Edit person' : 'Add person'}
       onRequestClose={() => {
-        if (!busy && window.confirm('Discard this person form?')) close();
+        if (!busy && (!person || window.confirm('Discard this person form?'))) close();
       }}
     >
-      <form
-        className="stack"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (busy) return;
-          setError('');
-          const name = draft.name.trim();
-          const duplicate = people.find(
-            (entry) => entry.id !== person?.id && entry.name.trim() === name,
-          );
-          if (duplicate) {
-            setNameError(
-              duplicate.archived
-                ? 'An archived person already has this name. Choose a different name.'
-                : 'A person already has this name. Choose a different name.',
-            );
-            return;
-          }
-          setNameError('');
-          setBusy(true);
-          void journal<Person>(
-            session,
-            person ? `people/${person.id}` : 'people',
-            person ? 'PUT' : 'POST',
-            { ...draft, name, ...(person ? { revision: person.revision } : {}) },
-          )
-            .then(done, (e) => {
-              reloadConflict(e);
-              setError(failureMessage(e));
-            })
-            .finally(() => setBusy(false));
-        }}
-      >
+      <form className="stack" onSubmit={(event) => void submit(event)}>
         <label>
           Name
           <input
@@ -100,11 +122,7 @@ function PersonEditor({
             maxLength={120}
             aria-invalid={nameError ? true : undefined}
             aria-describedby={nameError ? 'person-name-error' : undefined}
-            value={draft.name}
-            onChange={(e) => {
-              setDraft({ ...draft, name: e.target.value });
-              setNameError('');
-            }}
+            {...register('name', { onChange: () => clearErrors('name') })}
           />
         </label>
         {nameError && (
@@ -114,13 +132,7 @@ function PersonEditor({
         )}
         <label htmlFor="person-priority">
           Private priority
-          <select
-            id="person-priority"
-            value={draft.priority ?? ''}
-            onChange={(e) =>
-              setDraft({ ...draft, priority: (e.target.value as PersonInput['priority']) || null })
-            }
-          >
+          <select id="person-priority" {...register('priority')}>
             <option value="">No priority</option>
             {levels.map((l) => (
               <option key={l[0]} value={l[0]}>
@@ -131,9 +143,10 @@ function PersonEditor({
         </label>
         {suggestion && (
           <Button
-            onClick={() =>
-              setDraft({ ...draft, cadence_count: suggestion[2], cadence_unit: suggestion[3] })
-            }
+            onClick={() => {
+              setValue('cadence_count', suggestion[2]);
+              setValue('cadence_unit', suggestion[3]);
+            }}
           >
             Use suggested cadence: every {suggestion[2]} {suggestion[3]}
           </Button>
@@ -147,14 +160,11 @@ function PersonEditor({
           <select
             id="person-cadence"
             aria-label="Cadence"
-            value={draft.cadence_unit ?? ''}
-            onChange={(e) =>
-              setDraft({
-                ...draft,
-                cadence_unit: (e.target.value as PersonInput['cadence_unit']) || null,
-                cadence_count: e.target.value ? (draft.cadence_count ?? 1) : null,
-              })
-            }
+            {...register('cadence_unit', {
+              onChange: (event) => {
+                if (!event.target.value) setValue('cadence_count', 1);
+              },
+            })}
           >
             <option value="">No cadence</option>
             <option value="days">Days</option>
@@ -162,7 +172,7 @@ function PersonEditor({
             <option value="months">Months</option>
           </select>
         </label>
-        {draft.cadence_unit && (
+        {cadenceUnit && (
           <label>
             Every
             <input
@@ -170,14 +180,36 @@ function PersonEditor({
               required
               min={1}
               max={365}
-              value={draft.cadence_count ?? 1}
-              onChange={(e) => setDraft({ ...draft, cadence_count: Number(e.target.value) })}
+              {...register('cadence_count', { valueAsNumber: true })}
             />
           </label>
         )}
-        {error && (
+        <label>
+          Next scheduled meetup (optional)
+          <input
+            type="date"
+            max="9999-12-31"
+            aria-describedby="scheduled-meetup-help"
+            {...register('next_scheduled_on')}
+          />
+        </label>
+        <p id="scheduled-meetup-help" className="supporting secondary">
+          Catch-up reminders pause through this date. Clear the date to resume your cadence sooner.
+        </p>
+        {scheduled && (
+          <Button
+            className="self-start"
+            onClick={() => {
+              setValue('next_scheduled_on', '');
+              setFocus('next_scheduled_on');
+            }}
+          >
+            Clear scheduled meetup
+          </Button>
+        )}
+        {errors.root?.save?.message && (
           <p role="alert" className="error-text">
-            {error}
+            {errors.root.save.message}
           </p>
         )}
         <Button type="submit" variant="primary" busy={busy}>
@@ -205,65 +237,59 @@ function MeetupEditor({
   close: () => void;
   reloadConflict: (error: unknown) => void;
 }) {
-  const [date, setDate] = useState(meetup?.completed_on ?? today(timezone));
-  const [note, setNote] = useState(meetup?.note ?? '');
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isDirty, isSubmitting: busy },
+  } = useForm({
+    defaultValues: {
+      completed_on: meetup?.completed_on ?? today(timezone),
+      note: meetup?.note ?? '',
+    },
+  });
   const [requestId] = useState(() => crypto.randomUUID());
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
   // A retry retains the exact payload/key after an ambiguous transport failure.
   const [submitted, setSubmitted] = useState<{ completed_on: string; note: string } | null>(null);
+  const error = errors.root?.save?.message;
+  const submit = handleSubmit(async (draft) => {
+    const payload = submitted ?? draft;
+    setSubmitted(payload);
+    try {
+      await journal(
+        session,
+        meetup ? `meetups/${meetup.id}` : `people/${person.id}/meetups`,
+        meetup ? 'PUT' : 'POST',
+        { ...payload, ...(meetup ? { revision: meetup.revision } : { request_id: requestId }) },
+      );
+      done(meetup ? 'Meetup updated.' : 'Meetup logged.');
+    } catch (failure) {
+      reloadConflict(failure);
+      setError('root.save', { message: failureMessage(failure) });
+    }
+  });
   return (
     <Dialog
       open
       title={`${meetup ? 'Edit' : 'Log'} meetup with ${person.name}`}
       onRequestClose={() => {
-        if (!busy && window.confirm('Discard this meetup form?')) close();
+        if (!busy && (!isDirty || window.confirm('Discard this meetup form?'))) close();
       }}
     >
-      <form
-        className="stack"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (busy) return;
-          const payload = submitted ?? { completed_on: date, note };
-          setSubmitted(payload);
-          setBusy(true);
-          setError('');
-          void journal(
-            session,
-            meetup ? `meetups/${meetup.id}` : `people/${person.id}/meetups`,
-            meetup ? 'PUT' : 'POST',
-            { ...payload, ...(meetup ? { revision: meetup.revision } : { request_id: requestId }) },
-          )
-            .then(
-              () => done(meetup ? 'Meetup updated.' : 'Meetup logged.'),
-              (e) => {
-                reloadConflict(e);
-                setError(failureMessage(e));
-              },
-            )
-            .finally(() => setBusy(false));
-        }}
-      >
+      <form className="stack" onSubmit={(event) => void submit(event)}>
         <label>
           Meetup date
           <input
             type="date"
             required
             max={today(timezone)}
-            value={date}
+            {...register('completed_on')}
             disabled={submitted !== null}
-            onChange={(e) => setDate(e.target.value)}
           />
         </label>
         <label>
           Note (optional)
-          <textarea
-            maxLength={2000}
-            value={note}
-            disabled={submitted !== null}
-            onChange={(e) => setNote(e.target.value)}
-          />
+          <textarea maxLength={2000} {...register('note')} disabled={submitted !== null} />
         </label>
         <p className="supporting secondary">Dates use your saved timezone: {timezone}.</p>
         {error && (
@@ -314,6 +340,7 @@ export function PeoplePage({
     meetupDelete?: boolean;
   } | null>(null);
   const profileHeading = useRef<HTMLHeadingElement>(null);
+  const historyHeading = useRef<HTMLHeadingElement>(null);
   const profileSection = useRef<HTMLElement>(null);
   const pageHeading = useRef<HTMLHeadingElement>(null);
   const navigation = useRef<HTMLElement>(null);
@@ -360,7 +387,9 @@ export function PeoplePage({
   function closeEditor() {
     setEditor(null);
     requestAnimationFrame(() => {
-      if (document.activeElement === document.body) profileHeading.current?.focus();
+      if (document.activeElement === document.body) {
+        (historyHeading.current ?? profileHeading.current)?.focus();
+      }
     });
   }
   function refreshPeople() {
@@ -502,131 +531,131 @@ export function PeoplePage({
           className="person-detail surface stack"
           aria-label={`Profile for ${person.name}`}
         >
-          <Button className="self-start" onClick={backToList}>
-            <ArrowLeft aria-hidden="true" size={18} /> Back to {viewTitle}
-          </Button>
-          <div className="stack stack--small">
-            <p className="eyebrow">Person details</p>
+          <MeetupHistory
+            key={person.id}
+            history={history}
+            name={person.name}
+            fullHeading={historyHeading}
+            onRefresh={() => void historyQuery.refetch()}
+            onEdit={(meetup) => {
+              setEditingMeetup(meetup);
+              setEditor('meetup');
+            }}
+            onDelete={(meetup) =>
+              setConfirmation({
+                title: `Delete meetup with ${person.name} on ${meetup.completed_on}?`,
+                path: `meetups/${meetup.id}?revision=${meetup.revision}`,
+                method: 'DELETE',
+                success: 'Meetup deleted.',
+                personId: person.id,
+                meetupDelete: true,
+              })
+            }
+          >
+            <Button className="self-start" onClick={backToList}>
+              <ArrowLeft aria-hidden="true" size={18} /> Back to {viewTitle}
+            </Button>
             <h2 ref={profileHeading} tabIndex={-1}>
               {person.name}
             </h2>
-          </div>
-          <p>
-            {person.archived ? 'Archived - ' : ''}
-            {levels.find((l) => l[0] === person.priority)?.[1] ?? 'No priority'}
-          </p>
-          <p>
-            {person.cadence_count
-              ? `Every ${person.cadence_count} ${person.cadence_unit}`
-              : 'No cadence'}
-          </p>
-          <div className="actions">
-            <Button
-              variant="primary"
-              onClick={() => {
-                setEditingMeetup(null);
-                setEditor('meetup');
+            {person.archived && <p className="secondary">Archived</p>}
+            <div className="actions" aria-label="Person actions" role="group">
+              <Button
+                variant="primary"
+                onClick={() => {
+                  setEditingMeetup(null);
+                  setEditor('meetup');
+                }}
+              >
+                Log meetup
+              </Button>
+              <Button
+                onClick={() => {
+                  setEditingPerson(person);
+                  setEditor('person');
+                }}
+              >
+                Edit person
+              </Button>
+              <Button
+                onClick={() =>
+                  setConfirmation({
+                    title: `${person.archived ? 'Restore' : 'Archive'} ${person.name}? History will be retained.`,
+                    path: `people/${person.id}`,
+                    method: 'PUT',
+                    success: person.archived ? 'Person restored.' : 'Person archived.',
+                    personId: person.id,
+                    body: {
+                      name: person.name,
+                      priority: person.priority ?? null,
+                      cadence_count: person.cadence_count ?? null,
+                      cadence_unit: person.cadence_unit ?? null,
+                      archived: !person.archived,
+                      revision: person.revision,
+                    },
+                  })
+                }
+              >
+                {person.archived ? 'Restore person' : 'Archive person'}
+              </Button>
+              <Button
+                variant="danger"
+                onClick={() =>
+                  setConfirmation({
+                    title: `Delete ${person.name} and all their meetup history permanently?`,
+                    path: `people/${person.id}?revision=${person.revision}`,
+                    method: 'DELETE',
+                    success: 'Person and meetup history deleted.',
+                    personId: person.id,
+                  })
+                }
+              >
+                Delete person
+              </Button>
+            </div>
+            <dl className="person-summary">
+              <div>
+                <dt>Last meetup</dt>
+                <dd>{person.last_seen ?? 'None logged'}</dd>
+              </div>
+              <div>
+                <dt>Next scheduled meetup</dt>
+                <dd>
+                  {person.next_scheduled_on ?? 'None scheduled'}
+                  {person.next_scheduled_on && person.next_scheduled_on < date && ' (passed)'}
+                </dd>
+              </div>
+              <div>
+                <dt>Private priority</dt>
+                <dd>
+                  {levels.find((level) => level[0] === person.priority)?.[1].split(' - ')[0] ??
+                    'None'}
+                </dd>
+              </div>
+              <div>
+                <dt>Cadence</dt>
+                <dd>
+                  {person.cadence_count
+                    ? `Every ${person.cadence_count} ${person.cadence_unit}`
+                    : 'None'}
+                </dd>
+              </div>
+            </dl>
+            <NudgeControls
+              key={person.id}
+              person={person}
+              session={session}
+              notify={notify}
+              refresh={(updated) => {
+                if (sessionStore.getSnapshot().session !== session) return;
+                cache.setQueryData<Person[]>(libraryKey, (current) =>
+                  current?.map((p) => (p.id === updated.id ? updated : p)),
+                );
+                refreshPeople();
               }}
-            >
-              Log meetup
-            </Button>
-            <Button
-              onClick={() => {
-                setEditingPerson(person);
-                setEditor('person');
-              }}
-            >
-              Edit person
-            </Button>
-            <Button
-              onClick={() =>
-                setConfirmation({
-                  title: `${person.archived ? 'Restore' : 'Archive'} ${person.name}? History will be retained.`,
-                  path: `people/${person.id}`,
-                  method: 'PUT',
-                  success: person.archived ? 'Person restored.' : 'Person archived.',
-                  personId: person.id,
-                  body: {
-                    name: person.name,
-                    priority: person.priority ?? null,
-                    cadence_count: person.cadence_count ?? null,
-                    cadence_unit: person.cadence_unit ?? null,
-                    archived: !person.archived,
-                    revision: person.revision,
-                  },
-                })
-              }
-            >
-              {person.archived ? 'Restore person' : 'Archive person'}
-            </Button>
-            <Button
-              variant="danger"
-              onClick={() =>
-                setConfirmation({
-                  title: `Delete ${person.name} and all their meetup history permanently?`,
-                  path: `people/${person.id}?revision=${person.revision}`,
-                  method: 'DELETE',
-                  success: 'Person and meetup history deleted.',
-                  personId: person.id,
-                })
-              }
-            >
-              Delete person
-            </Button>
-          </div>
-          <NudgeControls
-            key={person.id}
-            person={person}
-            session={session}
-            notify={notify}
-            refresh={(updated) => {
-              if (sessionStore.getSnapshot().session !== session) return;
-              cache.setQueryData<Person[]>(libraryKey, (current) =>
-                current?.map((p) => (p.id === updated.id ? updated : p)),
-              );
-              refreshPeople();
-            }}
-            reloadConflict={reloadConflict}
-          />
-          <div className="actions">
-            <h3>Meetup history</h3>
-            <Button onClick={() => void historyQuery.refetch()}>Refresh history</Button>
-          </div>
-          {!history ? null : !history.length ? (
-            <p>No meetup logged. The last-seen date is unknown.</p>
-          ) : (
-            history.map((m) => (
-              <article className="surface stack" key={m.id}>
-                <h4>{m.completed_on}</h4>
-                {m.note && <p className="meetup-note">{m.note}</p>}
-                <div className="actions">
-                  <Button
-                    onClick={() => {
-                      setEditingMeetup(m);
-                      setEditor('meetup');
-                    }}
-                  >
-                    Edit meetup on {m.completed_on}
-                  </Button>
-                  <Button
-                    variant="danger"
-                    onClick={() =>
-                      setConfirmation({
-                        title: `Delete meetup with ${person.name} on ${m.completed_on}?`,
-                        path: `meetups/${m.id}?revision=${m.revision}`,
-                        method: 'DELETE',
-                        success: 'Meetup deleted.',
-                        personId: person.id,
-                        meetupDelete: true,
-                      })
-                    }
-                  >
-                    Delete meetup on {m.completed_on}
-                  </Button>
-                </div>
-              </article>
-            ))
-          )}
+              reloadConflict={reloadConflict}
+            />
+          </MeetupHistory>
         </section>
       )}
       {editor === 'person' && people && (

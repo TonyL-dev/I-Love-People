@@ -24,7 +24,9 @@ class PrivacyService:
 
     def export(self, account: Identity) -> Backup:
         try:
-            backup = Backup.model_validate(self.repository.rpc(account.token, "backup_export"))
+            backup = Backup.model_validate(
+                self.repository.rpc(account.token, "backup_export_with_plans")
+            )
         except ValidationError:
             raise PrivacyFailure(422) from None
         if len(backup.model_dump_json().encode()) > BACKUP_BYTES:

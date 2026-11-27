@@ -136,4 +136,60 @@ The reset fix passed actual local Auth recovery, both Linux jobs and a staged Ch
 
 The owner reports that the updated password reset works. Confirm the signed-in meetup smoke on the stable Production URL before closing Phase 5.
 
-Phase 5 was accepted November 22, 2026. The owner confirmed successful replacement-password sign-in and the sample meetup journey on the protected stable Production URL. The active deployment is `dpl_3eVKdtxV7XamHkhTXJ8kTHf4C6z6`. [Release evidence](docs/IMPLEMENTATION_STATUS.md#phase-5-accepted--november-22-2026) records the rollout and cost review.
+Phase 5 was accepted November 22, 2026. The owner confirmed successful replacement-password sign-in and the sample meetup journey on the protected stable Production URL. The deployment at acceptance was `dpl_3eVKdtxV7XamHkhTXJ8kTHf4C6z6`. [Release evidence](docs/IMPLEMENTATION_STATUS.md#phase-5-accepted--november-22-2026) records the rollout and cost review.
+
+## Production Web Push — November 22, 2026
+
+The protected stable URL now serves `dpl_3Vp2bU33kNCb4UHKtK8weZMY4D4c` with separate Production VAPID and job credentials. The private Production Worker has its own job and Vercel automation bindings. Staged and stable HTTP smoke, job authorization and an actual five-minute trigger invocation passed. The Preview trigger is disabled. The owner's closed-iPhone check remains open in [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md#production-web-push--november-22-2026). Follow [docs/PUSH_SETUP.md](docs/PUSH_SETUP.md#production) for opt-in, verification and pause.
+
+## Phase 6 named reminders — November 23, 2026
+
+Phase 6 adds a default-off per-device name setting. Alembic `0009_push_names` extends the private device row. The sender reuses Catch up order and includes one name in the encrypted payload when the setting is on. Clearing the option keeps notifications and quiet hours enabled. Source commit `081b9e2` passed both GitHub CI jobs. The protected Preview serves that commit, and the isolated database upgrade and role checks passed. [Implementation status](docs/IMPLEMENTATION_STATUS.md#named-reminders--november-23-2026) records the verification boundaries. Live push and the closed-iPhone check remain open before a Production rollout.
+
+The [Phase 6 live trial](https://i-love-people-5wf9drj1g-smooshy.vercel.app) uses the same source, new Preview-only push secrets, and the five-minute private Preview Worker. Cloudflare recorded a successful automatic run. Closed-page Chrome received the expected name and was unsubscribed. The disposable iPhone account is seeded. Follow [the device checklist and trial cleanup](docs/PUSH_SETUP.md#named-reminder-device-check).
+
+The disposable Preview device's daily receipt was reset twice on request. The user confirmed both named and generic wording on iPhone. Phase 6 Preview acceptance is complete. The Preview Cron Trigger, Worker secrets, temporary access and synthetic account were removed. Three unused branch-scoped Vercel settings remain pending removal. Production review and migration are pending.
+
+Production is at Alembic `0009_push_names`. Staging commit `d43497b` corrects the Auth origin and the [staged build](https://i-love-people-3muyb4m0d-smooshy.vercel.app) passed protected HTTP verification. Signed-in staged smoke and promotion remain pending.
+
+November 24, 2026. The user reported the staged sign-in and meetup checks passed and removed the disposable account. Cleanup was verified and Vercel promoted `dpl_EJSiMUM54XKEg1grwswDgT9hPirv` to protected stable Production. Stable HTTP checks passed. The first scheduled iPhone reminder after promotion remains to be observed.
+
+After an owner-requested daily reset, the scheduled Production sender recorded a successful push at 9:35 a.m. Toronto time with names enabled. The owner confirmed the named reminder on iPhone. Phase 6 is accepted in protected Production.
+
+## Phase 7 roadmap — November 24, 2026
+
+The roadmap covers self-service signup, an animated heart loading indicator, settings success toasts, a searchable timezone dropdown, and toast dismiss alignment. Build and test signup on isolated local and Preview projects. Opening Production registration is a separate rollout. See [Phase 7 acceptance checks](docs/PROJECT.md#phase-7--self-service-signup-and-interface-refinements).
+
+Phase 8 covers [forms, the person view, and reminders](docs/PROJECT.md#phase-8--form-organization-person-view-and-reminders). The [cache baseline](docs/ARCHITECTURE.md#current-caching-and-frontend-state) documents the shipped public assets, private in-memory state and offline behavior.
+
+The [frontend playbook](frontend-playbook/README.md) packages reusable styling, caching, and form patterns for other React projects.
+
+The first form migration covers timezone preferences. [Implementation status](docs/IMPLEMENTATION_STATUS.md#phase-8-form-organization--november-26-2026) records local verification, the protected Preview, and the remaining review.
+
+The remaining Phase 8 implementation uses React Hook Form, compacts the person view, and adds a planned meetup date plus per-person delivery receipts in Alembic `0010_person_reminders`. A plan holds cadence reminders through its local date. Follow the Phase 8 status for local evidence and protected Preview and device gates.
+
+The compact profile starts with Recent meetups collapsed and shows the total count. Expanding it reveals three recent entries and the full history action. Keep edit, deletion and refresh on the shared history query.
+
+The meetup editor asks for discard confirmation only when the draft differs from the opening date or note.
+
+Close and Escape dismiss **Add person** without a confirmation prompt.
+
+Full history lets each month expand independently. Profile actions sit at the top. **Nudge settings** and **Recent meetups** start collapsed.
+
+## Phase 7 implementation — November 24, 2026
+
+Managed email signup, the heart loading indicator, searchable timezone selection, and settings success toasts are implemented on `codex/phase-7-signup`. Local database checks and both Linux CI jobs passed for the Phase 7 review. The protected Preview serves `2ed4f49` with readiness and signup routes verified. Use [Phase 7 Preview setup](docs/AUTH_SETUP.md#phase-7-protected-preview-signup) for sender setup and real-inbox checks. Signup defaults off outside the local test setup. The protected Production release continues to serve Phase 6.
+
+The Phase 7 loading follow-up shows one fullscreen heart spinner during pending browser API and managed Auth requests. The sign-in and signup password fields use a trailing visibility eye. The updated protected Preview serves `2644f5d`. See [implementation status](docs/IMPLEMENTATION_STATUS.md#phase-7-loading-overlay-and-password-control) for verification.
+
+The Phase 7 toast follow-up centers the dismiss X inside its button and preserves alignment with the first text line. See [toast verification](docs/IMPLEMENTATION_STATUS.md#phase-7-toast-dismiss-centering).
+
+The Phase 7 browser now blocks exact repeat names on person saves and backup review, including archived entries. Names are trimmed and compared case-sensitively. See [person-name verification](docs/IMPLEMENTATION_STATUS.md#phase-7-exact-person-name-checks).
+
+## Phase 8 session cache — November 25, 2026
+
+The requested cache uses the approved `@tanstack/react-query@5.108.4` on `codex/phase-8-session-cache`. People and meetup history use a 24-hour freshness window in tab memory. Catch up refreshes at the saved timezone's day boundary. See [implementation status](docs/IMPLEMENTATION_STATUS.md#phase-8-session-cache--november-25-2026) for verification.
+
+The user reports that caching works and all three Preview device checks pass. Proton SMTP delivered a Preview recovery email, the exact redirect was verified, and the user confirmed password reset and sign-in. Real-inbox signup worked after correcting the **Confirm signup** template. The user verified isolation in the app. Local application API checks against hosted Preview Auth and hosted Supabase Data API checks also passed. All temporary accounts and their test person record were removed and absence was verified.
+
+The protected Production release source merged as `488753f` after PR checks, and both exact `main` CI jobs passed. The approved [migration workflow](https://github.com/TonyL-dev/I-Love-People/actions/runs/45708562342) passed at Alembic `0009_push_names`. The owner reported passing the staged signed-in meetup smoke, and synthetic cleanup was verified. Vercel promoted `dpl_EAawwHLQExAg6Ry1ouUKdtcSgjur` to protected Production. Stable HTTP checks passed with Production Auth and signup closed. The owner confirmed sign-in and the reset redirect on stable Production, completing the protected rollout.

@@ -1,15 +1,8 @@
 import { PeoplePage } from '../people/PeoplePage';
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useSyncExternalStore,
-  type FormEvent,
-} from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { Eye, EyeOff, Menu } from 'lucide-react';
 import { QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Controller, useForm } from 'react-hook-form';
 import { deviceKey, meetupKey, peopleKey, profileKey } from '../api/accountCache';
 import { Link } from '../navigation';
 import { Button } from '../ui/Button';
@@ -51,22 +44,25 @@ function CredentialsForm({
   signupEnabled?: boolean;
   loading?: boolean;
 }) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const {
+    register,
+    resetField,
+    handleSubmit,
+    formState: { isSubmitting: busy },
+  } = useForm({
+    defaultValues: { email: '', password: '' },
+  });
   const [visible, setVisible] = useState(false);
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [sent, setSent] = useState(false);
   const request = useRef<AbortController | null>(null);
   useEffect(() => () => request.current?.abort(), []);
-  async function submit(event: FormEvent) {
-    event.preventDefault();
+  async function submit({ email, password }: { email: string; password: string }) {
     if (!client || request.current) return;
     if (signup && !passwordMeetsRules(password)) {
       setError(passwordRules);
       return;
     }
-    setBusy(true);
     setError('');
     const abort = new AbortController();
     request.current = abort;
@@ -74,7 +70,7 @@ function CredentialsForm({
       if (signup) {
         await client.signUp(email.trim(), password, abort.signal);
         if (abort.signal.aborted) return;
-        setPassword('');
+        resetField('password');
         setSent(true);
         return;
       }
@@ -82,13 +78,12 @@ function CredentialsForm({
       if (abort.signal.aborted) return;
       const profile = await client.profile(session, undefined, abort.signal);
       if (abort.signal.aborted) return;
-      setPassword('');
+      resetField('password');
       sessionStore.signIn(session, profile);
     } catch (failure) {
       if (!abort.signal.aborted) setError(errorMessage(failure));
     } finally {
       request.current = null;
-      if (!abort.signal.aborted) setBusy(false);
     }
   }
   return (
@@ -119,20 +114,18 @@ function CredentialsForm({
         <form
           className="stack"
           onSubmit={(event) => {
-            void submit(event);
+            void handleSubmit(submit)(event);
           }}
         >
           <label htmlFor="email">
             Email
             <input
               id="email"
-              name="email"
               type="email"
               autoComplete="username"
               required
               disabled={busy}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              {...register('email')}
             />
           </label>
           <div className="stack stack--small">
@@ -140,7 +133,6 @@ function CredentialsForm({
             <div className="password-field">
               <input
                 id="password"
-                name="password"
                 type={visible ? 'text' : 'password'}
                 autoComplete={signup ? 'new-password' : 'current-password'}
                 required
@@ -148,8 +140,7 @@ function CredentialsForm({
                 minLength={signup ? 12 : undefined}
                 maxLength={signup ? 128 : undefined}
                 aria-describedby={signup ? 'signup-password-rules' : undefined}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                {...register('password')}
               />
               <Button
                 variant="quiet"
@@ -269,24 +260,25 @@ function ConfirmEmail({
 }
 
 function RecoveryRequest({ client }: { client: AccountClient | null }) {
-  const [email, setEmail] = useState('');
-  const [busy, setBusy] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    formState: { isSubmitting: busy },
+  } = useForm({
+    defaultValues: { email: '' },
+  });
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
-  async function submit(event: FormEvent) {
-    event.preventDefault();
-    if (!client || busy) return;
-    setBusy(true);
+  const submit = handleSubmit(async ({ email }) => {
+    if (!client) return;
     setError('');
     try {
       await client.recover(email);
       setSent(true);
     } catch (failure) {
       setError(errorMessage(failure));
-    } finally {
-      setBusy(false);
     }
-  }
+  });
   return (
     <section className="login stack">
       <h1>A fresh start.</h1>
@@ -312,8 +304,7 @@ function RecoveryRequest({ client }: { client: AccountClient | null }) {
             type="email"
             autoComplete="email"
             required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            {...register('email')}
           />
         </label>
         {error && (
@@ -334,9 +325,14 @@ function RecoveryRequest({ client }: { client: AccountClient | null }) {
 
 function ResetPassword({ client, session }: { client: AccountClient; session: Session }) {
   const [verified, setVerified] = useState(false);
-  const [password, setPassword] = useState('');
-  const [confirm, setConfirm] = useState('');
-  const [busy, setBusy] = useState(false);
+  const {
+    register,
+    resetField,
+    handleSubmit,
+    formState: { isSubmitting: busy },
+  } = useForm({
+    defaultValues: { password: '', confirm: '' },
+  });
   const [error, setError] = useState('');
   useEffect(() => {
     const abort = new AbortController();
@@ -351,9 +347,8 @@ function ResetPassword({ client, session }: { client: AccountClient; session: Se
     );
     return () => abort.abort();
   }, [client, session]);
-  async function submit(event: FormEvent) {
-    event.preventDefault();
-    if (busy || !verified) return;
+  const submit = handleSubmit(async ({ password, confirm }) => {
+    if (!verified) return;
     if (password !== confirm) {
       setError('The passwords do not match.');
       return;
@@ -362,12 +357,11 @@ function ResetPassword({ client, session }: { client: AccountClient; session: Se
       setError('Include a lowercase letter, an uppercase letter, and a number.');
       return;
     }
-    setBusy(true);
     setError('');
     try {
       await client.resetPassword(session, password);
-      setPassword('');
-      setConfirm('');
+      resetField('password');
+      resetField('confirm');
       let message = 'Password updated. Sign in with your new password.';
       try {
         await client.signOut(session);
@@ -381,10 +375,8 @@ function ResetPassword({ client, session }: { client: AccountClient; session: Se
       window.dispatchEvent(new PopStateEvent('popstate'));
     } catch (failure) {
       setError(errorMessage(failure));
-    } finally {
-      setBusy(false);
     }
-  }
+  });
   return (
     <section className="login stack">
       <h1>Choose a new password.</h1>
@@ -406,8 +398,7 @@ function ResetPassword({ client, session }: { client: AccountClient; session: Se
             minLength={12}
             maxLength={128}
             aria-describedby="password-rules"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            {...register('password')}
           />
         </label>
         <label htmlFor="confirm-password">
@@ -420,8 +411,7 @@ function ResetPassword({ client, session }: { client: AccountClient; session: Se
             required
             minLength={12}
             maxLength={128}
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
+            {...register('confirm')}
           />
         </label>
         {error && (
@@ -458,13 +448,16 @@ function PrivateAccount({
     staleTime: Infinity,
   });
   const profile = profileQuery.data;
-  const [timezoneDraft, setTimezone] = useState<string | null>(null);
-  const timezone = timezoneDraft ?? profile?.timezone ?? 'UTC';
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { isSubmitting: busy },
+  } = useForm({ values: { timezone: profile?.timezone ?? 'UTC' } });
   const [saveError, setSaveError] = useState('');
   const [toast, setToast] = useState<{ id: number; message: string } | null>(null);
   const toastSequence = useRef(0);
   const dismissToast = useCallback(() => setToast(null), []);
-  const [busy, setBusy] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [optOutOnLogout, setOptOutOnLogout] = useState(true);
   const [pushBusy, setPushBusy] = useState(false);
@@ -477,10 +470,8 @@ function PrivateAccount({
       setToast({ id: ++toastSequence.current, message });
     }
   }
-  async function save(event: FormEvent) {
-    event.preventDefault();
+  async function save({ timezone }: { timezone: string }) {
     if (busy) return;
-    setBusy(true);
     setSaveError('');
     try {
       const value = await client.profile(session, timezone);
@@ -489,7 +480,7 @@ function PrivateAccount({
         void cache.invalidateQueries({ queryKey: peopleKey, refetchType: 'none' });
       }
       cache.setQueryData(profileKey, value);
-      setTimezone(null);
+      reset({ timezone: value.timezone });
       notify('Timezone saved.');
     } catch (failure) {
       if (failure instanceof AccountError && failure.status === 401)
@@ -500,8 +491,6 @@ function PrivateAccount({
             ? 'This timezone could not be saved. Choose another timezone and try again.'
             : errorMessage(failure),
         );
-    } finally {
-      setBusy(false);
     }
   }
   async function logout() {
@@ -581,11 +570,17 @@ function PrivateAccount({
               <form
                 className="surface stack"
                 onSubmit={(event) => {
-                  void save(event);
+                  void handleSubmit(save)(event);
                 }}
               >
                 <h2>Your preferences</h2>
-                <TimezoneField value={timezone} onChange={setTimezone} disabled={busy} />
+                <Controller
+                  control={control}
+                  name="timezone"
+                  render={({ field }) => (
+                    <TimezoneField value={field.value} onChange={field.onChange} disabled={busy} />
+                  )}
+                />
                 {saveError && (
                   <p className="error-text" role="alert">
                     {saveError}
@@ -619,7 +614,7 @@ function PrivateAccount({
                   cache.removeQueries({ queryKey: peopleKey });
                   cache.removeQueries({ queryKey: meetupKey });
                   cache.removeQueries({ queryKey: deviceKey });
-                  setTimezone(null);
+                  reset({ timezone: profile.timezone });
                   setDataVersion((value) => value + 1);
                   void profileQuery.refetch();
                 }}

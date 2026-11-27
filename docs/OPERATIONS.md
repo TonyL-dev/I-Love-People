@@ -35,7 +35,7 @@ If the app fails after promotion, pause the external sender if enabled. Use Verc
 
 ## Monthly cost review
 
-The November 22, 2026 quota review projects $0 recurring hosting for a single personal account, provider subdomains, one owner database and one synthetic Preview database. A five-minute schedule would generate at most 8,928 scheduler and sender calls in a 31-day month. The Preview trial scheduler is currently disabled.
+The November 22, 2026 quota review projects $0 recurring hosting for a single personal account, provider subdomains, one owner database and one synthetic Preview database. The [Production push scheduler](PUSH_SETUP.md#production) can generate at most 8,928 calls each to Cloudflare and the sender in a 31-day month. The Preview trial schedule is disabled.
 
 | Service | Reviewed capacity and usage to record |
 | --- | --- |

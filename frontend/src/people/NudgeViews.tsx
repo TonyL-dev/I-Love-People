@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { ChevronDown } from 'lucide-react';
+import { useForm } from 'react-hook-form';
 import { AccountError, type Session } from '../auth/client';
 import { Button } from '../ui/Button';
 import { journal, failureMessage, type Person } from './client';
@@ -16,10 +18,10 @@ export function NudgeControls({
   reloadConflict: (error: unknown) => void;
   notify: (message: string) => void;
 }) {
-  const [until, setUntil] = useState('');
+  const { register, handleSubmit } = useForm({ defaultValues: { until: '' } });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  async function change(action: string) {
+  async function change(action: string, until?: string) {
     if (busy) return;
     setBusy(true);
     setError('');
@@ -52,55 +54,56 @@ export function NudgeControls({
     }
   }
   return (
-    <section className="stack" aria-label="Nudge preferences">
-      <h3>In-app nudges</h3>
-      <p>{person.reason}</p>
-      <p>{person.due_on ? `Catch-up date: ${person.due_on}` : 'Catch-up date unknown'}</p>
-      {person.suppression && <p role="status">{nudgeStatus(person)}</p>}
-      <div className="actions">
-        <Button disabled={busy} onClick={() => void change(person.paused ? 'unpause' : 'pause')}>
-          {person.paused ? 'Unpause nudges' : 'Pause nudges'}
-        </Button>
-        <Button
-          disabled={busy || !person.due_on}
-          onClick={() => void change(person.suppression === 'dismissed' ? 'undismiss' : 'dismiss')}
-        >
-          {person.suppression === 'dismissed' ? 'Show again today' : 'Dismiss for today'}
-        </Button>
-        {person.snoozed_until && (
-          <Button disabled={busy} onClick={() => void change('unsnooze')}>
-            Clear snooze
-          </Button>
-        )}
-      </div>
-      <form
-        className="stack"
-        onSubmit={(event) => {
-          event.preventDefault();
-          void change('snooze');
-        }}
-      >
-        <label>
-          Snooze until
-          <input
-            type="date"
-            required
-            value={until}
-            onChange={(event) => setUntil(event.target.value)}
-          />
-        </label>
-        <Button type="submit" busy={busy} disabled={!person.due_on}>
-          Snooze nudge
-        </Button>
-      </form>
-      <p className="supporting secondary">
-        Nudges appear when you open this website. A new latest meetup clears snooze and dismissal.
-      </p>
-      {error && (
-        <p role="alert" className="error-text">
-          {error}
-        </p>
-      )}
+    <section aria-label="Nudge preferences">
+      <details className="nudge-settings">
+        <summary>
+          <span>Nudge settings</span>
+          <ChevronDown className="disclosure-chevron" aria-hidden="true" size={18} />
+        </summary>
+        <div className="stack stack--small">
+          <p>{person.due_on ? `Catch-up date: ${person.due_on}` : 'Catch-up date unknown'}</p>
+          {person.suppression && <p role="status">{nudgeStatus(person)}</p>}
+          <div className="actions">
+            <Button
+              disabled={busy}
+              onClick={() => void change(person.paused ? 'unpause' : 'pause')}
+            >
+              {person.paused ? 'Unpause nudges' : 'Pause nudges'}
+            </Button>
+            <Button
+              disabled={busy || !person.due_on}
+              onClick={() =>
+                void change(person.suppression === 'dismissed' ? 'undismiss' : 'dismiss')
+              }
+            >
+              {person.suppression === 'dismissed' ? 'Show again today' : 'Dismiss for today'}
+            </Button>
+            {person.snoozed_until && (
+              <Button disabled={busy} onClick={() => void change('unsnooze')}>
+                Clear snooze
+              </Button>
+            )}
+          </div>
+          <form
+            className="actions snooze-form"
+            onSubmit={(event) => void handleSubmit(({ until }) => change('snooze', until))(event)}
+          >
+            <label>
+              Snooze until
+              <input type="date" required {...register('until')} />
+            </label>
+            <Button type="submit" busy={busy} disabled={!person.due_on}>
+              Snooze nudge
+            </Button>
+          </form>
+          <p className="supporting secondary">A new latest meetup clears snooze and dismissal.</p>
+          {error && (
+            <p role="alert" className="error-text">
+              {error}
+            </p>
+          )}
+        </div>
+      </details>
     </section>
   );
 }
@@ -109,6 +112,8 @@ function nudgeStatus(person: Person) {
   switch (person.suppression) {
     case 'paused':
       return 'Nudges paused';
+    case 'scheduled':
+      return `Meetup scheduled for ${person.next_scheduled_on}`;
     case 'snoozed':
       return `Snoozed until ${person.snoozed_until}`;
     case 'dismissed':
@@ -144,7 +149,7 @@ export function DueList({
       !p.archived &&
       (review
         ? p.due_on && !p.paused && (p.timing === 'now' || p.timing === 'soon')
-        : p.cadence_count || !p.last_seen),
+        : p.cadence_count || !p.last_seen || p.suppression === 'scheduled'),
   );
   const active = visible.filter(
     (p) => !p.suppression && (p.timing === 'now' || p.timing === 'soon'),

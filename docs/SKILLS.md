@@ -129,3 +129,47 @@ Supabase and Postgres guidance informed caller-scoped recovery, role grants, por
 Verified the exact CI-passed Preview with short-lived Vercel access, a real Chrome download/upload, and disposable Supabase accounts. Both production dependency audits passed. Verified removal of disposable rows and revoked temporary access. Used no new runtime dependencies.
 
 For the reset feedback follow-up, used the documented Supabase Auth error code and the existing real local Chrome/Auth recovery drill. The disposable user tried the current password first, heard actionable feedback, and retried successfully with the same recovery session. Local Supabase stopped after verification.
+
+For Production Web Push, used Vercel environment and deployment guidance to stage the previously tested source with sensitive Production-only settings. Authenticated Wrangler deployed a second private Worker, and Cloudflare's API verified its secret bindings and activated the Cron Trigger after the stable HTTP smoke.
+
+## Named reminders — November 23, 2026
+
+Supabase and Postgres guidance informed the additive default-off column on the existing private table. React guidance informed the labeled device checkbox and confirmed save. The checks exercise the local owned-device API, the encrypted payload and the installed worker's notification text separately.
+
+The follow-up extends the Playwright settings journey through opt-in, reopening the drawer, turning names off, and confirming that notifications stay enabled. The two-user database drill now also exercises a generic send after explicit name opt-out.
+
+For the Phase 6 live trial, used the Vercel deployment, environment and protected-access guidance and Supabase managed Auth. Reused the private Cloudflare Preview Worker and verified its bindings and Cron Trigger through the API. The disposable account password and local automation credentials are sealed with Windows DPAPI.
+
+At trial closure, verified the empty Preview schedule, removed both Worker secrets and the disposable Supabase account, revoked the temporary Vercel bypass, and removed the trial DPAPI files.
+
+Staged the Phase 6 Production build from the verified merge in an isolated Git worktree with a single CSP substitution. Applied Vercel deployment and protected-access guidance to verify the staged HTTP responses and confirm the stable domain still served the earlier deployment.
+
+After user-reported staged smoke and account deletion, verified cleanup against Production using aggregate Supabase queries. Used the Vercel promotion and authenticated fetch tools to switch and verify the stable domain.
+
+Phase 7 planning reviewed the existing Auth and settings components, profile timezone API, shared toast, and design standards. The roadmap calls for local Supabase and captured mail, protected Preview with a real test inbox, two-account isolation checks, and iPhone Safari and VoiceOver review.
+
+The Phase 8 planning review used the Vercel CDN caching guidance and compared live Production headers with the service worker, API response policy, and React state. The review was read-only.
+
+Phase 7 implementation used Supabase Auth template and SMTP guidance, the React best-practices checklist, and Vercel deployment guidance for the protected Preview. The repo task runner and synthetic Chrome flows exercise signup, captured mail, session isolation, and settings UI.
+
+The Phase 7 loading follow-up used the React checklist for the shared request state and native modal, and extended the synthetic Chrome checks to exercise blocked input, overlapping requests, reduced motion, and the password eye.
+
+The toast follow-up reused the synthetic Chrome checks to measure the dismiss icon within its button and inspect wrapped and unwrapped messages.
+
+The exact person-name check used the React review checklist and synthetic Chrome fixtures for active and archived names, self-edits, case sensitivity, and backup review.
+
+The session-cache work used the React checklist and TanStack Query documentation for cache lifetime, request deduplication, and targeted invalidation. Synthetic Chrome checks measure requests across focus, idle time, and a simulated date rollover.
+
+The timezone combobox uses the React checklist and React Hook Form documentation. Browser checks cover opening the full list, partial matching, keyboard selection, and the saved value after sign-in.
+
+Phase 8 applied React best practices to the form migrations and compact profile, Supabase and Postgres guidance to the owned plan and private receipts, and full-flow verification to local browser, API and database journeys. The installed service worker and encrypted push transport have separate checks.
+
+The compact meetup history uses the React review checklist for keyboard focus, disclosure state, and reuse of the session's history query.
+
+The meetup editor reuses React Hook Form's dirty state for dismissal through Close and Escape.
+
+The history and nudge disclosures use the React review checklist for independent expansion, keyboard operation and preservation of form state.
+
+The compact layout reuses disclosure styles for Nudge settings and Recent meetups. The focused browser checks cover action order and collapsed reminder details.
+
+Use the [frontend playbook](../frontend-playbook/README.md) to carry these patterns into another React project.

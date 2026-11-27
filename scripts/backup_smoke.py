@@ -46,6 +46,9 @@ async def exercise_backup(
     delete_url = "/api/privacy/delete-all"
     assert (await api.get(backup_url)).status_code == 401
     assert data.post("/rpc/backup_export", headers={"apikey": public_key}, json={}).is_error
+    assert data.post(
+        "/rpc/backup_export_with_plans", headers={"apikey": public_key}, json={}
+    ).is_error
     assert data.post("/rpc/backup_begin_delete", headers={"apikey": public_key}, json={}).is_error
     assert (
         await api.put("/api/profile", headers=source, json={"timezone": "America/Toronto"})
@@ -59,6 +62,7 @@ async def exercise_backup(
             "cadence_count": 2,
             "cadence_unit": "weeks",
             "archived": True,
+            "next_scheduled_on": "2099-11-26",
         },
     )
     created.raise_for_status()
@@ -87,6 +91,10 @@ async def exercise_backup(
     assert backup["timezone"] == "America/Toronto"
     assert len(backup["people"]) == 1 and len(backup["meetups"]) == 2
     assert backup["people"][0]["archived"] and backup["people"][0]["paused"]
+    assert backup["people"][0]["next_scheduled_on"] == "2099-11-26"
+    legacy = deepcopy(backup)
+    del legacy["people"][0]["next_scheduled_on"]
+    assert (await api.post(preview_url, headers=target, json=legacy)).is_success
     assert all(set(row) == {"id", "person_id", "completed_on", "note"} for row in backup["meetups"])
     assert all(mark not in response.text for mark in (*ids[-2:], password, other_password))
     assert (await api.get(backup_url, headers=target)).json() == {
