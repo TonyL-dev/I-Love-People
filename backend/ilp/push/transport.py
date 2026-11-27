@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from http.client import HTTPException, HTTPResponse, HTTPSConnection
 from json import dumps, loads
 from logging import getLogger
+from re import fullmatch
 from time import time
 from typing import Literal, Protocol
 from urllib.parse import urlunsplit
@@ -51,6 +52,12 @@ def apple_reason(response: HTTPResponse) -> str:
     return reason if isinstance(reason, str) and reason in APPLE_REASONS else "unknown"
 
 
+def valid_subject(subject: str) -> bool:
+    return (subject.startswith("mailto:") and "@" in subject) or fullmatch(
+        r"https://[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+", subject
+    ) is not None
+
+
 @dataclass(frozen=True)
 class Subscription:
     endpoint: str = field(repr=False)
@@ -76,8 +83,7 @@ class WebPushTransport:
         if (
             not settings.push_private_key
             or not settings.push_subject
-            or not settings.push_subject.startswith("mailto:")
-            or "@" not in settings.push_subject
+            or not valid_subject(settings.push_subject)
             or not settings.push_job_secret
             or len(settings.push_job_secret.get_secret_value()) < 32
             or not settings.database_url

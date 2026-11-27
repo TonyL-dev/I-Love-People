@@ -1,3 +1,4 @@
+from base64 import urlsafe_b64decode
 from datetime import UTC, datetime
 from http.client import HTTPResponse
 from json import loads
@@ -65,16 +66,15 @@ def test_quiet_hours_wrap_and_ttl_respects_the_dst_jump() -> None:
     "status, outcome", [(201, "sent"), (410, "revoked"), (429, "retry"), (307, "failed")]
 )
 @pytest.mark.parametrize("name", [None, "Synthetic Maïa"])
+@pytest.mark.parametrize("subject", ["mailto:push@example.test", "https://push.example.test"])
 def test_web_push_encrypts_and_signs_without_redirecting(
-    monkeypatch: pytest.MonkeyPatch, status: int, outcome: str, name: str | None
+    monkeypatch: pytest.MonkeyPatch, status: int, outcome: str, name: str | None, subject: str
 ) -> None:
     receiver = ec.generate_private_key(ec.SECP256R1())
     point = receiver.public_key().public_bytes(Encoding.X962, PublicFormat.UncompressedPoint)
     auth = token_bytes(16)
     sender = ec.generate_private_key(ec.SECP256R1()).private_numbers().private_value
-    transport = WebPushTransport(
-        SecretStr(encode(sender.to_bytes(32, "big"))), "mailto:push@example.test"
-    )
+    transport = WebPushTransport(SecretStr(encode(sender.to_bytes(32, "big"))), subject)
     endpoint = "https://fcm.googleapis.com/wp/synthetic"
     tag = "a" * 32
 
@@ -87,6 +87,10 @@ def test_web_push_encrypts_and_signs_without_redirecting(
         ) -> None:
             assert (method, target) == ("POST", "/wp/synthetic")
             assert headers["Authorization"].startswith("vapid t=")
+            claims = headers["Authorization"].split(".")[1]
+            decoded = loads(urlsafe_b64decode(claims + "=" * (-len(claims) % 4)))
+            assert decoded["sub"] == subject
+            assert decoded["aud"] == "https://fcm.googleapis.com"
             assert headers["Content-Encoding"] == "aes128gcm" and headers["TTL"] == "60"
             assert headers["Topic"] == tag
             plain = http_ece.decrypt(
