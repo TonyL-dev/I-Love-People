@@ -1,7 +1,8 @@
 from base64 import urlsafe_b64encode
 from dataclasses import dataclass, field
-from http.client import HTTPException, HTTPSConnection
-from json import dumps
+from http.client import HTTPException, HTTPResponse, HTTPSConnection
+from json import dumps, loads
+from logging import getLogger
 from time import time
 from typing import Literal, Protocol
 from urllib.parse import urlunsplit
@@ -16,6 +17,38 @@ from ilp.infrastructure.settings import Settings
 from ilp.push.models import decode_key, push_url
 
 Outcome = Literal["sent", "retry", "revoked", "failed"]
+logger = getLogger(__name__)
+
+# Apple's documented Web Push response codes. Never log other provider-supplied text.
+APPLE_REASONS = frozenset(
+    {
+        "BadTtl",
+        "BadUrgency",
+        "BadWebPushRequest",
+        "BadWebPushTopic",
+        "VapidPkHashMismatch",
+        "IdleTimeout",
+        "BadAuthorizationHeader",
+        "BadJwtToken",
+        "BadVapidPublicKey",
+        "BadPath",
+        "MethodNotAllowed",
+        "PayloadTooLarge",
+        "TooManyRequests",
+        "InternalServerError",
+        "ServiceUnavailable",
+        "Shutdown",
+    }
+)
+
+
+def apple_reason(response: HTTPResponse) -> str:
+    try:
+        payload = loads(response.read(1024))
+    except (OSError, HTTPException, ValueError, RecursionError):
+        return "unknown"
+    reason = payload.get("reason") if isinstance(payload, dict) else None
+    return reason if isinstance(reason, str) and reason in APPLE_REASONS else "unknown"
 
 
 @dataclass(frozen=True)
@@ -82,7 +115,9 @@ class WebPushTransport:
             body = pusher.encode(dumps(payload, separators=(",", ":")).encode())["body"]
         except Exception:
             # Library errors can contain endpoint or key material.
+            logger.warning("Web Push request preparation failed")
             return "failed"
+        is_apple = url.netloc == "push.apple.com" or url.netloc.endswith(".push.apple.com")
         connection = HTTPSConnection(url.netloc, timeout=4)
         try:
             connection.request(
@@ -90,7 +125,11 @@ class WebPushTransport:
             )
             with connection.getresponse() as response:
                 status = response.status
+                if not 200 <= status < 300:
+                    reason = apple_reason(response) if is_apple else "unknown"
+                    logger.warning("Web Push response status=%d reason=%s", status, reason)
         except (OSError, HTTPException):
+            logger.warning("Web Push connection failed")
             return "retry"
         finally:
             connection.close()

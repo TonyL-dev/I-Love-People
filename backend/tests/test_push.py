@@ -1,6 +1,8 @@
 from datetime import UTC, datetime
+from http.client import HTTPResponse
 from json import loads
 from secrets import token_bytes
+from unittest.mock import Mock
 from uuid import uuid4
 
 import http_ece  # type: ignore[import-untyped]
@@ -10,9 +12,25 @@ from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 from ilp.push.models import push_url
 from ilp.push.repository import Device
 from ilp.push.service import send_window
-from ilp.push.transport import Subscription, WebPushTransport
+from ilp.push.transport import Subscription, WebPushTransport, apple_reason
 from push_smoke import encode
 from pydantic import SecretStr
+
+
+@pytest.mark.parametrize(
+    "body, expected",
+    [
+        (b'{"reason":"BadJwtToken","detail":"secret"}', "BadJwtToken"),
+        (b'{"reason":"https://push.apple.com/private"}', "unknown"),
+        (b'{"reason":["BadJwtToken"]}', "unknown"),
+        (b"invalid", "unknown"),
+    ],
+)
+def test_apple_push_reason_uses_only_documented_codes(body: bytes, expected: str) -> None:
+    response = Mock(spec=HTTPResponse)
+    response.read.return_value = body
+    assert apple_reason(response) == expected
+    response.read.assert_called_once_with(1024)
 
 
 @pytest.mark.parametrize(
